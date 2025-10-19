@@ -1,0 +1,167 @@
+BOTA - Ambient Sailing Sounds Generation Guidance
+==================================================
+
+This file documents the prompts used to generate ambient sounds for sailing gameplay.
+
+Generation Tool: ElevenLabs Text-to-Sound-Effects API
+Command: python Imagine/imagine.py makenoise [prompt] [output] --duration 17
+
+All ambient sounds are 17 seconds long for seamless looping.
+These sounds create an immersive Caribbean maritime atmosphere.
+
+Purpose: Layer multiple ambient sounds at low volume to create rich sailing soundscape
+
+---
+
+gentle_waves.mp3
+----------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Gentle ocean waves continuously lapping and rolling, soft water movement, peaceful Caribbean sea ambience"
+
+Description: Soft ocean waves providing base water ambience. Essential foundation sound.
+
+Date Generated: 2025-10-19
+
+---
+
+seagulls.mp3
+------------
+Duration: 17 seconds
+Type: Occasional/random trigger
+Prompt: "Distant seagull cries and calls, multiple birds, tropical ocean birds, atmospheric background ambience"
+
+Description: Distant seagull calls adding life to the ocean atmosphere.
+
+Date Generated: 2025-10-19
+
+---
+
+wind_breeze.mp3
+---------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Gentle tropical breeze blowing, soft wind sounds, light airy atmosphere, peaceful wind ambience"
+
+Description: Gentle wind sounds creating sense of movement and atmosphere.
+
+Date Generated: 2025-10-19
+
+---
+
+rigging_creak.mp3
+-----------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Soft creaking of ship rigging and ropes, subtle wooden maritime sounds, sailing ship ambience"
+
+Description: Ship rigging sounds reminding player they're on a sailing vessel.
+
+Date Generated: 2025-10-19
+
+---
+
+hull_splash.mp3
+---------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Water gently splashing against wooden hull, soft boat movement through water, hull waves ambience"
+
+Description: Water interacting with hull, reinforces boat movement through water.
+
+Date Generated: 2025-10-19
+
+---
+
+distant_thunder.mp3
+-------------------
+Duration: 17 seconds
+Type: Occasional/random trigger
+Prompt: "Far-off thunder rumble, distant storm sounds, low atmospheric rumbling, tropical storm ambience"
+
+Description: Distant thunder for dramatic atmosphere, suggests weather in the distance.
+
+Date Generated: 2025-10-19
+
+---
+
+dolphins.mp3
+------------
+Duration: 17 seconds
+Type: Occasional/random trigger
+Prompt: "Distant dolphin clicks and whistles, playful marine mammals, underwater sounds, ocean wildlife ambience"
+
+Description: Dolphin sounds adding wonder and life to the ocean environment.
+
+Date Generated: 2025-10-19
+
+---
+
+wood_groan.mp3
+--------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Subtle wooden ship hull creaking and groaning, old timber sounds, sailing vessel ambience"
+
+Description: Wooden hull sounds creating sense of aged sailing vessel.
+
+Date Generated: 2025-10-19
+
+---
+
+sail_flutter.mp3
+----------------
+Duration: 17 seconds
+Type: Continuous ambient loop
+Prompt: "Canvas sail gently flapping and fluttering in wind, fabric movement, sailing ship ambience"
+
+Description: Sail fabric movement sounds, reinforces wind and sailing mechanics.
+
+Date Generated: 2025-10-19
+
+---
+
+bell_buoy.mp3
+-------------
+Duration: 17 seconds
+Type: Occasional/random trigger  
+Prompt: "Distant bell buoy ringing softly, maritime bell sounds, gentle nautical ambience, ocean marker"
+
+Description: Bell buoy sounds suggesting navigation markers, adds nautical authenticity.
+
+Date Generated: 2025-10-19
+
+---
+
+RECOMMENDED USAGE:
+
+Continuous Ambient Layers (always playing, very low volume 0.1-0.15):
+- gentle_waves.mp3
+- wind_breeze.mp3
+- hull_splash.mp3
+- rigging_creak.mp3
+- wood_groan.mp3
+- sail_flutter.mp3
+
+Occasional Sounds (random triggers, low volume 0.15-0.2):
+- seagulls.mp3
+- dolphins.mp3
+- distant_thunder.mp3
+- bell_buoy.mp3
+
+Implementation Notes:
+- Managed by MusicManager's ambient sound system (src/music.js)
+- Continuous sounds loop seamlessly and play continuously
+- Occasional sounds trigger randomly every 5 seconds (20% chance) with 30-60 second cooldowns
+- All volumes configured in volume_config.js
+- System can be enabled/disabled via MusicManager.setAmbientEnabled()
+- Starts automatically when game begins playing
+- Integrated with main audio system for volume control
+
+Technical Details:
+- Continuous sounds use audio.loop = true
+- Occasional sounds use random triggers with cooldown timers
+- All sounds respect master volume and individual volume settings
+- Audio nodes are cloned for overlapping playback support
+
+

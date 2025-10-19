@@ -1,0 +1,72 @@
+BOTA - Sound Effects Generation Guidance
+==========================================
+
+This file documents the prompts used to generate sound effects for the game.
+
+Generation Tool: ElevenLabs Text-to-Sound-Effects API
+Command: python Imagine/imagine.py makenoise [prompt] [output] --duration [seconds]
+
+Volume Configuration: See volume_config.js for volume settings of each sound effect
+Note: Using JavaScript file instead of JSON to avoid CORS issues when opening game directly from file system
+
+---
+
+boat_start.mp3
+--------------
+Duration: 1 second
+Volume: 0.2 (20% - subtle effect)
+Prompt: "Quick succession of sounds: rustling canvas sail fabric unfurling, followed by gentle water splashing and waves as a boat begins to move forward"
+
+Description: Sound effect played when a boat starts moving. Combines fabric rustling and water splashing to create an immersive maritime start-up sound.
+
+Usage: Triggered when player clicks to set a new movement target (only when actually moving, not when clicking too close to current position).
+
+Implementation: 
+  - Loaded in Game.init()
+  - Played in Game.handleClickInput() after setting targetMarker
+  - Automatically skipped if click is too close (within BOAT_SNAP_TO_DISTANCE)
+
+Date Generated: 2025-10-19
+Date Updated: 2025-10-19 (removed rope creaking, kept fabric and water sounds)
+Date Updated: 2025-10-19 (reduced duration from 2.5s to 1s for snappier feedback)
+
+---
+
+anchor_raise.mp3
+----------------
+Duration: 2 seconds
+Volume: 0.3 (30%)
+Prompt: "Heavy anchor chain raising from water, creaking windlass, dripping water, metallic clanking, ship preparing to depart"
+
+Description: Anchor raising sound for when player leaves a port. Creates sense of departure and setting sail.
+
+Usage: Triggered when player leaves port and resumes sailing.
+
+Implementation: 
+  - Loaded in Game.init()
+  - Played in Game.leavePort() (src/game.js line 705)
+
+Date Generated: 2025-10-19
+
+---
+
+money_click.mp3
+---------------
+Duration: 0.8 seconds
+Volume: 0.4 (40%)
+Prompt: "Coins clicking and clinking together, gold pieces dropping, money transaction sound, satisfying currency sound"
+
+Description: Money/coin sound for confirming purchases. Provides satisfying audio feedback for transactions.
+
+Usage: Triggered when player confirms a purchase (buying goods, ships, upgrades, etc.)
+
+Implementation: 
+  - Loaded in Game.init()
+  - Played in UI.executeTradeTransaction() on successful trade (src/ui.js line 1229)
+  - Ready to be added to other purchase points (shipyard, upgrades, etc.)
+
+Date Generated: 2025-10-19
+
+---
+
+

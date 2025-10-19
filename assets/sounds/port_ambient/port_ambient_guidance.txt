@@ -1,0 +1,138 @@
+BOTA - Port Ambient Sounds Generation Guidance
+================================================
+
+This file documents the prompts used to generate port ambient sounds for each faction.
+
+Generation Tool: ElevenLabs Text-to-Sound-Effects API
+Command: python Imagine/imagine.py makenoise [prompt] [output] --duration 5
+
+All port ambient sounds are 5 seconds long.
+These sounds play when the player enters a port and should fade out over the final 4 seconds.
+
+Volume Configuration: See ../volume_config.js (all set to 0.35 / 35%)
+
+---
+
+artifact_traders.mp3
+--------------------
+Duration: 5 seconds
+Faction: Artifact Traders
+Prompt: "Mystical port atmosphere with arcane energy humming, magical chimes, distant enchantment sounds, ethereal ambience"
+
+Description: Magical, mystical atmosphere for the Artifact Traders' arcane trading posts.
+
+Date Generated: 2025-10-19
+
+---
+
+claddish_navy.mp3
+-----------------
+Duration: 5 seconds
+Faction: Claddish Navy
+Prompt: "Military naval port atmosphere with ship bells, disciplined footsteps, distant naval commands, harbor activity, orderly maritime ambience"
+
+Description: Military discipline and naval order for the Claddish Navy's ports.
+
+Date Generated: 2025-10-19
+
+---
+
+free_captains.mp3
+-----------------
+Duration: 5 seconds
+Faction: Free Captains
+Prompt: "Rowdy pirate port with tavern music, rough laughter, clinking bottles, sea shanties, chaotic harbor ambience"
+
+Description: Rowdy, chaotic pirate atmosphere for Free Captains' havens.
+
+Date Generated: 2025-10-19
+
+---
+
+keen_folk_engineers.mp3
+-----------------------
+Duration: 5 seconds
+Faction: Keen Folk Engineers
+Prompt: "Mechanical engineering port with whirring gears, steam hissing, clanking machinery, tinkering sounds, industrial workshop ambience"
+
+Description: Mechanical, industrial atmosphere for the Keen Folk Engineers' technological ports.
+
+Date Generated: 2025-10-19
+
+---
+
+oglodi_raiders.mp3
+------------------
+Duration: 5 seconds
+Faction: Oglodi Raiders
+Prompt: "Aggressive warrior port with war drums, weapon sharpening, battle chants, intimidating atmosphere, raider camp ambience"
+
+Description: Aggressive, intimidating warrior atmosphere for Oglodi Raiders' fortresses.
+
+Date Generated: 2025-10-19
+
+---
+
+revtel.mp3
+----------
+Duration: 5 seconds
+Faction: Revtel
+Prompt: "Peaceful underwater mystical port with gentle water sounds, soft aquatic ambience, ethereal music, tranquil atmosphere"
+
+Description: Peaceful, mystical underwater atmosphere for Revtel's aquatic ports.
+
+Date Generated: 2025-10-19
+
+---
+
+roseleaf_traders.mp3
+--------------------
+Duration: 5 seconds
+Faction: Roseleaf Traders
+Prompt: "Nature-focused trading port with rustling leaves, bird songs, peaceful commerce, gentle breeze, forest harbor ambience"
+
+Description: Natural, forest-based peaceful trading atmosphere for Roseleaf Traders.
+
+Date Generated: 2025-10-19
+
+---
+
+slithereen_guard.mp3
+--------------------
+Duration: 5 seconds
+Faction: Slithereen Guard
+Prompt: "Underwater military port with deep ocean sounds, aquatic guard patrols, distant whale calls, mysterious depths ambience"
+
+Description: Deep ocean military atmosphere for the Slithereen Guard's underwater fortresses.
+
+Date Generated: 2025-10-19
+
+---
+
+stonehall_merchants.mp3
+-----------------------
+Duration: 5 seconds
+Faction: Stonehall Merchants
+Prompt: "Industrial merchant port with hammering anvils, mining sounds, stone grinding, forge fires, busy marketplace ambience"
+
+Description: Industrial forge and mining atmosphere for Stonehall Merchants' trading posts.
+
+Date Generated: 2025-10-19
+
+---
+
+IMPLEMENTATION NOTES:
+
+✅ FULLY IMPLEMENTED:
+
+- Sounds play automatically when player enters a port (Game.enterPort)
+- Sound starts immediately upon port entry
+- Automatically fades out over final 4 seconds (1 second normal, 4 seconds fade out)
+- Faction determined by port's faction property (converted to snake_case)
+- Implementation: 
+  * Audio.playPortAmbient() handles playback and fade (src/audio.js)
+  * Called from Game.enterPort() (src/game.js line 683)
+  * Sounds loaded on game init (src/game.js lines 132-140)
+- Sounds are one-shot, not looped
+
+

@@ -1,0 +1,46 @@
+# Captain Portrait Generation Commands
+# All portraits are 1024x1024, close-up bust shots, painterly opaque backgrounds
+# Run from Imagine/ directory using PowerShell
+
+# IMPORTANT: Navigate to Imagine directory first
+# cd Imagine
+
+# 1. KUNKKA (Claddish Navy)
+# Admiral, heroic naval commander
+python imagine.py generate "Close-up portrait of Kunkka from Dota 2, heroic admiral with tricorn hat, strong jaw, determined expression, naval uniform with gold epaulettes, ocean-worn face with scars, holding enchanted sword Tidebringer. Epic fantasy game character portrait, painted art style, dramatic lighting, white and gold color scheme. Bust shot, face and shoulders visible. Painterly background with ocean waves and stormy seas." ../assets/characters/captain_kunkka.png --size 1024x1024 --quality high --background opaque
+
+# 2. RUBICK (Artifact Traders)
+# Grand Magus, mysterious and wise
+python imagine.py generate "Close-up portrait of Rubick from Dota 2, the Grand Magus with tall pointed green hood and mask, glowing green eyes visible, mystical arcane energy swirling around, elegant robes with arcane symbols, mysterious and intelligent expression. Epic fantasy game character portrait, painted art style, magical glow lighting, green and gold color scheme. Bust shot, face and shoulders visible. Painterly background with magical runes and mystical energy." ../assets/characters/captain_rubick.png --size 1024x1024 --quality high --background opaque
+
+# 3. ALCHEMIST (Stonehall Merchants)
+# Greedy merchant with goblin rider and ogre
+python imagine.py generate "Close-up portrait of Alchemist from Dota 2, small goblin alchemist riding on large ogre's shoulders, goblin wearing goggles and merchant robes counting gold coins, ogre has gentle expression, alchemical apparatus and gold coins visible, merchant aesthetic. Epic fantasy game character portrait, painted art style, warm lighting, brown and gold color scheme. Bust shot showing both characters, face and shoulders visible. Painterly background with treasure vault and gold." ../assets/characters/captain_alchemist.png --size 1024x1024 --quality high --background opaque
+
+# 4. SLARDAR (Slithereen Guard)
+# Deep sea warrior, strong guardian
+python imagine.py generate "Close-up portrait of Slardar from Dota 2, powerful Slithereen warrior with purple scaled skin, fierce aquatic face with sharp features, golden crown and armor, holding trident, guardian of the deep aesthetic, water droplets on skin. Epic fantasy game character portrait, painted art style, dramatic underwater lighting, purple and gold color scheme. Bust shot, face and shoulders visible. Painterly background with underwater coral and deep ocean." ../assets/characters/captain_slardar.png --size 1024x1024 --quality high --background opaque
+
+# 5. NAGA SIREN (Revtel)
+# Enchanting queen, elegant and powerful
+python imagine.py generate "Close-up portrait of Naga Siren from Dota 2, beautiful serpentine warrior queen with scaled teal skin, elegant face with golden jewelry and crown, long flowing hair, holding weapon, regal and mesmerizing expression, coral reef aesthetic. Epic fantasy game character portrait, painted art style, soft magical lighting, teal and gold color scheme. Bust shot, face and shoulders visible. Painterly background with coral reefs and tropical ocean." ../assets/characters/captain_naga_siren.png --size 1024x1024 --quality high --background opaque
+
+# 6. TIDEHUNTER (Free Captains)
+# Fearsome pirate lord, massive and intimidating
+python imagine.py generate "Close-up portrait of Tidehunter from Dota 2, massive intimidating sea creature with wide mouth full of sharp teeth, greenish-teal aquatic skin with blue-green scales, pirate aesthetic with tattered clothes and naval decorations, large anchor weapon visible, fearsome and powerful expression, glowing eyes. Epic fantasy game character portrait, painted art style, dramatic harsh lighting, teal and dark blue-green color scheme. Bust shot, face and shoulders visible. Painterly background with rough seas and pirate ships." ../assets/characters/captain_tidehunter.png --size 1024x1024 --quality high --background opaque
+
+# 7. ENCHANTRESS (Roseleaf Traders)
+# Cheerful nature protector, innocent appearance
+python imagine.py generate "Close-up portrait of Enchantress from Dota 2, cheerful young fawn-like creature with deer features, red hair with flowers, innocent large eyes, gentle smile, nature magic visible with glowing plants and butterflies, colorful natural aesthetic. Epic fantasy game character portrait, painted art style, soft warm lighting, green and floral color scheme. Bust shot, face and shoulders visible. Painterly background with magical forest and blooming flowers." ../assets/characters/captain_enchantress.png --size 1024x1024 --quality high --background opaque
+
+# 8. AXE (Oglodi Raiders)
+# Brutal warlord, pure intimidation
+python imagine.py generate "Close-up portrait of Axe from Dota 2, massive brutal red-skinned Oglodi warrior with fierce snarling expression, bald head with war paint, enormous muscular build, holding massive axe weapon, intimidating and bloodthirsty aesthetic, battle scars visible. Epic fantasy game character portrait, painted art style, dramatic harsh lighting, red and black color scheme. Bust shot, face and shoulders visible. Painterly background with burning battlefield and war banners." ../assets/characters/captain_axe.png --size 1024x1024 --quality high --background opaque
+
+# 9. TINKER (Keen Folk Engineers)
+# Brilliant inventor, mechanical genius
+python imagine.py generate "Close-up portrait of Tinker from Dota 2, small keen folk inventor with goggles pushed up on head, intelligent expression, mechanical armor and gadgets visible, robotic laser weapon components, blue and copper color scheme, inventor workshop aesthetic. Epic fantasy game character portrait, painted art style, bright technical lighting, blue and copper color scheme. Bust shot, face and shoulders visible. Painterly background with inventor's workshop and mechanical devices." ../assets/characters/captain_tinker.png --size 1024x1024 --quality high --background opaque
+
+# After generation, return to project root
+# cd ..
+

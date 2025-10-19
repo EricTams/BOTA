@@ -1,0 +1,274 @@
+# Port Asset Art Guidance
+
+## Overview
+Top-down view port icons for faction cities/towns. Boardgame token style for readability.
+Size: 1024x1024 pixels
+Background: Transparent
+
+## CRITICAL Design Requirements
+1. **Water areas should be MOSTLY TRANSPARENT (alpha)** - So port water blends seamlessly with the sea map
+2. **City wall around the perimeter** - Makes the port "pop" visually from the terrain
+3. **Buildings and docks are fully opaque** - Only the water areas should be transparent
+4. **Wall should be visible and distinct** - Defines the port boundary clearly
+
+## Boardgame Token Aesthetic
+**CRITICAL for all port art:**
+- Simple, iconic designs - easy to identify at a glance
+- Clear silhouettes - distinct shapes for each tier
+- High contrast - buildings/walls stand out against transparent water
+- Minimal detail - focus on key structures only
+- Readable at small sizes (32-64px on screen)
+- Painterly boardgame token aesthetic (not photorealistic)
+- Each tier visually distinct by building count and wall complexity
+
+## Tier System (Town/City/Capital)
+
+Port tiers represent size and development level:
+
+**Tier 1 (Town)**:
+- 2-3 key buildings (simple shapes)
+- Simple wall fortifications
+- Simple dock to the left side
+- Compact, easy-to-read layout
+
+**Tier 2 (City)**:
+- 4-5 buildings (one larger central structure)
+- Stronger walls with corner towers
+- Medium dock to the left side
+- One grand structure visible (temple, market hall)
+
+**Tier 3 (Capital)**:
+- 6-7 buildings (grand centerpiece clearly visible)
+- Massive walls with multiple towers
+- Large dock to the left side
+- Grand centerpiece dominates (castle, cathedral, palace)
+
+---
+
+## Faction-Specific Ports
+
+### Revtel Ports (Aquatic Coral Reef Dwellers)
+
+**Colors**: Coral Pink #FF7F50, Turquoise #40E0D0, Pearl White
+**Theme**: Peaceful traders, tropical reef aesthetic
+
+#### Tier 1 (Town) - Coral Haven
+**File**: revtel_port_tier1.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal port, Revtel faction, 2-3 simple coral pink and turquoise buildings with pearl white domes, tropical reef aesthetic, simple decorative wall with wave patterns, simple dock on left side, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings and docks opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal port, Revtel faction, 2-3 simple coral pink and turquoise buildings with pearl white domes, tropical reef aesthetic, simple decorative wall with wave patterns, simple dock on left side, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings and docks opaque. Painterly boardgame aesthetic. No text." assets/ports/revtel_port_tier1.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Artifact Traders Ports (Mystical Commerce)
+
+**Colors**: Purple #9370DB, Gold #FFD700
+**Theme**: Mystical magical items, luxury goods
+
+#### Tier 2 (City) - Golden Shore
+**File**: artifact_traders_port_tier2.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal port, Artifact Traders faction, 4-5 elegant buildings with deep purple roofs and gold trim, mystical magical aesthetic with glowing lanterns, ornate temple centerpiece, stronger ornate magical walls with gold trim and corner towers, medium dock on left side, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal port, Artifact Traders faction, 4-5 elegant buildings with deep purple roofs and gold trim, mystical magical aesthetic with glowing lanterns, ornate temple centerpiece, stronger ornate magical walls with gold trim and corner towers, medium dock on left side, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/artifact_traders_port_tier2.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Claddish Navy Ports (Naval Power)
+
+**Colors**: Royal Blue #4169E1, Silver #C0C0C0
+**Theme**: Military order, naval authority
+
+#### Tier 3 (Capital) - Claddish Harbor
+**File**: claddish_navy_port_tier3.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal naval fortress, Claddish Navy faction, 6-7 organized buildings with royal blue roofs and silver accents, grand castle with towers as centerpiece, massive fortified stone walls with battlements and multiple towers, large dock on left side, flags and banners, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal naval fortress, Claddish Navy faction, 6-7 organized buildings with royal blue roofs and silver accents, grand castle with towers as centerpiece, massive fortified stone walls with battlements and multiple towers, large dock on left side, flags and banners, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/claddish_navy_port_tier3.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Stonehall Merchants Ports (Dwarven Craftsmanship)
+
+**Colors**: Stone Gray #708090, Bronze #CD7F32
+**Theme**: Industrial, forge-focused, sturdy
+
+#### Tier 1 (Town) - Forge Haven
+**File**: stonehall_merchants_port_tier1.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal dwarven port, Stonehall Merchants faction, 2-3 sturdy stone gray buildings with bronze chimneys and smoke, simple forge, thick stone walls with bronze reinforcements, simple dock on left side, anvil motifs, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal dwarven port, Stonehall Merchants faction, 2-3 sturdy stone gray buildings with bronze chimneys and smoke, simple forge, thick stone walls with bronze reinforcements, simple dock on left side, anvil motifs, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/stonehall_merchants_port_tier1.png --size 1024x1024 --quality high --background transparent
+```
+
+#### Tier 2 (City) - Iron Bay
+**File**: stonehall_merchants_port_tier2.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal dwarven port, Stonehall Merchants faction, 4-5 industrial stone gray buildings with bronze chimneys, warehouse district centerpiece with smokestacks, stronger stone walls with bronze-reinforced corner towers, medium dock on left side, anvil and gear motifs, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal dwarven port, Stonehall Merchants faction, 4-5 industrial stone gray buildings with bronze chimneys, warehouse district centerpiece with smokestacks, stronger stone walls with bronze-reinforced corner towers, medium dock on left side, anvil and gear motifs, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/stonehall_merchants_port_tier2.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Oglodi Raiders Ports (Warrior Culture)
+
+**Colors**: Blood Red #8B0000, Bone White #F5F5DC
+**Theme**: Brutal raiders, intimidating martial
+
+#### Tier 3 (Capital) - Bloodstone Keep
+**File**: oglodi_raiders_port_tier3.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style brutal warrior fortress port, Oglodi Raiders faction, 6-7 blood red buildings with bone white skull decorations, massive fortress with skull tower as dominant centerpiece, intimidating walls with bone white spikes and multiple skull-topped towers, large dock on left side, war banners, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style brutal warrior fortress port, Oglodi Raiders faction, 6-7 blood red buildings with bone white skull decorations, massive fortress with skull tower as dominant centerpiece, intimidating walls with bone white spikes and multiple skull-topped towers, large dock on left side, war banners, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/oglodi_raiders_port_tier3.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Roseleaf Traders Ports (Elven Merchants)
+
+**Colors**: Forest Green #228B22, Gold #FFD700
+**Theme**: Natural harmony, elegant
+
+#### Tier 2 (City) - Greenleaf Port
+**File**: roseleaf_traders_port_tier2.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style elven coastal port, Roseleaf Traders faction, 4-5 forest green buildings with gold trim integrated with trees, elegant temple with spires as centerpiece, living walls of intertwined vines and trees with golden highlights and corner towers, medium dock on left side, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style elven coastal port, Roseleaf Traders faction, 4-5 forest green buildings with gold trim integrated with trees, elegant temple with spires as centerpiece, living walls of intertwined vines and trees with golden highlights and corner towers, medium dock on left side, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/roseleaf_traders_port_tier2.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Slithereen Guard Ports (Aquatic Warriors)
+
+**Colors**: Deep Blue #00008B, Sea Green #2E8B57
+**Theme**: Underwater guardians, defensive
+
+#### Tier 1 (Town) - Crystal Cove
+**File**: slithereen_guard_port_tier1.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style coastal fortified port, Slithereen Guard faction, 2-3 deep blue buildings with sea green accents, defensive tower with trident symbol, simple defensive walls with coral and trident decorations, simple dock on left side, warrior aesthetic, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style coastal fortified port, Slithereen Guard faction, 2-3 deep blue buildings with sea green accents, defensive tower with trident symbol, simple defensive walls with coral and trident decorations, simple dock on left side, warrior aesthetic, clear iconic silhouette, easy to read at small size. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/slithereen_guard_port_tier1.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Free Captains Ports (Pirates)
+
+**Colors**: Black #000000, Crimson Red #DC143C
+**Theme**: Lawless haven, dangerous
+
+#### Tier 2 (City) - Rogue's Haven
+**File**: free_captains_port_tier2.png
+**Status**: ✓ Generated
+
+**Prompt**:
+```
+Top-down boardgame token style hidden pirate cove port, Free Captains faction, 4-5 ramshackle black and dark red buildings, smuggler warehouse centerpiece with skull flag, rough wooden palisade walls with spikes and corner watchtowers, medium dock on left side, chaotic layout with skull motifs, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "Top-down boardgame token style hidden pirate cove port, Free Captains faction, 4-5 ramshackle black and dark red buildings, smuggler warehouse centerpiece with skull flag, rough wooden palisade walls with spikes and corner watchtowers, medium dock on left side, chaotic layout with skull motifs, clear iconic silhouette. Water areas transparent. Buildings opaque. Painterly boardgame aesthetic. No text." assets/ports/free_captains_port_tier2.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+### Keen Folk Engineers Ports (Gnomish Engineering)
+
+**Colors**: Brass #B5A642, Steam Gray #A9A9A9
+**Theme**: Steampunk, mechanical, inventive
+
+**Note**: No ports in current game data, but included for future use.
+
+---
+
+## Port Data Mapping
+
+| Port Name | Faction | Tier | Art File |
+|-----------|---------|------|----------|
+| Coral Haven | Revtel | Town (1) | revtel_port_tier1.png ✓ |
+| Golden Shore | Artifact Traders | City (2) | artifact_traders_port_tier2.png |
+| Claddish Harbor | Claddish Navy | Capital (3) | claddish_navy_port_tier3.png |
+| Forge Haven | Stonehall Merchants | Town (1) | stonehall_merchants_port_tier1.png |
+| Iron Bay | Stonehall Merchants | City (2) | stonehall_merchants_port_tier2.png |
+| Bloodstone Keep | Oglodi Raiders | Capital (3) | oglodi_raiders_port_tier3.png |
+| Greenleaf Port | Roseleaf Traders | City (2) | roseleaf_traders_port_tier2.png |
+| Crystal Cove | Slithereen Guard | Town (1) | slithereen_guard_port_tier1.png |
+| Rogue's Haven | Free Captains | City (2) | free_captains_port_tier2.png |
+
+---
+
+## Generation Tips
+
+1. Always use `--background transparent` for port icons
+2. Size should be 1024x1024 for consistency
+3. Use `--quality high` for best results
+4. **CRITICAL: Include "boardgame token style" in every prompt**
+5. **CRITICAL: Specify building count based on tier (2-3, 4-5, 6-7)**
+6. **CRITICAL: Include dock on left side (simple/medium/large based on tier)**
+7. **CRITICAL: NO ships in images - just the dock structure**
+8. **CRITICAL: Specify water areas as "transparent" in prompt**
+9. **CRITICAL: Always include city walls in prompt for visual "pop"**
+10. Ensure "No text" in prompt to avoid AI-generated labels
+11. Match painterly boardgame aesthetic to world map style
+12. Keep faction colors visible and distinct
+13. Buildings, docks, and walls should be fully opaque
+14. Only water within port boundaries should be transparent
+15. Emphasize "clear iconic silhouette" for readability
+

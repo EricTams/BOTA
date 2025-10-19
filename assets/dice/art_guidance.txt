@@ -1,0 +1,184 @@
+# Dice Asset Art Guidance
+
+## Overview
+Six-sided dice faces for encounter resolution system.
+Rendered on Canvas (not DOM elements).
+
+## Dice System Design
+
+**Color Coding**:
+- **Red** = Strength/Combat (sword icon)
+- **Green** = Agility/Escape (running figure icon)
+- **Blue** = Magic/Special (star/magic symbol icon)
+- **Blank** = No effect (plain white/gray, no icon, no color)
+
+**Critical Rule**: Colored faces ALWAYS have icons. Blank faces NEVER have icons or colors.
+
+---
+
+## Dice Face Assets
+
+### Red Face (Strength)
+**File**: face_red_sword.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+**Status**: ⚠ Not yet generated
+
+**Prompt**:
+```
+A single six-sided die face, bright red color, with a simple sword icon in white, clean game art style, flat design, clear and readable.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A single six-sided die face, bright red color, with a simple sword icon in white, clean game art style, flat design, clear and readable." assets/dice/face_red_sword.png --size 1024x1024 --quality high --background transparent
+```
+
+**Style Notes**:
+- Bright red background (#FF0000 or similar)
+- White sword icon, simple and iconic
+- Flat design, not 3D perspective
+- Icon centered on face
+- Clear at small sizes
+
+---
+
+### Green Face (Agility)
+**File**: face_green_run.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+**Status**: ⚠ Not yet generated
+
+**Prompt**:
+```
+A single six-sided die face, bright green color, with a simple running figure icon in white, clean game art style, flat design, clear and readable.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A single six-sided die face, bright green color, with a simple running figure icon in white, clean game art style, flat design, clear and readable." assets/dice/face_green_run.png --size 1024x1024 --quality high --background transparent
+```
+
+**Style Notes**:
+- Bright green background (#00FF00 or similar)
+- White running figure icon
+- Flat design
+- Icon shows motion/speed
+- Clear at small sizes
+
+---
+
+### Blue Face (Magic)
+**File**: face_blue_magic.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+**Status**: ⚠ Not yet generated
+
+**Prompt**:
+```
+A single six-sided die face, bright blue color, with a simple star/magic symbol icon in white, clean game art style, flat design, clear and readable.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A single six-sided die face, bright blue color, with a simple star/magic symbol icon in white, clean game art style, flat design, clear and readable." assets/dice/face_blue_magic.png --size 1024x1024 --quality high --background transparent
+```
+
+**Style Notes**:
+- Bright blue background (#0000FF or similar)
+- White star or sparkle icon
+- Flat design
+- Magical/mystical feel
+- Clear at small sizes
+
+---
+
+### Blank Face
+**File**: face_blank.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+**Status**: ⚠ Not yet generated
+
+**Prompt**:
+```
+A single six-sided die face, plain gray/white color, completely empty with no symbols or icons, clean game art style, flat design.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A single six-sided die face, plain gray/white color, completely empty with no symbols or icons, clean game art style, flat design." assets/dice/face_blank.png --size 1024x1024 --quality high --background transparent
+```
+
+**Style Notes**:
+- Plain white or light gray (#FFFFFF or #E0E0E0)
+- **NO icons whatsoever**
+- **NO colors**
+- Just a blank die face
+- May have subtle shading for depth
+
+---
+
+## Alternative: 3D Dice (Future)
+
+If using WebGL or want more realistic dice:
+
+### Red Die (3D)
+```bash
+python Imagine/imagine.py generate "A red six-sided die with rounded edges, 3D rendered, sword icons on each visible face in white, game asset style, dramatic lighting, transparent background." assets/dice/die_red_3d.png --size 1024x1024 --quality high --background transparent
+```
+
+### Green Die (3D)
+```bash
+python Imagine/imagine.py generate "A green six-sided die with rounded edges, 3D rendered, running figure icons on each visible face in white, game asset style, dramatic lighting, transparent background." assets/dice/die_green_3d.png --size 1024x1024 --quality high --background transparent
+```
+
+### Blue Die (3D)
+```bash
+python Imagine/imagine.py generate "A blue six-sided die with rounded edges, 3D rendered, star/magic icons on each visible face in white, game asset style, dramatic lighting, transparent background." assets/dice/die_blue_3d.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+## Dice Mechanics Reference
+
+**Each player boat has**:
+- 2 Red dice (Strength)
+- 2 Green dice (Agility)
+- 2 Blue dice (Intelligence/Magic)
+
+**Each die has**:
+- 3 colored faces (with icon)
+- 3 blank faces (no icon, no color)
+
+**Usage**:
+- Roll dice on encounters (combat, escape, events)
+- Count total colored faces showing
+- Red for combat damage
+- Green for escape/agility checks
+- Blue for magic/special effects
+
+**Rendering**:
+- Dice rendered on Canvas during encounters
+- May show rolling animation
+- Display final results clearly
+- Visual feedback for which faces contribute
+
+---
+
+## Generation Tips
+1. **Flat design preferred** - Easier to render/animate on Canvas
+2. **High contrast** - Icons must be clearly visible
+3. **Simple icons** - Recognizable at small sizes (dice may be 32-48px on screen)
+4. **Consistent style** - All four faces should match aesthetically
+5. **Transparent background** - For Canvas compositing
+6. **Clear color coding** - Red/Green/Blue immediately distinguishable
+7. **Blank faces are BLANK** - No icons, no bright colors
+
+## Technical Notes
+- Rendered on Canvas using `ctx.drawImage()`
+- May be rotated/animated during dice roll
+- Size scaled based on UI layout
+- Click/tap to roll dice
+- Results calculated from random face selection
+- Visual representation of game mechanics (not just decorative)
+

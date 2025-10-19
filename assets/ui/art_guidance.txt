@@ -1,0 +1,193 @@
+# UI Asset Art Guidance
+
+## Overview
+User interface elements for menus, buttons, panels, and game chrome.
+UI elements use DOM rendering (not Canvas game objects).
+
+---
+
+## BOTA Logo
+**File**: bota_logo.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+**Status**: ✓ Generated
+
+**Concept**: DOTA game logo style, but with wooden planks nailed over the "D" and a red "B" painted on it.
+
+**Prompt**:
+```
+The DOTA game logo, but modified: wooden planks are nailed over the letter D, covering it. A large red letter B is painted over the planks in rough brushstrokes. The logo maintains the epic fantasy style of DOTA with gold metallic letters, dramatic lighting, and fantasy game aesthetic. The planks should look weathered and nailed with visible nails. Maritime/nautical theme subtle in background.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "The DOTA game logo, but modified: wooden planks are nailed over the letter D, covering it. A large red letter B is painted over the planks in rough brushstrokes. The logo maintains the epic fantasy style of DOTA with gold metallic letters, dramatic lighting, and fantasy game aesthetic. The planks should look weathered and nailed with visible nails. Maritime/nautical theme subtle in background." assets/ui/bota_logo.png --size 1024x1024 --quality high --background transparent
+```
+
+**Usage**: Title screen, main menu, branding
+
+---
+
+## Parchment Background
+**File**: parchment_bg.png
+**Purpose**: Background texture for UI panels and menus
+**Status**: ✓ Generated
+
+**Style Notes**:
+- Old parchment paper texture
+- Weathered, maritime feel
+- Suitable for text overlay
+- Neutral tone, doesn't compete with text
+
+---
+
+## Green X Marker
+**File**: green_x_marker.png
+**Purpose**: Waypoint/destination marker on map
+**Status**: ✓ Generated
+
+**Style Notes**:
+- Bright green for visibility
+- X shape for "you are here" / destination
+- Simple, clear icon
+- Visible on any map background
+
+---
+
+## UI Elements (Not Yet Generated)
+
+### Wooden Button
+**File**: button_wood.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent
+
+**Prompt**:
+```
+A wooden button for a maritime fantasy game, carved wood texture, slightly rounded, suitable for UI element, game art style.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A wooden button for a maritime fantasy game, carved wood texture, slightly rounded, suitable for UI element, game art style." assets/ui/button_wood.png --size 1024x1024 --quality high --background transparent
+```
+
+**Usage**: Menu buttons, action buttons
+
+---
+
+### Decorative Panel Frame
+**File**: panel_frame.png
+**Size**: 1024x1024 pixels
+**Background**: Transparent (center should be transparent)
+
+**Prompt**:
+```
+A decorative panel frame for a maritime fantasy game, ornate wood border with nautical rope details, suitable for menu background, game art style, transparent center.
+```
+
+**Generation Command**:
+```bash
+python Imagine/imagine.py generate "A decorative panel frame for a maritime fantasy game, ornate wood border with nautical rope details, suitable for menu background, game art style, transparent center." assets/ui/panel_frame.png --size 1024x1024 --quality high --background transparent
+```
+
+**Usage**: Trading panels, inventory screens, dialog boxes
+
+---
+
+## Resource Icons
+
+Icons for each tradeable resource. Size: 1024x1024, transparent background.
+
+### Tier 1 Resources
+
+**Grain**:
+```bash
+python Imagine/imagine.py generate "Icon of grain wheat stalks, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_grain.png --size 1024x1024 --quality high --background transparent
+```
+
+**Fish**:
+```bash
+python Imagine/imagine.py generate "Icon of a fish, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_fish.png --size 1024x1024 --quality high --background transparent
+```
+
+**Wood**:
+```bash
+python Imagine/imagine.py generate "Icon of stacked wooden logs, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_wood.png --size 1024x1024 --quality high --background transparent
+```
+
+**Iron Ore**:
+```bash
+python Imagine/imagine.py generate "Icon of iron ore chunks, dark metallic rocks, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_iron_ore.png --size 1024x1024 --quality high --background transparent
+```
+
+**Salt**:
+```bash
+python Imagine/imagine.py generate "Icon of salt crystals in a small pile, white crystalline, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_salt.png --size 1024x1024 --quality high --background transparent
+```
+
+**Cotton**:
+```bash
+python Imagine/imagine.py generate "Icon of cotton bolls on plant, fluffy white, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_cotton.png --size 1024x1024 --quality high --background transparent
+```
+
+### Higher Tier Resources
+
+**Beer** (Tier 3):
+```bash
+python Imagine/imagine.py generate "Icon of a wooden beer mug, foamy top, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_beer.png --size 1024x1024 --quality high --background transparent
+```
+
+**Cloth** (Tier 4):
+```bash
+python Imagine/imagine.py generate "Icon of folded cloth fabric, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_cloth.png --size 1024x1024 --quality high --background transparent
+```
+
+**Weapons** (Tier 5):
+```bash
+python Imagine/imagine.py generate "Icon of crossed swords, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_weapons.png --size 1024x1024 --quality high --background transparent
+```
+
+**Artifacts** (Tier 9):
+```bash
+python Imagine/imagine.py generate "Icon of a glowing magical artifact, mystical energy, simple game asset icon style, clear silhouette, suitable for inventory display." assets/ui/icon_artifacts.png --size 1024x1024 --quality high --background transparent
+```
+
+---
+
+## UI Style Guide
+
+### Color Palette
+- **Primary**: Warm wood tones (#8B4513, #A0522D)
+- **Accent**: Gold (#FFD700), Brass (#B5A642)
+- **Text**: Dark brown (#3E2723) on light backgrounds, White (#FFFFFF) on dark
+- **Parchment**: Beige (#F5DEB3), Tan (#D2B48C)
+
+### Typography (CSS, not assets)
+- Headers: Fantasy/medieval style fonts
+- Body text: Readable serif or sans-serif
+- High contrast for readability
+
+### Design Principles
+- **Maritime theme**: Ropes, anchors, waves, nautical elements
+- **Fantasy aesthetic**: Medieval fantasy, not modern
+- **DOTA influence**: Epic, dramatic, heroic style
+- **Readability first**: UI must be functional, beautiful second
+- **Consistent style**: All UI elements should feel cohesive
+
+---
+
+## Generation Tips
+1. **Transparent backgrounds** - Essential for UI overlays
+2. **High contrast** - Icons must be visible on various backgrounds
+3. **Simple, clear** - UI elements should be instantly recognizable
+4. **Consistent style** - Use similar prompts for cohesive look
+5. **Size appropriately** - Larger for logos, smaller for icons
+6. **Test on dark and light** - Ensure visibility in all contexts
+
+## Technical Notes
+- UI elements are DOM-rendered (not Canvas)
+- Loaded as `<img>` tags or CSS backgrounds
+- Can use CSS transforms for hover effects
+- Keep file sizes reasonable for web loading
+- Use PNG format for transparency support
+

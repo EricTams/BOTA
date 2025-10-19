@@ -1,0 +1,59 @@
+# Port Background Image Generation Commands
+# Run these from the Imagine/ directory
+# Each command will take 10-30 seconds to complete
+
+# Navigate to Imagine directory first:
+# cd Imagine
+
+# ===== FACTION SETTLEMENT BACKGROUNDS (9 total) =====
+
+# 1. Artifact Traders
+python imagine.py generate "Mystical port settlement with purple and gold architecture, floating arcane crystals, glowing runes, enchanted market stalls, magical lighting, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/artifact_traders_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 2. Claddish Navy
+python imagine.py generate "Naval fortress port settlement with navy blue and white buildings, military docks, fortified walls, cannons, naval banners, orderly maritime architecture, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/claddish_navy_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 3. Free Captains (Pirates)
+python imagine.py generate "Pirate cove port settlement with weathered black and red buildings, skull flags, hidden harbor, rough wooden structures, barrels and crates, lawless atmosphere, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/free_captains_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 4. Keen Folk Engineers
+python imagine.py generate "Steampunk port settlement with brass and copper machinery, gears, smokestacks, mechanical cranes, industrial docks, engineering workshops, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/keen_folk_engineers_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 5. Oglodi Raiders
+python imagine.py generate "Brutal warrior fortress port with blood red and iron gray buildings, intimidating architecture, bone decorations, war banners, aggressive atmosphere, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/oglodi_raiders_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 6. Revtel
+python imagine.py generate "Tropical reef port settlement with coral pink and turquoise buildings, tropical plants, vibrant colors, peaceful atmosphere, beach and reef aesthetics, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/revtel_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 7. Roseleaf Traders
+python imagine.py generate "Garden-like elven port settlement with green and gold buildings, living wood structures, flowering plants, natural architecture, elegant design, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/roseleaf_traders_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 8. Slithereen Guard
+python imagine.py generate "Underwater naga port settlement with teal and silver buildings, partially submerged architecture, water channels, aquatic design, exotic underwater aesthetics, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/slithereen_guard_settlement.png --size 1024x1024 --quality high --background opaque
+
+# 9. Stonehall Merchants
+python imagine.py generate "Dwarven stone port settlement with gray stone and copper trim, underground warehouses, mountain architecture, solid fortifications, craftsmanship details, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/stonehall_merchants_settlement.png --size 1024x1024 --quality high --background opaque
+
+
+# ===== LOCATION BACKGROUNDS (5 total) =====
+
+# 1. Marketplace (low contrast for Trading UI)
+python imagine.py generate "Fantasy marketplace interior with market stalls, goods and wares, low contrast soft lighting, muted colors suitable for UI overlay, merchants area, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/location_marketplace.png --size 1024x1024 --quality high --background opaque
+
+# 2. Shipyard
+python imagine.py generate "Fantasy shipyard with boats under construction, wooden scaffolding, ship parts, maritime workshop, docks with building materials, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/location_shipyard.png --size 1024x1024 --quality high --background opaque
+
+# 3. Tavern
+python imagine.py generate "Cozy fantasy tavern interior with wooden tables, barrels, warm lighting, bottles and mugs, rustic atmosphere, welcoming ambiance, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/location_tavern.png --size 1024x1024 --quality high --background opaque
+
+# 4. Town Square
+python imagine.py generate "Fantasy town square with notice board, central plaza, gathering area, quest board, town center atmosphere, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/location_town_square.png --size 1024x1024 --quality high --background opaque
+
+# 5. Construction Site
+python imagine.py generate "Fantasy construction site with wooden scaffolding, building materials, work area, construction equipment, development zone, DOTA fantasy style, painterly art, 1024x1024 game background" ../assets/ports/backgrounds/location_construction.png --size 1024x1024 --quality high --background opaque
+
+
+# When done, return to project root:
+# cd ..
+
+

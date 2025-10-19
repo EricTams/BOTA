@@ -1,0 +1,260 @@
+===========================================
+GOODS ASSET GENERATION - ART GUIDANCE
+===========================================
+
+STYLE: Close-up view of the good with textured background
+SIZE: 1024x1024 pixels (standard)
+BACKGROUND: Semi-transparent or textured (wood, cloth, stone)
+AESTHETIC: Painterly, fantasy game art, DOTA-inspired
+LIGHTING: Warm, inviting, showcases the good clearly
+
+GENERAL NOTES:
+- Each image should be a close-up that clearly shows the good
+- Background should be textured (wood planks, cloth, stone table, etc.) but not distract from the item
+- Use warm, painterly art style consistent with DOTA universe
+- Items should look hand-crafted and fantasy-themed
+- Consider faction aesthetics where relevant
+
+===========================================
+TIER 1 - BASIC RAW MATERIALS (40g/unit)
+===========================================
+
+GRAIN:
+cd Imagine
+python imagine.py generate "Close-up view of golden wheat grain stalks laid on a rough wooden table, fantasy game art style, painterly, warm lighting, bundles of wheat tied with twine, rustic background, DOTA-inspired aesthetic" ../assets/goods/grain.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+CORN:
+cd Imagine
+python imagine.py generate "Close-up view of golden corn ears with husks partially peeled back, arranged on weathered wood, fantasy game art style, painterly, warm colors, rustic farm aesthetic, DOTA universe theme" ../assets/goods/corn.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+FISH:
+cd Imagine
+python imagine.py generate "Close-up view of fresh caught fish laid on a wooden dock surface, silver scales glistening, fantasy maritime theme, painterly art style, water droplets visible, rustic nets in background blur, DOTA aesthetic" ../assets/goods/fish.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+WOOD:
+cd Imagine
+python imagine.py generate "Close-up view of stacked logs and timber planks, rough bark texture visible, forest fantasy aesthetic, painterly art style, warm brown tones, woodgrain detail, rustic background, DOTA-inspired" ../assets/goods/wood.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+CLAY:
+cd Imagine
+python imagine.py generate "Close-up view of wet clay chunks and pottery clay on a stone work surface, terracotta colors, fantasy crafting aesthetic, painterly style, earth tones, water spots and fingerprints visible, DOTA theme" ../assets/goods/clay.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+SALT:
+cd Imagine
+python imagine.py generate "Close-up view of coarse sea salt crystals in burlap sacks and wooden bowls, white crystalline texture, maritime theme, painterly art style, coastal aesthetic, rough fabric background, DOTA-inspired" ../assets/goods/salt.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+HERBS:
+cd Imagine
+python imagine.py generate "Close-up view of fresh herbs bundled with twine, green leafy sprigs, aromatic plants, laid on rough wood, fantasy alchemy aesthetic, painterly style, natural colors, botanical detail, DOTA universe theme" ../assets/goods/herbs.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+TIER 2 - VALUABLE RAW MATERIALS (60g/unit)
+===========================================
+
+COTTON:
+cd Imagine
+python imagine.py generate "Close-up view of fluffy white cotton bolls and cotton fiber, soft texture, laid on woven cloth, fantasy textile theme, painterly art style, natural whites and creams, farm aesthetic, DOTA-inspired" ../assets/goods/cotton.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+SUGAR:
+cd Imagine
+python imagine.py generate "Close-up view of raw sugar cane stalks cut and stacked, with sugar crystals in a wooden bowl, tropical fantasy aesthetic, painterly style, golden and brown tones, plantation theme, DOTA universe" ../assets/goods/sugar.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+MEAT:
+cd Imagine
+python imagine.py generate "Close-up view of fresh cuts of meat on a butcher's wooden block, fantasy game provision aesthetic, painterly art style, rich reds and browns, rustic kitchen setting, DOTA theme, appetizing presentation" ../assets/goods/meat.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+FRUIT:
+cd Imagine
+python imagine.py generate "Close-up view of assorted fantasy fruits in a wooden crate, colorful apples, grapes, and exotic varieties, painterly art style, vibrant colors, orchard aesthetic, natural lighting, DOTA-inspired fantasy setting" ../assets/goods/fruit.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+COAL:
+cd Imagine
+python imagine.py generate "Close-up view of black coal chunks in a rough burlap sack with some spilled on stone surface, mining aesthetic, painterly style, dark grays and blacks, industrial fantasy theme, DOTA universe" ../assets/goods/coal.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+IRON_ORE:
+cd Imagine
+python imagine.py generate "Close-up view of raw iron ore rocks with reddish-brown metallic sheen, mining cart or stone surface, fantasy smithing theme, painterly art style, earthy metallic colors, industrial aesthetic, DOTA-inspired" ../assets/goods/iron_ore.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+MANA_CRYSTALS:
+cd Imagine
+python imagine.py generate "Close-up view of glowing blue-purple mana crystals with internal light, magical energy visible, resting on dark stone, fantasy magic aesthetic, painterly style, luminous ethereal glow, DOTA magical theme, arcane power" ../assets/goods/mana_crystals.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+TIER 3 - PROCESSED TIER 1 (90g/unit)
+===========================================
+
+BEER:
+cd Imagine
+python imagine.py generate "Close-up view of wooden beer tankards and a barrel tap, golden ale with foam head, fantasy tavern aesthetic, painterly art style, warm amber colors, rustic wood background, DOTA universe tavern theme" ../assets/goods/beer.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+DYE:
+cd Imagine
+python imagine.py generate "Close-up view of colorful dye pots with vibrant pigments, reds, blues, yellows, arranged on wooden workbench, fantasy textile crafting, painterly style, rich saturated colors, artisan aesthetic, DOTA theme" ../assets/goods/dye.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+POTTERY:
+cd Imagine
+python imagine.py generate "Close-up view of finished clay pottery - bowls, vases, jugs - with terracotta glaze, arranged on wooden shelf, fantasy crafting aesthetic, painterly art style, earthy tones, artisan workshop, DOTA-inspired" ../assets/goods/pottery.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+FLUX:
+cd Imagine
+python imagine.py generate "Close-up view of alchemical flux in glass vials and bottles with glowing substance, magical catalyst aesthetic, painterly style, ethereal colors, alchemy workbench, mysterious energy, DOTA alchemist theme" ../assets/goods/flux.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+PLANKS:
+cd Imagine
+python imagine.py generate "Close-up view of processed lumber planks neatly stacked, smooth planed wood surface, sawmill aesthetic, painterly art style, warm wood tones, construction materials, rustic background, DOTA universe" ../assets/goods/planks.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+TIER 4 - PROCESSED TIER 2 (135g/unit)
+===========================================
+
+CLOTH:
+cd Imagine
+python imagine.py generate "Close-up view of rolled bolts of fine cloth fabric, linen and cotton weaves, textile patterns visible, fantasy merchant aesthetic, painterly style, natural fabric colors, weaving loom in soft background, DOTA theme" ../assets/goods/cloth.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+RUM:
+cd Imagine
+python imagine.py generate "Close-up view of dark rum in glass bottles with cork stoppers, amber liquid, pirate barrel in background, fantasy maritime tavern, painterly art style, warm golden browns, nautical aesthetic, DOTA universe" ../assets/goods/rum.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+WINE:
+cd Imagine
+python imagine.py generate "Close-up view of elegant wine bottles and goblet with deep red wine, vineyard aesthetic, fantasy noble dining, painterly art style, rich purples and reds, refined presentation, DOTA-inspired luxury" ../assets/goods/wine.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+IRON_INGOTS:
+cd Imagine
+python imagine.py generate "Close-up view of forged iron ingots stacked on anvil, metallic sheen, still warm from forge with slight glow, fantasy smithing aesthetic, painterly style, metallic grays with orange highlights, DOTA forge theme" ../assets/goods/iron_ingots.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+COKE:
+cd Imagine
+python imagine.py generate "Close-up view of processed coke fuel chunks, high-grade carbon, arranged near forge fire, industrial fantasy aesthetic, painterly style, deep blacks with glowing red edges, smithing theme, DOTA universe" ../assets/goods/coke.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+TIER 5 - COMBINED GOODS (200g/unit)
+===========================================
+
+WEAPONS:
+cd Imagine
+python imagine.py generate "Close-up view of crafted fantasy weapons - sword, axe, spear - displayed on armory rack, masterwork quality, painterly art style, steel and leather details, DOTA weapon aesthetic, dramatic lighting, heroic theme" ../assets/goods/weapons.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+ARMOR:
+cd Imagine
+python imagine.py generate "Close-up view of crafted armor pieces - breastplate, pauldrons, helmet - arranged on wooden stand, fantasy metalwork, painterly style, polished steel with leather straps, DOTA armor aesthetic, warrior theme" ../assets/goods/armor.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+FURNITURE:
+cd Imagine
+python imagine.py generate "Close-up view of fine wooden furniture pieces - carved chair, ornate table corner - quality craftsmanship, fantasy noble aesthetic, painterly art style, rich wood tones with metal accents, DOTA-inspired luxury goods" ../assets/goods/furniture.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+POTIONS:
+cd Imagine
+python imagine.py generate "Close-up view of colorful potion bottles with glowing liquids - red healing, blue mana, green stamina - arranged on alchemist shelf, fantasy magic aesthetic, painterly style, luminous colors, DOTA potion theme" ../assets/goods/potions.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+FINE_CLOTHING:
+cd Imagine
+python imagine.py generate "Close-up view of luxurious garments - embroidered cloak, fine tunic - draped on dress form, fantasy noble fashion, painterly art style, rich fabric colors and patterns, elegant presentation, DOTA-inspired finery" ../assets/goods/fine_clothing.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+TIER 6 - LUXURY COMBINATIONS (300g/unit)
+===========================================
+
+MAGIC_ITEMS:
+cd Imagine
+python imagine.py generate "Close-up view of enchanted magic items - glowing staff, runed dagger, mystical ring - displayed on velvet cloth, arcane energy visible, painterly art style, ethereal glow effects, DOTA magical artifact aesthetic, legendary quality" ../assets/goods/magic_items.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+ENCHANTED_ARMOR:
+cd Imagine
+python imagine.py generate "Close-up view of enchanted armor with magical runes glowing, mystical energy emanating from surface, fantasy epic gear, painterly style, steel with blue-purple magical aura, DOTA legendary armor aesthetic, heroic presentation" ../assets/goods/enchanted_armor.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+ARTIFACTS:
+cd Imagine
+python imagine.py generate "Close-up view of divine artifacts - ornate crown, ceremonial scepter, sacred amulet - on altar cloth, fantasy religious aesthetic, painterly art style, gold and jewels with divine glow, DOTA artifact theme, sacred power" ../assets/goods/artifacts.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+ELIXIRS:
+cd Imagine
+python imagine.py generate "Close-up view of powerful elixir vials with swirling magical liquids, intense energy glow, master alchemist creation, fantasy magic aesthetic, painterly style, vibrant supernatural colors, DOTA ultimate consumable theme, legendary quality" ../assets/goods/elixirs.png --size 1024x1024 --quality high --background opaque
+cd ..
+
+===========================================
+BATCH GENERATION
+===========================================
+
+To generate all goods at once, you can create a PowerShell script:
+
+# generate_goods.ps1
+cd Imagine
+python imagine.py generate "..." ../assets/goods/grain.png --size 1024x1024 --quality high --background opaque
+python imagine.py generate "..." ../assets/goods/corn.png --size 1024x1024 --quality high --background opaque
+# ... (continue for all goods)
+cd ..
+
+Or use a Python script to iterate through all prompts.
+
+===========================================
+FILENAME CONVENTION
+===========================================
+
+All goods use snake_case matching the goodId in economy.js:
+- grain.png
+- corn.png
+- fish.png
+- iron_ore.png (not iron-ore.png or ironore.png)
+- mana_crystals.png
+- magic_items.png
+- enchanted_armor.png
+- fine_clothing.png
+
+This ensures direct lookup: assets/goods/{goodId.toLowerCase().replace(' ', '_')}.png
+
+===========================================
+INTEGRATION NOTES
+===========================================
+
+Once generated, goods images can be used in:
+1. Trading screen - show the good being bought/sold
+2. Cargo manifest - visual inventory display
+3. Port production view - show what's being made
+4. Market price lists - icon next to good name
+5. Tooltips - preview when hovering over good name
+
+Loading in renderer.js:
+```javascript
+const goodsImages = {};
+for (const goodId in GoodsData) {
+    const filename = goodId.toLowerCase().replace(/\s+/g, '_');
+    const img = new Image();
+    img.src = `assets/goods/${filename}.png`;
+    await img.decode();
+    goodsImages[goodId] = img;
+}
+```
+

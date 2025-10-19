@@ -1,0 +1,8 @@
+{
+  "description": "Volume configuration for game sound effects (0.0 = silent, 1.0 = full volume)",
+  "masterVolume": 1.0,
+  "sounds": {
+    "boat_start": 0.1
+  }
+}
+

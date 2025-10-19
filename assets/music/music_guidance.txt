@@ -1,0 +1,82 @@
+BOTA - Background Music Generation Guidance
+============================================
+
+This file documents the prompts used to generate background music for the game.
+
+Generation Tool: ElevenLabs Text-to-Sound-Effects API
+Command: python Imagine/imagine.py makenoise [prompt] [output] --duration [seconds]
+
+All tracks are 30 seconds long with fade in/out, mellow atmospheric Caribbean instrumental style.
+
+Volume Configuration: See ../sounds/volume_config.js for volume settings (all music tracks set to 0.3 / 30%)
+
+Music System:
+- Managed by MusicManager (src/music.js)
+- Randomly selects tracks with 2-second fade in/out transitions
+- Automatically queues next track when current one ends
+- Avoids repeating the same track twice in a row
+- Starts automatically when game begins playing
+
+---
+
+steel_drums.mp3
+---------------
+Duration: 30 seconds
+Featured Instrument: Steel Drums
+Prompt: "Mellow atmospheric Caribbean instrumental music featuring steel drums, soft and relaxed tropical melody with gentle fade in and fade out, 30 seconds"
+
+Description: Soft steel drum melody creating a relaxed tropical atmosphere. Perfect for peaceful sailing moments.
+
+Date Generated: 2025-10-19
+
+---
+
+acoustic_guitar.mp3
+-------------------
+Duration: 30 seconds
+Featured Instrument: Acoustic Guitar
+Prompt: "Mellow atmospheric Caribbean instrumental music featuring acoustic guitar, soft fingerpicking tropical melody with gentle fade in and fade out, 30 seconds"
+
+Description: Gentle acoustic guitar with fingerpicking style. Creates a warm, intimate Caribbean feel.
+
+Date Generated: 2025-10-19
+
+---
+
+maracas.mp3
+-----------
+Duration: 30 seconds
+Featured Instrument: Maracas and Percussion
+Prompt: "Mellow atmospheric Caribbean instrumental music featuring maracas and percussion, soft tropical rhythm with gentle fade in and fade out, 30 seconds"
+
+Description: Rhythmic percussion-focused track with maracas providing a gentle tropical beat.
+
+Date Generated: 2025-10-19
+
+---
+
+bamboo_flute.mp3
+----------------
+Duration: 30 seconds
+Featured Instrument: Bamboo Flute
+Prompt: "Mellow atmospheric Caribbean instrumental music featuring bamboo flute, soft airy tropical melody with gentle fade in and fade out, 30 seconds"
+
+Description: Airy bamboo flute melody creating a peaceful, meditative Caribbean atmosphere.
+
+Date Generated: 2025-10-19
+
+---
+
+calypso_bass.mp3
+----------------
+Duration: 30 seconds
+Featured Instrument: Upright Bass (Calypso style)
+Prompt: "Mellow atmospheric Caribbean instrumental music featuring upright bass and calypso rhythm, soft tropical groove with gentle fade in and fade out, 30 seconds"
+
+Description: Mellow calypso groove with upright bass providing a warm, rhythmic foundation.
+
+Date Generated: 2025-10-19
+
+---
+
+

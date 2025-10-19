@@ -1,0 +1,204 @@
+# Cursor Rules for BOTA - Maritime Trading Simulation
+# Adapted for Windows development in Cursor, targeting GitHub Pages deployment
+
+## Project Context
+- HTML5 game development for web browsers
+- Target deployment: GitHub Pages
+- Development environment: Windows with Cursor IDE
+- Game type: Real-time maritime trading simulation themed by DOTA
+- Continuous map navigation (not grid-based)
+- Resource trading, dice-based encounters, world simulation
+
+## 1. MUST Requirements
+
+### 1.1 Simplicity and Clarity
+MUST keep functions under 20 fucking lines whenever possible
+MUST use vanilla JavaScript over complex frameworks unless absolutely necessary
+MUST make game logic obvious with clear names and consistent patterns
+MUST start with the dumbest fucking thing that could possibly work
+MUST use HTML5 Canvas for rendering (2D context or WebGL with painterly shader)
+
+### 1.2 Explicit Design
+MUST pass all dependencies explicitly as parameters
+MUST make all game configuration values explicitly provided by caller or config
+MUST name all magic numbers (MAP_WIDTH not 8192, BOAT_SPEED not 2.5)
+MUST return early to flatten logic and avoid deep nesting
+MUST define variables as close to their use as possible
+MUST use explicit event handling over global state
+
+### 1.3 Separation of Concerns
+MUST keep game UI and game state separate and independent
+MUST separate rendering from game logic completely
+MUST encapsulate individual game features into tiny fucking classes
+MUST use separate files for separate concerns (game.js, renderer.js, input.js, trading.js, etc.)
+MUST use separate functions for separate concerns
+MUST isolate DOM manipulation from pure game logic
+
+### 1.4 Failure Handling
+MUST crash immediately with clear error message when game assets are missing
+MUST crash loudly and early in development when something's wrong
+MUST crash fast rather than hide bugs with fallbacks
+MUST crash with an error message for missing game data or assets
+MUST validate game state before rendering
+
+### 1.5 Data and State Management
+MUST use real game assets and real game data only
+MUST wait until the exact moment something is needed to implement it
+MUST delete code immediately when it's no longer being used
+MUST use pure functions for game logic whenever possible (same input = same output)
+MUST minimize mutable state and isolate what remains
+MUST use immutable game state updates
+
+### 1.6 Development Process
+MUST test the game in browser after making changes
+MUST use browser dev tools for debugging
+MUST validate HTML/CSS/JS syntax after changes
+MUST test game functionality manually after each change
+MUST ensure game works on GitHub Pages deployment
+
+### 1.7 HTML5 Game Specific
+MUST use semantic HTML structure
+MUST implement proper game loop with requestAnimationFrame
+MUST handle window resize events properly
+MUST use relative paths for assets (GitHub Pages compatibility)
+MUST implement proper touch/mouse input handling
+MUST use CSS for styling, JavaScript for logic
+MUST use JavaScript files (.js) for configuration data, NOT JSON files
+MUST avoid fetch() for local resources (CORS blocks file:// protocol)
+MUST ensure game works when opened directly from file system (double-click HTML)
+
+### 1.8 CRITICAL - Canvas-Only Rendering for Game Objects
+MUST use HTML5 Canvas for ALL game object rendering (ships, map, dice, particles)
+MUST NEVER use DOM elements (divs, imgs, etc.) for game objects
+MUST render everything game-related on Canvas (2D context or WebGL)
+MUST only use DOM for UI chrome outside the game canvas (menus, buttons, HUD overlays)
+MUST use Canvas transforms for rotation (ship direction, etc.)
+This prevents animation conflicts and ensures smooth, game-driven rendering
+
+## 2. NEVER Requirements
+
+### 2.1 Complexity and Abstractions
+NEVER implement anything until it's actually fucking needed (YAGNI)
+NEVER add game engine abstractions until you have 3+ real use cases
+NEVER implement features "for later"
+NEVER add unused parameters, methods, or game objects
+NEVER use clever syntax when simple will do
+NEVER couple rendering and game logic
+
+### 2.2 Defensive Programming
+NEVER write fallback code or default values for game assets
+NEVER write code like "if (asset == null) { useDefault() }"
+NEVER write "// Shouldn't happen, but just in case"
+NEVER silently recover from game errors
+NEVER hide missing game data with defaults or placeholders
+
+### 2.3 Hardcoded Values
+NEVER hardcode default values in game constructors or functions
+NEVER assume "reasonable defaults" - make the caller fucking decide
+NEVER use magic numbers for game dimensions, speeds, or prices
+NEVER hardcode fallback values for game assets
+NEVER write sample game data or placeholder implementations
+
+### 2.4 Bad Practices
+NEVER maintain legacy game codepaths
+NEVER keep code that isn't actively being used
+NEVER mock game data
+NEVER write placeholder or memory implementations
+NEVER reach into global variables instead of explicit parameters
+NEVER commit API keys or secrets to the codebase
+NEVER use inline styles or scripts in HTML
+
+### 2.5 Code Smells
+NEVER allow change amplification (tiny game feature touches many files)
+NEVER create high cognitive load (huge mental map required)
+NEVER leave unknown unknowns (unsure what must change)
+NEVER use shared mutable state between game components
+NEVER create deep dependencies between unrelated game systems
+NEVER stack if/else/switch into spaghetti control flow
+
+### 2.6 HTML5 Game Specific
+NEVER use global variables for game state
+NEVER mix game logic with DOM manipulation
+NEVER use setTimeout/setInterval for game loops
+NEVER hardcode absolute paths for assets
+NEVER ignore browser compatibility issues
+NEVER use deprecated HTML5 APIs
+NEVER use fetch() or XMLHttpRequest for loading local config/data files (use .js files loaded as scripts)
+NEVER create JSON config files that require fetch (causes CORS errors with file:// protocol)
+
+### 2.7 CRITICAL - NEVER Use DOM for Game Objects
+NEVER use DOM elements (divs, images, etc.) for boats, dice, particles, or any game object
+NEVER animate game objects using CSS transitions or DOM manipulation
+NEVER mix Canvas rendering with DOM-based game objects
+NEVER use DOM positioning (style.left, style.top) for game objects
+This causes animation conflicts, performance issues, and buggy behavior
+
+## 3. File Organization
+- index.html: Main game page
+- src/game.js: Core game logic and main loop
+- src/renderer.js: Canvas rendering system
+- src/input.js: User input handling
+- src/map.js: Map navigation and collision detection
+- src/trading.js: Trading system
+- src/dice.js: Dice mechanics
+- src/simulation.js: World simulation (city production, time controls)
+- src/ai.js: AI boat behavior
+- assets/: Game images, sounds, etc.
+- css/: Stylesheets (for UI chrome only, not game objects)
+- docs/: Feature-specific documentation
+- README.md: Game design overview
+
+## 4. GitHub Pages Considerations
+- Use relative paths for all assets
+- Ensure game works without server-side processing
+- Test game in incognito mode to verify no local dependencies
+- Use HTTPS-compatible APIs only
+- Optimize assets for web delivery
+
+## 5. Windows/Cursor Specific
+- Use forward slashes in paths for cross-platform compatibility
+- Test game in multiple browsers (Chrome, Firefox, Edge)
+- Use Cursor's built-in terminal for any build processes
+- Leverage Cursor's IntelliSense for JavaScript development
+- Use Cursor's file explorer for asset management
+- MUST use PowerShell syntax for terminal commands (NOT bash)
+- NEVER use && or ; for command chaining (use separate commands or semicolons in PowerShell)
+- Use PowerShell-native commands (New-Item, Copy-Item, etc.) when appropriate
+
+## 6. Asset Generation
+MUST use the Imagine tool in Imagine/ folder for creating game assets
+MUST reference docs/ASSET_GENERATION.md for asset creation prompts
+MUST generate large map image (8192x8192 or maximum supported resolution)
+MUST generate simple top-down ship tokens (rotated via Canvas for direction)
+MUST use painterly shader for stylized map rendering
+MUST generate dice with clear Red/Green/Blue color coding
+
+## 7. Comment Markers
+Add specially formatted comments throughout the codebase, where appropriate, for yourself as inline knowledge that can be easily `grep`ped for.
+- Use `AIDEV-NOTE:`, `AIDEV-TODO:`, or `AIDEV-QUESTION:` as prefix as appropriate.
+- *Important:* Before scanning files, always first try to grep for existing `AIDEV-…`.
+- Update relevant anchors, after finishing any task.
+- Make sure to add relevant anchor comments, whenever a file or piece of code is:
+  * too complex, or
+  * very important, or
+  * could have a bug
+
+## 8. Simulation and Time Control
+AIDEV-NOTE: Game runs on dual-loop system: render loop + simulation tick
+- Render loop runs on requestAnimationFrame (60fps)
+- Simulation tick runs independently (can be paused, 1x, 2x, 4x speed)
+- ALL game logic respects simulation speed multiplier
+- Cities produce/consume resources on simulation ticks
+- Prices fluctuate based on supply/demand
+- AI boats make decisions on simulation ticks
+
+## 9. Modular Feature Design
+AIDEV-NOTE: Each major system is independent and documented
+- Each feature has its own module file (trading.js, dice.js, etc.)
+- Each feature has its own documentation (docs/TRADING_SYSTEM.md, etc.)
+- Clear interfaces between systems
+- Easy to develop and test independently
+- No hidden dependencies between unrelated systems
+
+REMEMBER: One piece, one purpose. Simple first and foremost. Make the game logic so fucking obvious that a five year old could understand it. Canvas for game objects, DOM only for UI chrome. The game should work immediately when someone opens the HTML file.
+

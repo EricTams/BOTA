@@ -1,0 +1,499 @@
+# Ship Asset Art Guidance - BOTA Maritime Trading Simulation
+
+## Overview
+STRICTLY top-down orthographic view ship tokens for game objects. Ships should be stylized maritime illustrations with clear, distinctive silhouettes for each faction - detailed enough to be visually interesting, but readable at small sizes.
+
+**Critical Specifications:**
+- **View Angle:** DIRECTLY TOP-DOWN (orthographic, bird's eye view, looking straight down)
+  - NOT isometric, NOT angled, NOT perspective view
+  - Like looking down from directly above the ship
+  - Flat 2D representation as if the ship is lying on a table
+- Size: 1024x1024 pixels
+- Style: Stylized maritime illustration (clear, readable, but detailed)
+  - NOT photorealistic, but can have painterly detail and texture
+  - Balance between clarity and visual richness
+- Background: Transparent PNG (required for Canvas rotation)
+- Bow Orientation: Points UP (towards top of image, forward direction)
+- Stern Design: Transom stern (square back) at bottom for clear directionality
+
+---
+
+## Ship Terminology
+
+**Bow**: Pointed front of the ship (top of image, forward direction)
+- Should have distinctive shape per faction
+- Primary visual identifier when ship is moving
+- Points in direction of travel
+- Bowsprit, figurehead, or ram extends forward from bow
+
+**Transom Stern**: Square or flat back of the ship (bottom of image, rear)
+- Provides clear visual indication of ship's rear
+- Traditional design for many sailing vessels
+- Makes rotation direction obvious in gameplay
+- Contrasts with pointed bow for clear directionality
+
+---
+
+## Critical Requirements for All Ships
+
+### Canvas Rotation Requirements
+- **Transparent background** - essential for rotation without artifacts
+- **Clear, recognizable silhouette** - overall shape should be distinctive
+- **Bow points UP** - ship rotates around center point in Canvas (0° = north/up)
+- **1024x1024 size** - provides good detail at all zoom levels
+- **Readable at small sizes** - must be recognizable at 32-64px display size
+
+### Top-Down View Requirements (CRITICAL)
+- **Deck visible from directly above** - you see the top of the deck, not the sides
+- **Sails appear flat** - seen from above, sails are flat shapes (not showing sail face)
+- **Mast appears as cylinder from above** - circular or slightly oval, not a full tall structure
+- **No perspective depth** - all deck elements at same visual plane
+- **Hull outline shows deck shape** - you see the deck perimeter, not hull sides
+- **Flat orthographic representation** - looking straight down, like a map or architectural plan
+
+### Visual Style
+- **Stylized maritime illustration** - NOT photorealistic, but can have painterly detail
+- **Rich textures acceptable** - wood grain, weathering, fabric textures add visual interest
+- **Faction colors prominent** - color schemes should be immediately recognizable
+- **Clear outlines** - ship should stand out against water/background
+- **Detail that scales** - fine details are good, but major features must be visible at small sizes
+- **Strong silhouette** - distinctive overall shape even at distance
+
+### Directional Clarity (CRITICAL)
+- **Pointed bow OR forward-extending element** - players must instantly see travel direction
+- **Options for bow design (at TOP of image):**
+  - Pointed/sharp bow, (figurehead/bowsprit/ram optional)
+  - Round bow with figurehead/bowsprit/ram extending upward/forward
+- **Mast positioning:** Masts should be vertical (perpendicular to deck) OR lean slightly towards the stern (bottom/back)
+  - NEVER lean masts towards the bow (top) - this makes the ship look backwards
+  - Slight backward rake (toward bottom) reinforces forward direction
+- **Transom stern must contrast with bow** - square back (bottom) vs pointed/extended front (top)
+- **Asymmetry is essential** - ship must have obvious "front" (top) and "back" (bottom)
+- **Rule of thumb:** If viewing ship at 64px size, direction should be immediately obvious
+
+---
+
+## Tier Progression System (Tier 0-3)
+
+### Tier 0 - Starter Vessels (Basic)
+**Visual Characteristics:**
+- Single mast or simple sail configuration
+- Small, compact hull (narrow beam)
+- Minimal decorative elements
+- Basic faction colors (1-2 colors)
+- Simple, clean silhouette
+- Utilitarian appearance
+
+**Size Reference:** Think small coastal trading vessel or patrol boat
+
+### Tier 1 - Improved Vessels
+**Visual Characteristics:**
+- Dual masts or enhanced rigging
+- Slightly larger hull (wider beam)
+- Basic faction symbols/decorations
+- More defined faction aesthetic (2-3 colors)
+- Clearer detail in woodwork
+- Purpose-built appearance
+
+**Size Reference:** Think dedicated merchant ship or naval cutter
+
+### Tier 2 - Advanced Vessels
+**Visual Characteristics:**
+- Multiple masts (2-3 depending on ship type)
+- Wider beam, more imposing presence
+- Prominent faction emblems and heraldry
+- Visible equipment (cannons, magical glows, mechanical parts)
+- Enhanced detail and ornamentation
+- Professional, established look
+
+**Size Reference:** Think large trading vessel or frigate
+
+### Tier 3 - Elite Vessels
+**Visual Characteristics:**
+- Full rigging with 3+ masts
+- Large, impressive hull (maximum beam)
+- Elaborate faction theming and decorations
+- Special visual effects (magical auras, steam effects, heavy weathering)
+- Maximum detail and distinctive silhouette
+- Legendary, unique appearance
+
+**Size Reference:** Think flagship, capital ship, or legendary vessel
+
+---
+
+## Tier 0 Starter Ships - Detailed Specifications
+
+### 1. NEUTRAL - Merchant Barge
+**File:** `merchant_barge.png` (Not yet generated)
+**Ship ID:** `ship_neutral_barge`
+**Faction:** Neutral (no affiliation)
+
+**Visual Description:**
+- **Hull Color:** Generic brown wood, weathered but serviceable
+- **Trim/Accents:** No faction colors, plain natural wood tones
+- **Mast Configuration:** Single short, thick mast (vertical or slight backward rake, cargo focus)
+- **Sail:** Plain off-white/cream sail, rectangular, utilitarian
+- **Hull Shape:** Wide, boxy hull with transom stern at bottom (cargo capacity evident)
+- **Bow:** Gently pointed bow at top with simple bowsprit extending upward (clear direction)
+- **Details:** Minimal decoration, functional rope rigging only
+- **Special Features:** Visible cargo deck space, no weapons
+
+**Design Notes:**
+- Most basic ship in game
+- Generic appearance - could belong to any faction
+- Emphasize cargo capacity over speed or combat
+- Should look slow but reliable
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a basic merchant barge looking directly down from above, stylized maritime illustration with painterly detail, brown weathered wood deck with visible wood grain and planking texture, transom stern (square back) at bottom, single mast visible as cylinder from above with off-white canvas sail seen flat from top, wide boxy deck showing cargo space, weathered rope rigging, gently pointed bow with simple bowsprit extending upward at top for clear forward direction, utilitarian trading vessel with realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 2. CLADDISH NAVY - Patrol Cutter
+**File:** `patrol_cutter.png` (Not yet generated)
+**Ship ID:** `ship_claddish_cutter`
+**Faction:** Claddish Navy
+
+**Visual Description:**
+- **Hull Color:** Navy blue, clean and well-maintained
+- **Trim/Accents:** White trim along gunwales, gold/brass fittings
+- **Mast Configuration:** Single tall mast (military efficiency)
+- **Sail:** Crisp white sail with small navy blue anchor symbol
+- **Hull Shape:** Sleek, narrow hull with transom stern, military lines
+- **Bow:** Sharp, pointed bow with small anchor motif
+- **Details:** Visible deck cannon mounts (2-3), orderly rope rigging, naval flags
+- **Special Features:** Clean, organized deck, disciplined appearance
+
+**Design Notes:**
+- Military vessel, well-maintained and professional
+- Balance between speed and combat capability
+- Should convey order and discipline
+- Navy blue/white/gold color scheme prominent
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a naval patrol cutter, stylized maritime illustration with painterly detail, navy blue hull with white trim and gold fittings, transom stern at bottom, single tall mast with crisp white sail bearing small navy anchor symbol, sharp pointed bow at top pointing upward/forward, visible deck cannon mounts, clean military lines, orderly rope rigging, organized deck, disciplined naval aesthetic, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 3. ARTIFACT TRADERS - Mystic Skiff
+**File:** `mystic_skiff.png` (Not yet generated)
+**Ship ID:** `ship_artifact_skiff`
+**Faction:** Artifact Traders
+
+**Visual Description:**
+- **Hull Color:** Deep purple wood with golden trim
+- **Trim/Accents:** Golden filigree patterns, arcane blue glowing runes
+- **Mast Configuration:** Single mast with mystical appearance
+- **Sail:** Purple-tinted sail with subtle arcane symbols and patterns
+- **Hull Shape:** Elegant, curved hull with transom stern, mystical design
+- **Bow:** Sharply pointed bow with glowing arcane crystal extending forward (clear direction)
+- **Details:** Glowing blue runes along hull sides, magical particle effects (subtle)
+- **Special Features:** Arcane staff visible on deck, crystal arrays, mystical aura
+
+**Design Notes:**
+- Should feel magical and mysterious
+- Glowing elements should be subtle (blue/purple glow)
+- Elegant rather than aggressive
+- Purple/gold/arcane blue color scheme
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a mystical trading skiff, stylized maritime illustration with painterly detail, deep purple wood hull with golden trim and transom stern at bottom, glowing arcane blue runes along hull sides, single mast with purple-tinted sail showing mystical symbols, sharply pointed bow at top with glowing arcane crystal extending upward for clear forward direction, subtle magical particle effects, arcane staff on deck, mysterious enchanted appearance, purple and gold color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 4. STONEHALL MERCHANTS - Granite Trader
+**File:** `granite_trader.png` (Not yet generated)
+**Ship ID:** `ship_stonehall_trader`
+**Faction:** Stonehall Merchants
+
+**Visual Description:**
+- **Hull Color:** Gray weathered wood, stone-reinforced appearance
+- **Trim/Accents:** Copper and brass fittings, earthy brown accents
+- **Mast Configuration:** Single thick, sturdy mast (dwarven construction)
+- **Sail:** Heavy brown/tan sail, thick material
+- **Hull Shape:** Blocky, wide hull with transom stern, dwarven craftsmanship
+- **Bow:** Reinforced pointed bow with metal ram/prow extending forward (durable AND directional)
+- **Details:** Visible metal hull plating/bands, heavy iron fittings, sturdy construction
+- **Special Features:** Stone/metal reinforcements, cargo hold covers, industrial look
+
+**Design Notes:**
+- Dwarven engineering - sturdy and functional
+- Should look slow but incredibly durable
+- Gray/copper/brown color scheme
+- Blocky, industrial aesthetic
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a dwarven granite trader, stylized maritime illustration with painterly detail, gray weathered wood hull with copper fittings and transom stern at bottom, visible metal hull plating and reinforcement bands, single thick sturdy mast with heavy brown sail, blocky wide hull showing dwarven craftsmanship, reinforced pointed bow at top with metal ram extending upward for clear forward direction, iron fittings, cargo hold covers, sturdy industrial appearance, gray and copper color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 5. SLITHEREEN GUARD - Tide Runner
+**File:** `tide_runner.png` (Not yet generated)
+**Ship ID:** `ship_slithereen_runner`
+**Faction:** Slithereen Guard
+
+**Visual Description:**
+- **Hull Color:** Teal hull with silver scale-like pattern
+- **Trim/Accents:** Silver trim, aqua highlights, scale motifs
+- **Mast Configuration:** Single sleek mast (speed-focused)
+- **Sail:** Teal sail with wave/water patterns, flowing design
+- **Hull Shape:** Sleek, narrow hull with transom stern, aquatic design
+- **Bow:** Sharp, aggressive bow with harpoon launcher mount
+- **Details:** Scale pattern texture on hull, water-themed decorations, naga motifs
+- **Special Features:** Visible harpoon launcher at bow, streamlined for speed
+
+**Design Notes:**
+- Aquatic race design - should feel water-themed
+- Fast and aggressive appearance
+- Teal/silver/aqua color scheme
+- Scale patterns important visual element
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a slithereen tide runner, stylized maritime illustration with painterly detail, teal hull with silver scale pattern texture and transom stern at bottom, silver trim with aqua highlights, single sleek mast with teal sail showing wave patterns, narrow streamlined hull with aquatic naga design, sharp aggressive bow at top with harpoon launcher pointing upward/forward, water-themed decorations, predatory fast appearance, teal and silver color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 6. REVTEL - Coral Skiff
+**File:** `coral_skiff.png` (Not yet generated)
+**Ship ID:** `ship_revtel_skiff`
+**Faction:** Revtel
+
+**Visual Description:**
+- **Hull Color:** Coral pink hull with turquoise accents
+- **Trim/Accents:** Pearl white trim, shell decorations, tropical colors
+- **Mast Configuration:** Single graceful mast (tropical design)
+- **Sail:** Pearl white sail with coral/reef patterns, organic shapes
+- **Hull Shape:** Organic, curved hull with transom stern at bottom, reef-inspired design
+- **Bow:** Gently pointed bow at top with decorative shell figurehead extending upward (clear direction)
+- **Details:** Sharp coral spike protrusions along hull sides (defensive/offensive), shell decorations, pearl inlays
+- **Special Features:** Coral spikes for protection, vibrant colors, welcoming yet protected appearance
+
+**Design Notes:**
+- Peaceful aquatic traders - should feel tropical and friendly
+- Organic, flowing lines (not aggressive)
+- Coral pink/turquoise/pearl white color scheme
+- Most colorful and vibrant of all ships
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a revtel coral skiff, stylized maritime illustration with painterly detail, coral pink hull with turquoise accents and transom stern at bottom, pearl white trim with shell decorations, sharp coral spike protrusions along hull sides for defense, single graceful mast with pearl white sail showing coral reef patterns, organic curved hull with tropical reef-inspired design, gently pointed bow at top with decorative shell figurehead extending upward for clear forward direction, shell ornaments on hull, vibrant welcoming but protected appearance, coral pink and turquoise color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 7. FREE CAPTAINS - Rogue's Sloop
+**File:** `rogues_sloop.png` (Not yet generated)
+**Ship ID:** `ship_pirate_sloop`
+**Faction:** Free Captains (Pirates)
+
+**Visual Description:**
+- **Hull Color:** Black weathered wood, damaged and patched
+- **Trim/Accents:** Blood red accents, worn brass fittings
+- **Mast Configuration:** Single tall mast (speed emphasis)
+- **Sail:** Tattered dark gray/black sail with skull or pirate symbol
+- **Hull Shape:** Narrow, fast hull with transom stern, pirate sloop design
+- **Bow:** Sharp, aggressive bow (ramming capable)
+- **Details:** Visible swivel guns on deck, weathered appearance, rough repairs
+- **Special Features:** Pirate flags, intimidating look, rough construction
+
+**Design Notes:**
+- Pirate vessel - should look fast and dangerous
+- Weathered, rough appearance (not well-maintained)
+- Black/red color scheme
+- Narrowest hull profile (fastest visual)
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a pirate rogue's sloop, stylized maritime illustration with painterly detail, black weathered wood hull with blood red accents and transom stern at bottom, worn brass fittings, single tall mast with tattered dark sail showing skull symbol, narrow fast hull profile, sharp aggressive bow at top pointing upward/forward, visible swivel guns on deck, rough patched repairs, weathered intimidating appearance, pirate flags, black and red color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 8. ROSELEAF TRADERS - Willowbark Trader
+**File:** `willowbark_trader.png` (Not yet generated)
+**Ship ID:** `ship_roseleaf_trader`
+**Faction:** Roseleaf Traders
+
+**Visual Description:**
+- **Hull Color:** Living green wood with natural bark texture
+- **Trim/Accents:** Golden trim, leaf motifs, natural wood tones
+- **Mast Configuration:** Single mast with natural/organic appearance
+- **Sail:** Leaf-green sail with vine patterns and nature symbols
+- **Hull Shape:** Organic, flowing hull with transom stern, elven design
+- **Bow:** Gently pointed bow with tree branch or leaf figurehead extending forward (clear direction)
+- **Details:** Visible plant growth on hull, vine decorations, natural aesthetic
+- **Special Features:** Living wood appearance, harmonious with nature, peaceful look
+
+**Design Notes:**
+- Elven nature traders - should feel organic and alive
+- Growing plants part of ship design
+- Green/gold/natural wood color scheme
+- Flowing, harmonious lines
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of an elven willowbark trader, stylized maritime illustration with painterly detail, living green wood hull with natural bark texture and transom stern at bottom, golden trim with leaf motifs, single organic mast with leaf-green sail showing vine patterns, flowing hull with elven nature design, gently pointed bow at top with tree branch figurehead extending upward for clear forward direction, visible plant growth and vine decorations on hull, harmonious natural appearance, green and gold color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 9. OGLODI RAIDERS - Longboat
+**File:** `oglodi_longboat.png` (Not yet generated)
+**Ship ID:** `ship_oglodi_longboat`
+**Faction:** Oglodi Raiders
+
+**Visual Description:**
+- **Hull Color:** Blood red wood with bone white trim
+- **Trim/Accents:** Iron gray metal fittings, bone decorations, brutal aesthetic
+- **Mast Configuration:** Single mast with warrior design
+- **Sail:** Tattered red sail with axe or skull symbols
+- **Hull Shape:** Angular, aggressive hull with transom stern, longboat design
+- **Bow:** Prominent ram at bow (weapon-like), intimidating figurehead
+- **Details:** Visible weapon racks on deck, shields along sides, war-focused
+- **Special Features:** Ram weapon, brutal decorations, warrior culture aesthetic
+
+**Design Notes:**
+- Warrior raiders - should look aggressive and intimidating
+- Angular, harsh lines (not elegant)
+- Blood red/bone white/iron gray color scheme
+- Most aggressive/brutal appearance
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of an oglodi raider longboat, stylized maritime illustration with painterly detail, blood red wood hull with bone white trim and transom stern at bottom, iron gray metal fittings, single mast with tattered red sail showing axe symbols, angular aggressive hull with warrior longboat design, prominent ram weapon at bow pointing upward at top, visible weapon racks and shields on deck, bone decorations, brutal intimidating appearance, blood red and bone white color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+### 10. KEEN FOLK ENGINEERS - Tinker's Barge
+**File:** `tinkers_barge.png` (Not yet generated)
+**Ship ID:** `ship_keenfolk_barge`
+**Faction:** Keen Folk Engineers
+
+**Visual Description:**
+- **Hull Color:** Brass and copper metal plating over wood
+- **Trim/Accents:** Industrial gray, copper pipes, mechanical parts
+- **Mast Configuration:** Steam funnel/smokestack instead of traditional mast
+- **Sail:** Small auxiliary sail OR none (steam-powered)
+- **Hull Shape:** Boxy, industrial hull with transom stern, mechanical design
+- **Bow:** Reinforced bow with mechanical apparatus
+- **Details:** Visible gears, pipes, steam engine parts, riveted metal plates
+- **Special Features:** Steam smoke from funnel, experimental technology, steampunk aesthetic
+
+**Design Notes:**
+- Gnomish engineers - should look mechanical and experimental
+- Steampunk aesthetic with visible technology
+- Brass/copper/industrial gray color scheme
+- Most unique silhouette (smokestack instead of mast)
+
+**Generation Prompt Template:**
+```
+STRICTLY top-down orthographic view of a keen folk tinker's barge, stylized maritime illustration with painterly detail, brass and copper metal plating over wood hull with transom stern at bottom, industrial gray accents, steam funnel smokestack instead of traditional mast with small auxiliary sail, boxy industrial hull with mechanical design, reinforced bow at top with mechanical apparatus pointing upward/forward, visible gears pipes and riveted metal plates, steam engine visible on deck, experimental steampunk appearance, brass and copper color scheme, realistic textures but clear readable silhouette, NO perspective or angle, transparent background, 1024x1024
+```
+
+---
+
+## Generation Command Format
+
+Use the Imagine tool in the Imagine/ folder:
+
+```powershell
+python Imagine/imagine.py generate "[PROMPT FROM ABOVE]" assets/ships/[FILENAME].png --size 1024x1024 --quality high --background transparent
+```
+
+**Important PowerShell Notes:**
+- Use separate commands (do NOT chain with && or ;)
+- Wrap prompts in quotes to handle spaces
+- Ensure transparent background flag is always included
+
+**Important Prompt Notes:**
+- ALWAYS start prompt with "STRICTLY top-down orthographic view" or "direct bird's eye view"
+- ALWAYS include "NO perspective or angle" to avoid angled/isometric views
+- Emphasize "looking directly down from above" 
+- Include "stylized maritime illustration with painterly detail" for richer visuals
+- Request "realistic textures but clear readable silhouette" to balance detail with clarity
+
+---
+
+## Technical Implementation Notes
+
+### Canvas Rendering
+Ships are rendered using `ctx.drawImage()` with rotation transforms:
+- Base orientation: bow points UP/NORTH (rotation angle 0 = north)
+- Ship rotates around center point based on heading
+- Rotation applied via `ctx.rotate()` before drawing
+- Ships scale with zoom level but maintain aspect ratio
+- Forward direction (bow) naturally points "up" on screen
+
+### Display Sizes
+Ships will be displayed at various sizes:
+- Minimum: 32x32 pixels (zoomed out)
+- Standard: 64x64 pixels (normal zoom)
+- Maximum: 128x128 pixels (zoomed in)
+
+Design must remain recognizable at all scales.
+
+### Faction Color Coding
+Primary faction colors at a glance:
+- **Claddish Navy:** Navy blue, white, gold
+- **Artifact Traders:** Purple, gold, arcane blue
+- **Stonehall Merchants:** Gray, copper, brown
+- **Slithereen Guard:** Teal, silver, aqua
+- **Revtel:** Coral pink, turquoise, pearl white
+- **Free Captains:** Black, blood red
+- **Roseleaf Traders:** Green, gold, natural wood
+- **Oglodi Raiders:** Blood red, bone white, iron gray
+- **Keen Folk Engineers:** Brass, copper, industrial gray
+- **Neutral:** Brown wood, generic (no faction colors)
+
+---
+
+## Future Tier 1-3 Ships
+
+When generating higher tier ships for each faction:
+- Follow tier progression guidelines above
+- Maintain faction color scheme and aesthetic
+- Increase size and detail appropriately
+- Add tier-specific features (more masts, equipment, effects)
+- Keep bow-down orientation and transom stern design
+- Maintain board game token style throughout
+
+---
+
+## Quality Checklist
+
+Before finalizing any ship asset:
+- [ ] Transparent background (no white edges)
+- [ ] Bow points DOWN (bottom of image)
+- [ ] Transom stern visible at top
+- [ ] Clear silhouette at 64x64 display size
+- [ ] Faction colors prominent and recognizable
+- [ ] Chunky board game style (not photorealistic)
+- [ ] 1024x1024 resolution
+- [ ] Distinctive from other faction ships
+- [ ] Tier-appropriate detail level
+- [ ] File named correctly matching ship_data.js
+
+---
+
+## AIDEV-NOTE: Art Guidance Maintenance
+
+When adding new ships:
+1. Follow tier progression system strictly
+2. Maintain faction visual identity
+3. Ensure each ship has unique silhouette
+4. Test visibility at small display sizes
+5. Keep board game aesthetic consistent
+6. Update this guidance file with new specifications
+
+Remember: Simple, bold, and readable beats complex and detailed for game tokens.
