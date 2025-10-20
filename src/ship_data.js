@@ -31,12 +31,12 @@ const STAT_TIERS = {
         highest: 200
     },
     cargo: {
-        lowest: 50,
-        low: 100,
-        mediumLow: 150,
-        medium: 200,
-        mediumHigh: 300,
-        high: 400,
+        lowest: 40,
+        low: 50,
+        mediumLow: 65,
+        medium: 100,
+        mediumHigh: 165,
+        high: 290,
         highest: 500
     },
     cabins: {
@@ -83,7 +83,7 @@ const ShipData = [
         factionTierRequired: 1,
         shipyardLevelRequired: 1,
         speed: STAT_TIERS.speed.mediumLow,              // 120
-        cargoCapacity: STAT_TIERS.cargo.mediumLow,      // 150
+        cargoCapacity: STAT_TIERS.cargo.lowest,         // 40
         cabins: STAT_TIERS.cabins.low,                  // 1
         durability: STAT_TIERS.durability.mediumLow,    // 150
         extraDice: [
@@ -118,9 +118,9 @@ const ShipData = [
         factionTierRequired: 1,
         shipyardLevelRequired: 1,
         speed: STAT_TIERS.speed.lowest,                 // 80
-        cargoCapacity: STAT_TIERS.cargo.high,           // 400
+        cargoCapacity: STAT_TIERS.cargo.mediumHigh,     // 165
         cabins: STAT_TIERS.cabins.low,                  // 1
-        durability: STAT_TIERS.durability.medium,       // 200
+        durability: STAT_TIERS.durability.low,          // 100
         extraDice: [],
         image: "assets/ships/granite_trader.png"
     },
@@ -167,9 +167,9 @@ const ShipData = [
         factionTierRequired: 1,
         shipyardLevelRequired: 1,
         speed: STAT_TIERS.speed.highest,                // 200
-        cargoCapacity: STAT_TIERS.cargo.lowest,         // 50
+        cargoCapacity: STAT_TIERS.cargo.lowest,         // 40
         cabins: STAT_TIERS.cabins.lowest,               // 0
-        durability: STAT_TIERS.durability.low,          // 100
+        durability: STAT_TIERS.durability.lowest,       // 50
         extraDice: [
             { equipment: "Swivel Guns", faces: "3 red, 1 green, 2 blank" }
         ],
@@ -183,10 +183,10 @@ const ShipData = [
         faction: "Roseleaf Traders",
         factionTierRequired: 1,
         shipyardLevelRequired: 1,
-        speed: STAT_TIERS.speed.mediumLow,              // 120
-        cargoCapacity: STAT_TIERS.cargo.mediumLow,      // 150
+        speed: STAT_TIERS.speed.lowest,                 // 80
+        cargoCapacity: STAT_TIERS.cargo.lowest,         // 40
         cabins: STAT_TIERS.cabins.medium,               // 2
-        durability: STAT_TIERS.durability.mediumLow,    // 150
+        durability: STAT_TIERS.durability.low,          // 100
         extraDice: [],
         image: "assets/ships/willowbark_trader.png"
     },
@@ -199,9 +199,9 @@ const ShipData = [
         factionTierRequired: 1,
         shipyardLevelRequired: 1,
         speed: STAT_TIERS.speed.lowest,                 // 80
-        cargoCapacity: STAT_TIERS.cargo.low,            // 100
+        cargoCapacity: STAT_TIERS.cargo.lowest,         // 40
         cabins: STAT_TIERS.cabins.mediumHigh,           // 2
-        durability: STAT_TIERS.durability.medium,       // 200
+        durability: STAT_TIERS.durability.low,          // 100
         extraDice: [
             { equipment: "Ram", faces: "4 red, 2 blank" }
         ],
