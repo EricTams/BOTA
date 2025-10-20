@@ -342,6 +342,7 @@ const UI = {
                 debugOptions.showCoastlines = false;
                 debugOptions.showIslandIds = false;
                 debugOptions.showBounds = false;
+                debugOptions.showWaypoints = false;
                 debugOptions.showDebugInfo = false;
                 
                 if (debugOptions.showClickPosition) {
@@ -369,6 +370,8 @@ const UI = {
         this.addDebugToggle(content, 'Coastlines', debugOptions, 'showCoastlines');
         this.addDebugToggle(content, 'Island IDs', debugOptions, 'showIslandIds');
         this.addDebugToggle(content, 'Bounds', debugOptions, 'showBounds');
+        this.addDebugToggle(content, 'Waypoints', debugOptions, 'showWaypoints');
+        this.addDebugToggle(content, 'Active Path', debugOptions, 'showActivePath');
         this.addDebugToggle(content, 'Info', debugOptions, 'showDebugInfo');
         this.addDebugToggle(content, 'Click Position', debugOptions, 'showClickPosition', (isActive) => {
             // Show or hide click position window
@@ -409,13 +412,18 @@ const UI = {
         const rows = content.querySelectorAll('.debug-row');
         rows.forEach(row => {
             const btn = row.querySelector('.debug-toggle');
-            const label = row.querySelector('span').textContent;
+            const labelElement = row.querySelector('span');
+            if (!labelElement) return; // Skip rows without a label span
+            
+            const label = labelElement.textContent;
             
             // Map label to debug option key
             const keyMap = {
                 'Coastlines': 'showCoastlines',
                 'Island IDs': 'showIslandIds',
                 'Bounds': 'showBounds',
+                'Waypoints': 'showWaypoints',
+                'Active Path': 'showActivePath',
                 'Info': 'showDebugInfo',
                 'Click Position': 'showClickPosition',
                 'Port Edit Mode': 'portEditMode'

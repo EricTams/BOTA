@@ -17,8 +17,13 @@ const MusicManager = {
     ambientEnabled: true,
     continuousAmbient: [],      // Tracks that loop continuously
     occasionalAmbient: [],      // Tracks that trigger randomly
-    activeAmbientSounds: {},    // Currently playing ambient sounds
+    activeAmbientSounds: {},    // Currently playing continuous ambient sounds
+    activeOccasionalSounds: [], // Currently playing occasional ambient sounds
     occasionalCooldowns: {},    // Cooldown tracking for occasional sounds
+    
+    // Focus tracking for pause/resume
+    wasMusicPlayingBeforeBlur: false,
+    wasAmbientPlayingBeforeBlur: false,
 
     // AIDEV-NOTE: Initialize music manager
     // Set up available tracks and ambient sounds
@@ -26,6 +31,89 @@ const MusicManager = {
         this.tracks = trackList;
         this.continuousAmbient = continuousAmbient || [];
         this.occasionalAmbient = occasionalAmbient || [];
+        
+        // Set up window focus/blur listeners to pause/resume music
+        this.setupFocusListeners();
+    },
+    
+    // AIDEV-NOTE: Set up focus/blur listeners for pause/resume
+    // Pauses music when window loses focus, resumes when regained
+    setupFocusListeners() {
+        window.addEventListener('blur', () => {
+            this.handleBlur();
+        });
+        
+        window.addEventListener('focus', () => {
+            this.handleFocus();
+        });
+    },
+    
+    // AIDEV-NOTE: Handle window blur (focus lost)
+    // Pause music and ambient sounds
+    handleBlur() {
+        // Track if music was playing
+        this.wasMusicPlayingBeforeBlur = this.isPlaying();
+        
+        // Track if ambient was active
+        this.wasAmbientPlayingBeforeBlur = Object.keys(this.activeAmbientSounds).length > 0 || 
+                                           this.activeOccasionalSounds.length > 0;
+        
+        // Pause music
+        if (this.currentAudio && !this.currentAudio.paused) {
+            this.currentAudio.pause();
+        }
+        
+        // Pause all continuous ambient sounds
+        Object.values(this.activeAmbientSounds).forEach(audio => {
+            if (audio && !audio.paused) {
+                audio.pause();
+            }
+        });
+        
+        // Pause all occasional ambient sounds
+        this.activeOccasionalSounds.forEach(audio => {
+            if (audio && !audio.paused) {
+                audio.pause();
+            }
+        });
+    },
+    
+    // AIDEV-NOTE: Handle window focus (focus regained)
+    // Resume music and ambient sounds if they were playing before blur
+    handleFocus() {
+        // Resume music if it was playing
+        if (this.wasMusicPlayingBeforeBlur && this.currentAudio) {
+            this.currentAudio.play().catch(error => {
+                console.error('Failed to resume music:', error);
+            });
+        }
+        
+        // Resume ambient sounds if they were active
+        if (this.wasAmbientPlayingBeforeBlur) {
+            // Resume continuous ambient sounds
+            Object.values(this.activeAmbientSounds).forEach(audio => {
+                if (audio) {
+                    audio.play().catch(error => {
+                        console.error('Failed to resume ambient sound:', error);
+                    });
+                }
+            });
+            
+            // Resume occasional ambient sounds (if they haven't finished)
+            this.activeOccasionalSounds = this.activeOccasionalSounds.filter(audio => {
+                if (audio && !audio.ended) {
+                    audio.play().catch(error => {
+                        console.error('Failed to resume occasional ambient:', error);
+                    });
+                    return true; // Keep in array
+                }
+                return false; // Remove from array if ended
+            });
+        }
+        
+        // Reset flags
+        this.wasMusicPlayingBeforeBlur = false;
+        this.wasAmbientPlayingBeforeBlur = false;
     },
 
     // AIDEV-NOTE: Start playing background music
@@ -276,6 +364,17 @@ const MusicManager = {
         
         audio.loop = false;
         
+        // Track this occasional sound so we can pause/resume it
+        this.activeOccasionalSounds.push(audio);
+        
+        // Remove from tracking when it ends
+        audio.addEventListener('ended', () => {
+            const index = this.activeOccasionalSounds.indexOf(audio);
+            if (index > -1) {
+                this.activeOccasionalSounds.splice(index, 1);
+            }
+        });
+        
         // Start playing
         audio.play().catch(error => {
             console.error(`Failed to play occasional ambient ${soundName}:`, error);
@@ -301,7 +400,16 @@ const MusicManager = {
             }
         });
         
+        // Stop all occasional ambient sounds
+        this.activeOccasionalSounds.forEach(audio => {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+        
         this.activeAmbientSounds = {};
+        this.activeOccasionalSounds = [];
         this.occasionalCooldowns = {};
     },
 

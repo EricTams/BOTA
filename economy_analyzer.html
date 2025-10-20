@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOTA Economy Analyzer</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #00ffff;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 5px;
+        }
+        .section {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        th {
+            background: #333;
+            color: #00ffff;
+            position: sticky;
+            top: 0;
+        }
+        .balanced { color: #00ff00; }
+        .oversupply { color: #ff4444; }
+        .undersupply { color: #ff8800; }
+        .extreme { color: #ff00ff; }
+        .neutral { color: #ffff00; }
+        .tier-header {
+            background: #444;
+            font-weight: bold;
+            color: #ffff00;
+        }
+        #output {
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        button {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #00aaaa;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚙️ BOTA Economy Analyzer</h1>
+    <p>Analyzing global supply and demand across all ports...</p>
+    
+    <button onclick="runAnalysis()">Run Full Analysis</button>
+    
+    <div id="output"></div>
+
+    <!-- Load game files -->
+    <script src="src/economy.js"></script>
+    <script src="src/port_data.js"></script>
+    
+    <script>
+        function runAnalysis() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<div class="section">Running analysis...</div>';
+            
+            setTimeout(() => {
+                let html = '';
+                
+                // Initialize economy
+                const ports = PortData.map(port => ({
+                    ...port,
+                    flipped: port.flipped || false
+                }));
+                
+                Economy.initializeEconomy(ports);
+                
+                html += `<div class="section">`;
+                html += `<h2>📊 Economy Initialized</h2>`;
+                html += `<p>Analyzed ${ports.length} ports across ${Object.keys(FactionPreferences).length} factions</p>`;
+                html += `<p><strong>Color Legend (Trading Game Economy):</strong></p>`;
+                html += `<p><span class="oversupply">🔴 RED = OVERSUPPLY (Prod ≥ Cons) - Goods pile up, BORING!</span></p>`;
+                html += `<p><span class="undersupply">🟠 ORANGE = MILD SHORTAGE (Cons 1x-1.5x Prod) - Barely scarce</span></p>`;
+                html += `<p><span class="balanced">🟢 GREEN = IDEAL SCARCITY (Cons 1.5x-3x Prod) - Perfect trading!</span></p>`;
+                html += `<p><span style="color: #ff00ff;">🟣 PURPLE = EXTREME SHORTAGE (Cons > 3x Prod) - Too scarce!</span></p>`;
+                html += `<p><strong>Target: Consumption should be ~2x Production (GREEN zone)!</strong></p>`;
+                html += `</div>`;
+                
+                // Aggregate stats
+                const globalStats = {};
+                for (const goodId in GoodsData) {
+                    globalStats[goodId] = {
+                        tier: GoodsData[goodId].tier,
+                        basePrice: GoodsData[goodId].basePrice,
+                        totalProduction: 0,
+                        totalCitizenConsumption: 0,
+                        totalIndustrialConsumption: 0,
+                        producingPorts: 0,
+                        consumingPorts: 0
+                    };
+                }
+                
+                for (const port of ports) {
+                    if (port.buildings) {
+                        for (const building of port.buildings) {
+                            const goodId = building.goodId;
+                            globalStats[goodId].totalProduction += building.productionRate;
+                            globalStats[goodId].producingPorts++;
+                        }
+                    }
+                    
+                    if (port.consumption) {
+                        const industrial = Economy.calculateIndustrialConsumption(port);
+                        for (const goodId in port.consumption) {
+                            const amount = port.consumption[goodId];
+                            const industrialAmount = industrial[goodId] || 0;
+                            const citizenAmount = amount - industrialAmount;
+                            
+                            globalStats[goodId].totalCitizenConsumption += citizenAmount;
+                            globalStats[goodId].totalIndustrialConsumption += industrialAmount;
+                            globalStats[goodId].consumingPorts++;
+                        }
+                    }
+                }
+                
+                // Display by tier
+                html += `<div class="section">`;
+                html += `<h2>🌍 Global Supply & Demand Analysis (Weekly)</h2>`;
+                html += `<p><em>Household Target: Ports want to buy 4 weeks of consumption for home storage</em></p>`;
+                
+                for (let tier = 1; tier <= 6; tier++) {
+                    html += `<h3>Tier ${tier} Goods</h3>`;
+                    html += `<table>`;
+                    html += `<tr><th>Good</th><th>Production</th><th>Citizen Use</th><th>Industry Use</th><th>Total Use</th><th>Home Target</th><th>Balance</th><th>Ports</th></tr>`;
+                    
+                    const tierGoods = Object.keys(globalStats).filter(g => globalStats[g].tier === tier);
+                    let tierProduction = 0;
+                    let tierConsumption = 0;
+                    
+                    tierGoods.sort((a, b) => a.localeCompare(b));
+                    
+                    for (const goodId of tierGoods) {
+                        const stats = globalStats[goodId];
+                        const totalConsumption = stats.totalCitizenConsumption + stats.totalIndustrialConsumption;
+                        const balance = stats.totalProduction - totalConsumption;
+                        
+                        // Calculate household target (4 weeks of consumption per consuming port)
+                        const householdTarget = totalConsumption * 4; // 4 weeks
+                        const weeksOfProduction = householdTarget / Math.max(stats.totalProduction, 0.1);
+                        
+                        tierProduction += stats.totalProduction;
+                        tierConsumption += totalConsumption;
+                        
+                        // Classify balance for TRADING GAME: scarcity is good!
+                        let balanceClass;
+                        const consumptionRatio = totalConsumption / Math.max(stats.totalProduction, 0.1);
+                        
+                        if (balance >= 0) {
+                            balanceClass = 'oversupply'; // RED: Production >= consumption
+                        } else if (consumptionRatio < 1.5) {
+                            balanceClass = 'undersupply'; // ORANGE: Mild shortage (1.0x-1.5x)
+                        } else if (consumptionRatio <= 3.0) {
+                            balanceClass = 'balanced'; // GREEN: Ideal scarcity (1.5x-3x)
+                        } else {
+                            balanceClass = 'extreme'; // PURPLE: Extreme shortage (>3x)
+                        }
+                        const balanceStr = balance >= 0 ? `+${balance.toFixed(1)}` : balance.toFixed(1);
+                        
+                        html += `<tr>`;
+                        html += `<td>${goodId}</td>`;
+                        html += `<td>${stats.totalProduction.toFixed(1)}</td>`;
+                        html += `<td>${stats.totalCitizenConsumption.toFixed(1)}</td>`;
+                        html += `<td>${stats.totalIndustrialConsumption.toFixed(1)}</td>`;
+                        html += `<td>${totalConsumption.toFixed(1)}</td>`;
+                        html += `<td style="color: #ffaa00;">${householdTarget.toFixed(1)} (${weeksOfProduction.toFixed(1)}w)</td>`;
+                        html += `<td class="${balanceClass}">${balanceStr}</td>`;
+                        html += `<td>${stats.producingPorts} / ${stats.consumingPorts}</td>`;
+                        html += `</tr>`;
+                    }
+                    
+                    const tierBalance = tierProduction - tierConsumption;
+                    // Classify tier balance for trading game
+                    let tierBalanceClass;
+                    const tierConsumptionRatio = tierConsumption / Math.max(tierProduction, 0.1);
+                    
+                    if (tierBalance >= 0) {
+                        tierBalanceClass = 'oversupply';
+                    } else if (tierConsumptionRatio < 1.5) {
+                        tierBalanceClass = 'undersupply';
+                    } else if (tierConsumptionRatio <= 3.0) {
+                        tierBalanceClass = 'balanced';
+                    } else {
+                        tierBalanceClass = 'extreme';
+                    }
+                    const tierHouseholdTarget = tierConsumption * 4;
+                    const tierWeeksOfProduction = tierHouseholdTarget / Math.max(tierProduction, 0.1);
+                    
+                    html += `<tr class="tier-header">`;
+                    html += `<td><strong>TIER ${tier} TOTAL</strong></td>`;
+                    html += `<td><strong>${tierProduction.toFixed(1)}</strong></td>`;
+                    html += `<td></td>`;
+                    html += `<td></td>`;
+                    html += `<td><strong>${tierConsumption.toFixed(1)}</strong></td>`;
+                    html += `<td style="color: #ffaa00;"><strong>${tierHouseholdTarget.toFixed(1)} (${tierWeeksOfProduction.toFixed(1)}w)</strong></td>`;
+                    html += `<td class="${tierBalanceClass}"><strong>${tierBalance >= 0 ? '+' : ''}${tierBalance.toFixed(1)}</strong></td>`;
+                    html += `<td></td>`;
+                    html += `</tr>`;
+                    html += `</table>`;
+                }
+                html += `</div>`;
+                
+                // Overall summary
+                let totalProduction = 0;
+                let totalCitizenConsumption = 0;
+                let totalIndustrialConsumption = 0;
+                let totalProductionValue = 0;
+                let totalConsumptionValue = 0;
+                
+                for (const goodId in globalStats) {
+                    const stats = globalStats[goodId];
+                    const totalConsumption = stats.totalCitizenConsumption + stats.totalIndustrialConsumption;
+                    totalProduction += stats.totalProduction;
+                    totalCitizenConsumption += stats.totalCitizenConsumption;
+                    totalIndustrialConsumption += stats.totalIndustrialConsumption;
+                    totalProductionValue += stats.totalProduction * stats.basePrice;
+                    totalConsumptionValue += totalConsumption * stats.basePrice;
+                }
+                
+                const totalConsumption = totalCitizenConsumption + totalIndustrialConsumption;
+                const totalBalance = totalProduction - totalConsumption;
+                const surplusPercent = (totalBalance / totalProduction * 100).toFixed(1);
+                const totalHouseholdTarget = totalConsumption * 4; // 4 weeks
+                const weeksToFillHouseholds = totalHouseholdTarget / Math.max(totalProduction, 0.1);
+                
+                html += `<div class="section">`;
+                html += `<h2>📈 Overall Economy Summary</h2>`;
+                html += `<table>`;
+                html += `<tr><td><strong>Total Production:</strong></td><td class="surplus">${totalProduction.toFixed(1)} units/week</td></tr>`;
+                html += `<tr><td><strong>Citizen Consumption:</strong></td><td>${totalCitizenConsumption.toFixed(1)} units/week (${(totalCitizenConsumption/totalConsumption*100).toFixed(1)}%)</td></tr>`;
+                html += `<tr><td><strong>Industrial Consumption:</strong></td><td>${totalIndustrialConsumption.toFixed(1)} units/week (${(totalIndustrialConsumption/totalConsumption*100).toFixed(1)}%)</td></tr>`;
+                html += `<tr><td><strong>Total Consumption:</strong></td><td class="neutral">${totalConsumption.toFixed(1)} units/week</td></tr>`;
+                html += `<tr><td><strong>Household Demand (4 weeks):</strong></td><td style="color: #ffaa00;"><strong>${totalHouseholdTarget.toFixed(1)} units (${weeksToFillHouseholds.toFixed(1)} weeks to fill)</strong></td></tr>`;
+                html += `<tr><td><strong>Net Balance:</strong></td><td class="surplus"><strong>${totalBalance >= 0 ? '+' : ''}${totalBalance.toFixed(1)} units/week (${surplusPercent}% surplus)</strong></td></tr>`;
+                html += `</table>`;
+                html += `</div>`;
+                
+                html += `<div class="section">`;
+                html += `<h2>💰 Economic Value Analysis</h2>`;
+                html += `<table>`;
+                html += `<tr><td><strong>Total Production Value:</strong></td><td class="surplus">${totalProductionValue.toFixed(0)}g/week</td></tr>`;
+                html += `<tr><td><strong>Total Consumption Value:</strong></td><td class="neutral">${totalConsumptionValue.toFixed(0)}g/week</td></tr>`;
+                html += `<tr><td><strong>Net Value Creation:</strong></td><td class="surplus"><strong>${(totalProductionValue - totalConsumptionValue).toFixed(0)}g/week</strong></td></tr>`;
+                html += `</table>`;
+                html += `</div>`;
+                
+                // Faction analysis
+                const factionStats = {};
+                for (const faction in FactionPreferences) {
+                    factionStats[faction] = {
+                        ports: 0,
+                        tier1: 0,
+                        tier2: 0,
+                        tier3: 0,
+                        production: 0,
+                        consumption: 0
+                    };
+                }
+                
+                for (const port of ports) {
+                    const faction = port.faction;
+                    factionStats[faction].ports++;
+                    if (port.tier === 1) factionStats[faction].tier1++;
+                    if (port.tier === 2) factionStats[faction].tier2++;
+                    if (port.tier === 3) factionStats[faction].tier3++;
+                    
+                    if (port.buildings) {
+                        for (const building of port.buildings) {
+                            factionStats[faction].production += building.productionRate;
+                        }
+                    }
+                    
+                    if (port.consumption) {
+                        for (const goodId in port.consumption) {
+                            factionStats[faction].consumption += port.consumption[goodId];
+                        }
+                    }
+                }
+                
+                html += `<div class="section">`;
+                html += `<h2>⚔️ Faction Production Summary</h2>`;
+                html += `<table>`;
+                html += `<tr><th>Faction</th><th>Ports</th><th>T1/T2/T3</th><th>Production</th><th>Consumption</th><th>Balance</th></tr>`;
+                
+                for (const faction in factionStats) {
+                    const stats = factionStats[faction];
+                    const balance = stats.production - stats.consumption;
+                    // Classify faction balance for trading game
+                    let balanceClass;
+                    const consumptionRatio = stats.consumption / Math.max(stats.production, 0.1);
+                    
+                    if (balance >= 0) {
+                        balanceClass = 'oversupply';
+                    } else if (consumptionRatio < 1.5) {
+                        balanceClass = 'undersupply';
+                    } else if (consumptionRatio <= 3.0) {
+                        balanceClass = 'balanced';
+                    } else {
+                        balanceClass = 'extreme';
+                    }
+                    
+                    html += `<tr>`;
+                    html += `<td>${faction}</td>`;
+                    html += `<td>${stats.ports}</td>`;
+                    html += `<td>${stats.tier1}/${stats.tier2}/${stats.tier3}</td>`;
+                    html += `<td>${stats.production.toFixed(1)}</td>`;
+                    html += `<td>${stats.consumption.toFixed(1)}</td>`;
+                    html += `<td class="${balanceClass}">${balance >= 0 ? '+' : ''}${balance.toFixed(1)}</td>`;
+                    html += `</tr>`;
+                }
+                html += `</table>`;
+                html += `</div>`;
+                
+                html += `<div class="section">`;
+                html += `<h2>✅ Analysis Complete!</h2>`;
+                html += `<p>All ${ports.length} ports analyzed with new 0.5x consumption ratio and production multipliers.</p>`;
+                html += `</div>`;
+                
+                output.innerHTML = html;
+            }, 100);
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', runAnalysis);
+    </script>
+</body>
+</html>
+

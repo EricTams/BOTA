@@ -18,33 +18,17 @@ const Collision = {
                 throw new Error('COLLISION_DATA not found - missing collision_data.js?');
             }
             
+            // AIDEV-NOTE: Collision data is already in world space (0,0 at center)
+            // No coordinate conversion needed - Python script outputs world space directly
             this.data = COLLISION_DATA;
             
-            // AIDEV-NOTE: Convert collision data from image space to world space
-            // Image space: 0,0 at top-left
-            // World space: 0,0 at center of map
-            const offsetX = this.data.mapWidth / 2;
-            const offsetY = this.data.mapHeight / 2;
-            
-            console.log(`Converting collision data from image space to world space (offset: ${offsetX}, ${offsetY})`);
-            
-            // Convert all island polygons and bounds
-            for (const island of this.data.islands) {
-                // Convert polygon coordinates
-                for (let i = 0; i < island.polygon.length; i++) {
-                    island.polygon[i][0] -= offsetX;
-                    island.polygon[i][1] -= offsetY;
-                }
-                
-                // Convert bounds
-                island.bounds.minX -= offsetX;
-                island.bounds.minY -= offsetY;
-                island.bounds.maxX -= offsetX;
-                island.bounds.maxY -= offsetY;
-            }
-            
             this.loaded = true;
-            console.log(`Collision data loaded: ${this.data.islands.length} islands (converted to world space)`);
+            console.log(`Loaded ${this.data.islands.length} islands (world space coordinates)`);
+            
+            // Log waypoint count if available
+            if (this.data.waypoints) {
+                console.log(`Loaded ${this.data.waypoints.length} waypoints for pathfinding`);
+            }
         } catch (error) {
             console.error('Failed to load collision data:', error);
             this.loaded = false;
@@ -165,6 +149,35 @@ const Collision = {
             x: (island.bounds.minX + island.bounds.maxX) / 2,
             y: (island.bounds.minY + island.bounds.maxY) / 2
         };
+    },
+
+    // AIDEV-NOTE: Find nearest water position to a given point
+    // Searches in expanding circles to find closest water
+    // More accurate than pushOutOfIsland for finding water near ports
+    findNearestWater(x, y, maxDistance = 100) {
+        // Quick check - already on water?
+        if (this.isOnWater(x, y)) {
+            return { x, y, found: true, distance: 0 };
+        }
+        
+        // Search in expanding circles
+        for (let radius = 5; radius <= maxDistance; radius += 5) {
+            // Sample points around circle (more samples for larger radius)
+            const numSamples = Math.max(12, Math.floor(radius * 0.5));
+            
+            for (let i = 0; i < numSamples; i++) {
+                const angle = (i / numSamples) * Math.PI * 2;
+                const testX = x + Math.cos(angle) * radius;
+                const testY = y + Math.sin(angle) * radius;
+                
+                if (this.isOnWater(testX, testY)) {
+                    return { x: testX, y: testY, found: true, distance: radius };
+                }
+            }
+        }
+        
+        // Couldn't find water within max distance
+        return { x, y, found: false, distance: 0 };
     },
 
     // AIDEV-NOTE: Push a point out of an island to the nearest water
@@ -365,6 +378,23 @@ const Collision = {
         const closestY = y1 + t * dy;
         
         return Math.hypot(px - closestX, py - closestY);
+    },
+
+    // AIDEV-NOTE: Get all waypoints from collision data
+    // Returns waypoints array or empty array if not available
+    getAllWaypoints() {
+        if (!this.loaded || !this.data.waypoints) {
+            return [];
+        }
+        return this.data.waypoints;
+    },
+
+    // AIDEV-NOTE: Get waypoint by ID
+    getWaypoint(id) {
+        if (!this.loaded || !this.data.waypoints) {
+            return null;
+        }
+        return this.data.waypoints.find(wp => wp.id === id);
     }
 };
 

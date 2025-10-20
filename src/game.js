@@ -29,10 +29,15 @@ const Game = {
     
     // Player boat
     playerBoat: null,
-    boatMightBeStuck: false, // Flag to enable/disable stuck checking
     
     // Target marker (green X)
     targetMarker: null,
+    
+    // Pathfinding variables
+    waypointPath: null, // Array of waypoint IDs from A* (original path)
+    waypointPathIndex: 0, // Current index in original waypoint path
+    finalDestination: null, // Final destination after waypoint path
+    lastPathSmoothTime: 0, // Time of last path smoothing check
     
     // Ports
     ports: [],
@@ -48,7 +53,9 @@ const Game = {
         showBounds: false,
         showDebugInfo: false,
         showClickPosition: false,
-        portEditMode: false
+        portEditMode: false,
+        showWaypoints: true,  // Show waypoint navigation graph by default
+        showActivePath: true  // Show active pathfinding route by default
     },
     
     // Port editing state
@@ -229,8 +236,8 @@ const Game = {
                 // AIDEV-NOTE: Only update boat movement and time if no UI overlay is active
                 // This pauses gameplay when viewing cargo, in ports, or other UI screens
                 if (!UI.hasActiveOverlay()) {
-                    // AIDEV-NOTE: Check if boat is stuck on land and push out if needed
-                    this.checkAndFixBoatStuck();
+                    // AIDEV-NOTE: Check if boat is on land every frame and push towards nearest waypoint
+                    this.checkAndPushBoatToWater();
                     
                     this.updateBoatMovement(deltaTime);
                     this.updateBoatTrail();
@@ -308,12 +315,12 @@ const Game = {
             case 'playing':
                 // Check if Shift key is pressed for port info display
                 const shiftPressed = Input.isKeyPressed('Shift');
-                Renderer.renderGameWorld(this.camera.x, this.camera.y, this.camera.zoom, this.debug, this.playerBoat, this.targetMarker, this.ports, this.gameTime, this.hoveredPort, this.draggedPort, this.selectedCaptain, this.player, shiftPressed);
+                Renderer.renderGameWorld(this.camera.x, this.camera.y, this.camera.zoom, this.debug, this.playerBoat, this.targetMarker, this.ports, this.gameTime, this.hoveredPort, this.draggedPort, this.selectedCaptain, this.player, shiftPressed, this.waypointPath, this.waypointPathIndex, this.finalDestination);
                 break;
             case 'paused':
                 // TODO: Render game world + pause overlay
                 const shiftPressedPaused = Input.isKeyPressed('Shift');
-                Renderer.renderGameWorld(this.camera.x, this.camera.y, this.camera.zoom, this.debug, this.playerBoat, this.targetMarker, this.ports, this.gameTime, this.hoveredPort, this.draggedPort, this.selectedCaptain, this.player, shiftPressedPaused);
+                Renderer.renderGameWorld(this.camera.x, this.camera.y, this.camera.zoom, this.debug, this.playerBoat, this.targetMarker, this.ports, this.gameTime, this.hoveredPort, this.draggedPort, this.selectedCaptain, this.player, shiftPressedPaused, this.waypointPath, this.waypointPathIndex, this.finalDestination);
                 break;
         }
     },
@@ -434,7 +441,7 @@ const Game = {
     },
 
     // AIDEV-NOTE: Handle click input for boat control
-    // Converts screen click to world position, rotates boat, casts ray, places marker
+    // Uses pathfinding to navigate around islands using waypoint graph
     handleClickInput() {
         if (!Input.mouse.justClicked) return;
         if (!this.playerBoat) return;
@@ -464,24 +471,35 @@ const Game = {
         // Check if player clicked on a port
         const clickedPort = this.getPortAtPosition(worldPos.x, worldPos.y, 30);
         if (clickedPort) {
-            // Navigate to the center of the port
-            // Port entry will happen automatically when boat arrives
-            worldPos.x = clickedPort.x;
-            worldPos.y = clickedPort.y;
+            // Navigate to nearest water position near the port
+            // Search in a circle around port to find closest water
+            const waterPos = Collision.findNearestWater(clickedPort.x, clickedPort.y, 80);
             
-            console.log('Navigating to port:', clickedPort.name);
+            if (waterPos.found) {
+                worldPos.x = waterPos.x;
+                worldPos.y = waterPos.y;
+                if (waterPos.distance > 0) {
+                    console.log(`Navigating to port ${clickedPort.name} via water ${Math.round(waterPos.distance)}px away`);
+                } else {
+                    console.log('Navigating to port:', clickedPort.name);
+                }
+            } else {
+                console.warn('Could not find water near port:', clickedPort.name);
+                return;
+            }
+            
             // Continue with normal navigation logic below
         }
         
-        // Always cast ray from boat to click to check for island collision
-        const collision = this.raycastToIsland(this.playerBoat.x, this.playerBoat.y, worldPos.x, worldPos.y);
-        
-        // Determine final target position (collision point or click position)
-        let targetPos = collision || worldPos;
+        // Check if click target is on land (don't navigate there)
+        if (Collision.isOnLand(worldPos.x, worldPos.y) !== null) {
+            console.log('Cannot navigate to land position:', worldPos.x, worldPos.y);
+            return;
+        }
         
         // Check distance from boat to target position
-        const dx = targetPos.x - this.playerBoat.x;
-        const dy = targetPos.y - this.playerBoat.y;
+        const dx = worldPos.x - this.playerBoat.x;
+        const dy = worldPos.y - this.playerBoat.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
         // If X would appear close to boat, snap it to boat's exact position
@@ -491,23 +509,87 @@ const Game = {
             return;
         }
         
-        // Calculate angle from boat to target position
-        const angle = Math.atan2(dy, dx);
+        // Check if there's direct line of sight (no islands blocking)
+        const hasLineOfSight = Pathfinding.hasLineOfSight(
+            this.playerBoat.x, this.playerBoat.y,
+            worldPos.x, worldPos.y,
+            Collision
+        );
         
-        // Rotate boat to face target position
-        // Add Math.PI/2 to adjust for sprite orientation (bow points up in sprite, Canvas 0 = right)
-        this.playerBoat.rotation = angle + Math.PI / 2;
-        
-        // Set the marker at the target position
-        this.targetMarker = { x: targetPos.x, y: targetPos.y };
-        
-        // Play boat start sound (only when actually moving)
-        Audio.play('boat_start');
-        
-        if (collision) {
-            console.log('Ray hit island, target set at collision point:', targetPos.x, targetPos.y);
+        if (hasLineOfSight) {
+            // Direct path available - no pathfinding needed
+            console.log('Direct path to target:', worldPos.x, worldPos.y);
+            this.targetMarker = { x: worldPos.x, y: worldPos.y };
+            this.waypointPath = null; // Clear any existing waypoint path
+            
+            // Rotate boat to face target
+            const angle = Math.atan2(dy, dx);
+            this.playerBoat.rotation = angle + Math.PI / 2;
+            
+            Audio.play('boat_start');
         } else {
-            console.log('Target set at click position:', targetPos.x, targetPos.y);
+            // Island blocking - use pathfinding
+            console.log('Island blocking, using pathfinding...');
+            const path = Pathfinding.findPath(
+                this.playerBoat.x, this.playerBoat.y,
+                worldPos.x, worldPos.y,
+                Collision
+            );
+            
+            if (!path) {
+                console.warn('No path found to target position');
+                return;
+            }
+            
+            console.log('Path found with', path.length, 'waypoints');
+            
+            // Store waypoint path and final destination
+            this.waypointPath = path;
+            this.waypointPathIndex = 0;
+            this.finalDestination = { x: worldPos.x, y: worldPos.y };
+            this.lastPathSmoothTime = performance.now() / 1000; // Initialize smooth timer
+            
+            // AIDEV-NOTE: Immediately do lookahead to find furthest visible point
+            // Don't just go to first waypoint - check if we can skip ahead
+            const furthest = this.findFurthestVisibleInPath();
+            
+            if (furthest) {
+                if (furthest.type === 'final') {
+                    // Can see destination directly (shouldn't happen since we just ran pathfinding, but handle it)
+                    console.log('Initial lookahead: Can see destination directly');
+                    this.waypointPath = null;
+                    this.targetMarker = this.finalDestination;
+                } else if (furthest.type === 'interpolated') {
+                    // Can see a point between waypoints
+                    const skipped = furthest.index - this.waypointPathIndex;
+                    console.log(`Initial lookahead: Cutting corner to ${Math.round(furthest.t * 100)}% (skipping ${skipped} waypoint(s))`);
+                    this.waypointPathIndex = furthest.index;
+                    this.targetMarker = { x: furthest.position.x, y: furthest.position.y };
+                } else {
+                    // Going to a waypoint
+                    if (furthest.index > 0) {
+                        console.log(`Initial lookahead: Skipping ${furthest.index} waypoint(s), heading to waypoint #${furthest.index + 1}`);
+                    }
+                    this.waypointPathIndex = furthest.index;
+                    this.targetMarker = { x: furthest.position.x, y: furthest.position.y };
+                }
+            } else {
+                // Fallback to first waypoint if lookahead fails
+                const firstWP = Collision.getWaypoint(path[0]);
+                if (!firstWP) {
+                    console.error('Failed to get first waypoint');
+                    return;
+                }
+                this.targetMarker = { x: firstWP.x, y: firstWP.y };
+            }
+            
+            // Rotate boat to face target
+            const targetDx = this.targetMarker.x - this.playerBoat.x;
+            const targetDy = this.targetMarker.y - this.playerBoat.y;
+            const angle = Math.atan2(targetDy, targetDx);
+            this.playerBoat.rotation = angle + Math.PI / 2;
+            
+            Audio.play('boat_start');
         }
     },
 
@@ -551,64 +633,251 @@ const Game = {
         }
     },
 
-    // AIDEV-NOTE: Check if boat is stuck on land and push it out
-    // Only runs when boatMightBeStuck flag is true for performance
-    // Disables itself after one clean frame
-    checkAndFixBoatStuck() {
-        if (!this.boatMightBeStuck) return; // Skip check if flag is off
+    // AIDEV-NOTE: Check if boat is on land and push towards nearest waypoint
+    // Only runs when NOT actively pathfinding
+    // If we're following a path, we trust the pathfinding to keep us in water
+    checkAndPushBoatToWater() {
         if (!this.playerBoat || !Collision || !Collision.loaded) return;
         
-        const BOAT_LAND_PADDING = 5; // Small padding for stuck check
-        const isStuck = Collision.isOnLand(this.playerBoat.x, this.playerBoat.y, BOAT_LAND_PADDING);
+        // Skip if we're actively following a path - trust the pathfinding
+        if (this.waypointPath && this.waypointPathIndex < this.waypointPath.length) {
+            return;
+        }
         
-        if (isStuck) {
-            console.warn('Boat is stuck on land, pushing out...');
-            
-            const result = Collision.pushOutOfIsland(this.playerBoat.x, this.playerBoat.y, 150);
-            if (result.pushed) {
-                this.playerBoat.x = result.x;
-                this.playerBoat.y = result.y;
-                console.log('Pushed stuck boat to water:', result.x, result.y, 'distance:', result.distance, 'from island:', result.islandId);
-                
-                // Cancel any movement to prevent boat from trying to move back onto land
-                if (this.targetMarker) {
-                    this.targetMarker = null;
-                    console.log('Cancelled movement due to being stuck on land');
-                }
-                // Keep checking next frame
-            } else {
-                console.error('Failed to push stuck boat out of island:', result.islandId);
-                // Keep checking next frame
+        // Check if boat is on land
+        const isOnLand = Collision.isOnLand(this.playerBoat.x, this.playerBoat.y) !== null;
+        
+        if (isOnLand) {
+            // Find nearest waypoint
+            const waypoints = Collision.getAllWaypoints();
+            if (!waypoints || waypoints.length === 0) {
+                console.error('Boat on land but no waypoints available');
+                return;
             }
-        } else {
-            // Boat is safe, disable checking
-            this.boatMightBeStuck = false;
-            console.log('Boat is safely in water, disabled stuck checking');
+            
+            let targetWP = null;
+            let nearestDist = Infinity;
+            for (const wp of waypoints) {
+                const dist = Math.hypot(wp.x - this.playerBoat.x, wp.y - this.playerBoat.y);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    targetWP = wp;
+                }
+            }
+            
+            if (targetWP) {
+                // Push boat towards nearest waypoint
+                const dx = targetWP.x - this.playerBoat.x;
+                const dy = targetWP.y - this.playerBoat.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > 0) {
+                    // Move 5 pixels towards waypoint
+                    const pushDistance = 5;
+                    this.playerBoat.x += (dx / dist) * pushDistance;
+                    this.playerBoat.y += (dy / dist) * pushDistance;
+                    
+                    console.log(`Boat on land (no active path), pushing towards nearest waypoint #${targetWP.id}`);
+                }
+            }
         }
     },
 
+    // AIDEV-NOTE: Find furthest visible point in the path
+    // Checks visibility to waypoints AND interpolated points between waypoints
+    // This allows cutting corners more aggressively by aiming for mid-segment points
+    findFurthestVisibleInPath() {
+        if (!this.waypointPath || this.waypointPathIndex >= this.waypointPath.length) {
+            return null;
+        }
+        
+        // AIDEV-NOTE: Build ordered list of all checkpoints from nearest to furthest
+        // Then check each one in order, keeping track of the furthest visible
+        const checkpoints = [];
+        
+        // Add all remaining waypoints and interpolated points between them
+        for (let i = this.waypointPathIndex; i < this.waypointPath.length; i++) {
+            const wp = Collision.getWaypoint(this.waypointPath[i]);
+            if (!wp) continue;
+            
+            // If not the first waypoint, add interpolated points between previous and current
+            if (i > this.waypointPathIndex) {
+                const prevWP = Collision.getWaypoint(this.waypointPath[i - 1]);
+                if (prevWP) {
+                    // Add 10 interpolated points along segment (from previous toward current)
+                    for (let step = 1; step <= 10; step++) {
+                        const t = step / 10; // 0.1, 0.2, ..., 1.0
+                        const interpX = prevWP.x + (wp.x - prevWP.x) * t;
+                        const interpY = prevWP.y + (wp.y - prevWP.y) * t;
+                        
+                        if (t === 1.0) {
+                            // This is the waypoint itself
+                            checkpoints.push({
+                                type: 'waypoint',
+                                index: i,
+                                x: wp.x,
+                                y: wp.y
+                            });
+                        } else {
+                            checkpoints.push({
+                                type: 'interpolated',
+                                index: i - 1,
+                                x: interpX,
+                                y: interpY,
+                                t: t
+                            });
+                        }
+                    }
+                }
+            } else {
+                // First waypoint in remaining path
+                checkpoints.push({
+                    type: 'waypoint',
+                    index: i,
+                    x: wp.x,
+                    y: wp.y
+                });
+            }
+        }
+        
+        // Add final destination as last checkpoint
+        if (this.finalDestination) {
+            checkpoints.push({
+                type: 'final',
+                x: this.finalDestination.x,
+                y: this.finalDestination.y
+            });
+        }
+        
+        // Check each checkpoint from nearest to furthest, keep track of furthest visible
+        let furthestVisible = null;
+        const enableDebug = this.debug.showActivePath;
+        
+        for (const checkpoint of checkpoints) {
+            const canSee = Pathfinding.hasWideCorridor(
+                this.playerBoat.x, this.playerBoat.y,
+                checkpoint.x, checkpoint.y,
+                Collision,
+                2,  // 2px clearance on each side
+                enableDebug
+            );
+            
+            if (canSee) {
+                // Can see this checkpoint - update furthest visible
+                furthestVisible = {
+                    type: checkpoint.type,
+                    index: checkpoint.index,
+                    position: { x: checkpoint.x, y: checkpoint.y },
+                    t: checkpoint.t
+                };
+            } else {
+                // Can't see this checkpoint - return the last one we could see
+                return furthestVisible;
+            }
+        }
+        
+        // If we get here, we could see all checkpoints, return the furthest (last) one
+        return furthestVisible;
+    },
+
     // AIDEV-NOTE: Update boat movement towards target marker
-    // Moves boat at steady speed, removes marker when close enough
+    // Follows waypoint chains when pathfinding, or moves directly to target
+    // Uses path smoothing to skip unnecessary waypoints
     // Also advances game time based on distance traveled
     updateBoatMovement(deltaTime) {
         if (!this.playerBoat || !this.targetMarker) return;
 
-        // Calculate distance to target
+        // AIDEV-NOTE: Path smoothing - check every 1 second for furthest visible waypoint
+        // Simple approach: look ahead in path and skip to furthest visible point
+        if (this.waypointPath && this.waypointPathIndex < this.waypointPath.length) {
+            const currentTime = performance.now() / 1000; // Convert to seconds
+            const timeSinceLastCheck = currentTime - this.lastPathSmoothTime;
+            
+            if (timeSinceLastCheck >= 1.0) {
+                this.lastPathSmoothTime = currentTime;
+                
+                // Find furthest visible point
+                const furthest = this.findFurthestVisibleInPath();
+                
+                if (furthest) {
+                    if (furthest.type === 'final') {
+                        // Can see final destination - skip all waypoints
+                        const skipped = this.waypointPath.length - this.waypointPathIndex;
+                        console.log(`Path smoothing: Can see destination, skipping ${skipped} waypoint(s)`);
+                        this.waypointPath = null;
+                        this.targetMarker = this.finalDestination;
+                        
+                        // Rotate boat
+                        const dx = this.finalDestination.x - this.playerBoat.x;
+                        const dy = this.finalDestination.y - this.playerBoat.y;
+                        this.playerBoat.rotation = Math.atan2(dy, dx) + Math.PI / 2;
+                    } else if (furthest.type === 'interpolated') {
+                        // Can see a point between waypoints - aim for that
+                        const skipped = furthest.index - this.waypointPathIndex;
+                        console.log(`Path smoothing: Cutting corner to ${Math.round(furthest.t * 100)}% between waypoints (skipping ${skipped})`);
+                        this.waypointPathIndex = furthest.index;
+                        this.targetMarker = { x: furthest.position.x, y: furthest.position.y };
+                        
+                        // Rotate boat
+                        const dx = furthest.position.x - this.playerBoat.x;
+                        const dy = furthest.position.y - this.playerBoat.y;
+                        this.playerBoat.rotation = Math.atan2(dy, dx) + Math.PI / 2;
+                    } else if (furthest.index > this.waypointPathIndex) {
+                        // Can skip ahead to a further waypoint
+                        const skipped = furthest.index - this.waypointPathIndex;
+                        console.log(`Path smoothing: Skipping ${skipped} waypoint(s) to waypoint #${furthest.index + 1}`);
+                        this.waypointPathIndex = furthest.index;
+                        this.targetMarker = { x: furthest.position.x, y: furthest.position.y };
+                        
+                        // Rotate boat
+                        const dx = furthest.position.x - this.playerBoat.x;
+                        const dy = furthest.position.y - this.playerBoat.y;
+                        this.playerBoat.rotation = Math.atan2(dy, dx) + Math.PI / 2;
+                    }
+                }
+            }
+        }
+
+        // Calculate distance to current target
         const dx = this.targetMarker.x - this.playerBoat.x;
         const dy = this.targetMarker.y - this.playerBoat.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Check if arrived at target
+        // Check if arrived at current target
         if (distance <= this.BOAT_ARRIVAL_DISTANCE) {
-            this.targetMarker = null;
-            console.log('Boat arrived at destination');
-            
-            // Check if arrived at a port
-            this.checkPortProximity();
-            return;
+            // If following waypoint path, advance to next waypoint
+            if (this.waypointPath && this.waypointPathIndex < this.waypointPath.length) {
+                // Advance to next waypoint in path
+                this.waypointPathIndex++;
+                
+                // Check if finished all waypoints
+                if (this.waypointPathIndex >= this.waypointPath.length) {
+                    console.log('Path complete, heading to final destination');
+                    this.targetMarker = this.finalDestination;
+                    this.waypointPath = null;
+                    return;
+                }
+                
+                // Get next waypoint (smoothing will handle skipping on next frame)
+                const nextWP = Collision.getWaypoint(this.waypointPath[this.waypointPathIndex]);
+                if (nextWP) {
+                    this.targetMarker = { x: nextWP.x, y: nextWP.y };
+                }
+                return;
+            } else {
+                // No waypoint path - arrived at final destination
+                this.targetMarker = null;
+                this.waypointPath = null;
+                this.finalDestination = null;
+                console.log('Boat arrived at destination');
+                
+                // Check if arrived at a port
+                this.checkPortProximity();
+                return;
+            }
         }
 
-        // Move boat towards target
+        // Move boat towards current target
         const moveSpeed = this.playerBoat.speed * deltaTime;
         const moveAmount = Math.min(moveSpeed, distance); // Don't overshoot
         
@@ -618,6 +887,11 @@ const Game = {
         
         this.playerBoat.x += dirX * moveAmount;
         this.playerBoat.y += dirY * moveAmount;
+        
+        // AIDEV-NOTE: Update boat rotation every frame while moving to face travel direction
+        // This ensures boat always points where it's going
+        const angle = Math.atan2(dy, dx);
+        this.playerBoat.rotation = angle + Math.PI / 2;
         
         // Advance game time based on distance traveled
         this.advanceTime(moveAmount);
@@ -894,9 +1168,6 @@ const Game = {
             trail: []       // Array of {x, y, time} for wake trail
         };
         console.log('Player boat initialized:', shipData.name, 'at:', this.playerBoat.x, this.playerBoat.y);
-        
-        // Enable stuck checking since boat might spawn on land
-        this.boatMightBeStuck = true;
     },
 
     // AIDEV-NOTE: Initialize ports

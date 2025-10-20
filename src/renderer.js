@@ -1229,7 +1229,7 @@ const Renderer = {
 
     // AIDEV-NOTE: Render game world with map
     // Uses camera position and zoom for pan/zoom control
-    renderGameWorld(cameraX = 0, cameraY = 0, cameraZoom = 1, debug = {}, playerBoat = null, targetMarker = null, ports = [], gameTime = null, hoveredPort = null, draggedPort = null, captain = null, player = null, shiftPressed = false) {
+    renderGameWorld(cameraX = 0, cameraY = 0, cameraZoom = 1, debug = {}, playerBoat = null, targetMarker = null, ports = [], gameTime = null, hoveredPort = null, draggedPort = null, captain = null, player = null, shiftPressed = false, waypointPath = null, waypointPathIndex = 0, finalDestination = null) {
         this.clear('#1a4d6d'); // Ocean color
 
         // Draw parchment background (at screen coordinates, no zoom)
@@ -1297,6 +1297,16 @@ const Renderer = {
         // Draw debug visualizations (in map space, affected by camera)
         if (debug.showCoastlines || debug.showBounds || debug.showIslandIds) {
             this.drawDebugCollision(ctx, mapWidth, mapHeight, debug);
+        }
+
+        // Draw waypoints (in map space, affected by camera)
+        if (debug.showWaypoints) {
+            this.drawWaypoints(ctx);
+        }
+
+        // Draw active path (in map space, affected by camera)
+        if (debug.showActivePath && playerBoat && waypointPath && finalDestination) {
+            this.drawActivePath(ctx, playerBoat, waypointPath, waypointPathIndex, finalDestination, targetMarker);
         }
 
         ctx.restore();
@@ -1390,6 +1400,130 @@ const Renderer = {
                 ctx.fillText(text, screenX, screenY);
                 
                 ctx.restore();
+            }
+        }
+
+        ctx.restore();
+    },
+
+    // AIDEV-NOTE: Draw waypoint navigation graph for debugging
+    drawWaypoints(ctx) {
+        const waypoints = Collision.getAllWaypoints();
+        if (!waypoints || waypoints.length === 0) return;
+
+        ctx.save();
+
+        const zoom = ctx.getTransform().a; // Get current zoom level
+
+        // Draw connections first (so they appear behind waypoints)
+        ctx.strokeStyle = 'rgba(0, 255, 0, 0.3)';
+        ctx.lineWidth = 1 / zoom; // Adjust for zoom
+
+        for (const wp of waypoints) {
+            for (const connId of wp.connections) {
+                // Only draw each connection once (from lower ID to higher ID)
+                if (connId > wp.id) {
+                    const connWp = Collision.getWaypoint(connId);
+                    if (connWp) {
+                        ctx.beginPath();
+                        ctx.moveTo(wp.x, wp.y);
+                        ctx.lineTo(connWp.x, connWp.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Draw waypoints as circles
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+        const radius = 4 / zoom; // Adjust for zoom
+
+        for (const wp of waypoints) {
+            ctx.beginPath();
+            ctx.arc(wp.x, wp.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        ctx.restore();
+    },
+
+    // AIDEV-NOTE: Draw active pathfinding route
+    // Shows original path in dim line, current segment in bright yellow
+    drawActivePath(ctx, playerBoat, waypointPath, waypointPathIndex, finalDestination, targetMarker) {
+        if (!waypointPath || !finalDestination) return;
+
+        const currentIndex = waypointPathIndex || 0;
+        const finalDest = finalDestination;
+
+        ctx.save();
+
+        const zoom = ctx.getTransform().a; // Get current zoom level
+
+        // Draw the full planned path in dim dashed gray (for reference)
+        ctx.strokeStyle = 'rgba(180, 180, 180, 0.3)';
+        ctx.lineWidth = 1 / zoom;
+        ctx.setLineDash([4 / zoom, 4 / zoom]); // Dashed line
+
+        ctx.beginPath();
+        ctx.moveTo(playerBoat.x, playerBoat.y);
+
+        for (let i = currentIndex; i < waypointPath.length; i++) {
+            const wp = Collision.getWaypoint(waypointPath[i]);
+            if (wp) {
+                ctx.lineTo(wp.x, wp.y);
+            }
+        }
+
+        // Line to final destination
+        ctx.lineTo(finalDest.x, finalDest.y);
+        ctx.stroke();
+
+        // Draw current segment (boat to current target) in bright yellow
+        if (targetMarker) {
+            ctx.setLineDash([]); // Solid line
+            ctx.strokeStyle = 'rgba(255, 220, 0, 0.9)';
+            ctx.lineWidth = 3 / zoom;
+
+            ctx.beginPath();
+            ctx.moveTo(playerBoat.x, playerBoat.y);
+            ctx.lineTo(targetMarker.x, targetMarker.y);
+            ctx.stroke();
+
+            // Draw small circle at current target
+            ctx.fillStyle = 'rgba(255, 220, 0, 0.9)';
+            ctx.beginPath();
+            ctx.arc(targetMarker.x, targetMarker.y, 6 / zoom, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Draw remaining waypoints as small orange dots
+        ctx.fillStyle = 'rgba(255, 150, 0, 0.6)';
+        for (let i = currentIndex; i < waypointPath.length; i++) {
+            const wp = Collision.getWaypoint(waypointPath[i]);
+            if (wp) {
+                ctx.beginPath();
+                ctx.arc(wp.x, wp.y, 4 / zoom, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Draw final destination as large bright yellow circle
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255, 255, 0, 0.9)';
+        ctx.strokeStyle = 'rgba(255, 150, 0, 1.0)';
+        ctx.lineWidth = 2 / zoom;
+        ctx.beginPath();
+        ctx.arc(finalDest.x, finalDest.y, 8 / zoom, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw corridor check debug points (if any)
+        if (typeof Pathfinding !== 'undefined' && Pathfinding.debugCorridorPoints) {
+            for (const point of Pathfinding.debugCorridorPoints) {
+                ctx.fillStyle = point.isLand ? 'rgba(255, 0, 0, 0.6)' : 'rgba(0, 255, 0, 0.4)';
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 3 / zoom, 0, Math.PI * 2);
+                ctx.fill();
             }
         }
 
