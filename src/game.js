@@ -54,8 +54,8 @@ const Game = {
         showDebugInfo: false,
         showClickPosition: false,
         portEditMode: false,
-        showWaypoints: true,  // Show waypoint navigation graph by default
-        showActivePath: true  // Show active pathfinding route by default
+        showWaypoints: false,  // Show waypoint navigation graph (debug only)
+        showActivePath: true   // Show active pathfinding route by default
     },
     
     // Port editing state
