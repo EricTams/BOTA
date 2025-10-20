@@ -1292,3 +1292,130 @@ body {
     background: #a08968;
 }
 
+/* Production Screen */
+.production-screen {
+    display: flex;
+    flex-direction: column;
+    max-height: 85vh;
+    height: 85vh;
+}
+
+.production-screen .sub-screen-content {
+    overflow-y: auto;
+    display: block;
+    padding: 20px;
+}
+
+.buildings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px;
+}
+
+.building-row {
+    display: grid;
+    grid-template-columns: 240px 1fr 1fr;
+    align-items: center;
+    gap: 15px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(139, 115, 85, 0.2);
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.building-row:hover {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(139, 115, 85, 0.4);
+}
+
+.building-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.good-icon {
+    width: 56px;
+    height: 56px;
+    object-fit: contain;
+    border: 2px solid rgba(212, 175, 55, 0.3);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 3px;
+    flex-shrink: 0;
+}
+
+.building-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #d4af37;
+}
+
+.production-info,
+.consumption-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.production-label {
+    font-size: 11px;
+    color: #aaa;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.production-value {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.production-value.produces {
+    color: #4CAF50;
+}
+
+.production-value.consumes {
+    color: #ff9800;
+}
+
+/* Scrollbar for production screen content */
+.production-screen .sub-screen-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.production-screen .sub-screen-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.production-screen .sub-screen-content::-webkit-scrollbar-thumb {
+    background: #8b7355;
+    border-radius: 4px;
+}
+
+.production-screen .sub-screen-content::-webkit-scrollbar-thumb:hover {
+    background: #a08968;
+}
+
+/* Scrollbar for buildings list (legacy) */
+.sub-screen-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sub-screen-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.sub-screen-content::-webkit-scrollbar-thumb {
+    background: #8b7355;
+    border-radius: 4px;
+}
+
+.sub-screen-content::-webkit-scrollbar-thumb:hover {
+    background: #a08968;
+}
+

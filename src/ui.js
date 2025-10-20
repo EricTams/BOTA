@@ -876,6 +876,12 @@ const UI = {
         });
         actionsContainer.appendChild(tradingBtn);
 
+        // Production button
+        const productionBtn = this.createActionButton('🏭', 'Production', () => {
+            this.showProductionScreen(port);
+        });
+        actionsContainer.appendChild(productionBtn);
+
         // Shipyard button
         const shipyardBtn = this.createActionButton('🚢', 'Shipyard', () => {
             this.showShipyardScreen(port);
@@ -893,13 +899,6 @@ const UI = {
             this.showTownEncountersScreen(port);
         });
         actionsContainer.appendChild(encountersBtn);
-
-        // Build button (disabled for now - placeholder for reputation check)
-        const buildBtn = this.createActionButton('🏗️', 'Build', () => {
-            this.showBuildScreen(port);
-        });
-        buildBtn.disabled = true; // TODO: Enable based on reputation
-        actionsContainer.appendChild(buildBtn);
 
         // Leave Port button
         const leaveBtn = this.createActionButton('⛵', 'Leave Port', () => {
@@ -1054,7 +1053,8 @@ const UI = {
         
         const goodData = GoodsData[goodId];
         const portQty = port.stockpile[goodId] || 0;
-        const playerQty = Game.playerBoat.cargo[goodId] || 0;
+        const cargoData = Game.playerBoat.cargo[goodId];
+        const playerQty = cargoData ? (typeof cargoData === 'number' ? cargoData : cargoData.quantity) : 0;
         const householdQty = port.householdSupply ? (port.householdSupply[goodId] || 0) : 0;
         const basePrice = goodData.basePrice;
         
@@ -1183,7 +1183,7 @@ const UI = {
                 </div>
                 <div class="slider-value">0</div>
             </div>
-            <div class="cargo-stock">You: ${playerQty}</div>
+            <div class="cargo-stock" style="color: ${playerQty > 0 ? '#4CAF50' : '#888'}">You: ${playerQty}</div>
         `;
         
         const slider = row.querySelector('.trade-slider');
@@ -1349,10 +1349,157 @@ const UI = {
             'Town encounters will be implemented here.');
     },
 
-    // AIDEV-NOTE: Show build sub-screen
-    showBuildScreen(port) {
-        this.showSubScreen(port, 'Construction Site', 'location_construction', 
-            'Building interface will be implemented here.');
+    // AIDEV-NOTE: Show production sub-screen
+    // Displays all production buildings and their output/consumption
+    showProductionScreen(port) {
+        this.clear();
+        this.currentScreen = 'production';
+
+        const modal = document.createElement('div');
+        modal.className = 'port-modal';
+
+        const container = document.createElement('div');
+        container.className = 'sub-screen-container production-screen';
+        
+        // Set location-specific background image
+        const bgImage = Renderer.locationBackgrounds?.['location_construction'];
+        if (bgImage) {
+            container.style.backgroundImage = `url('${bgImage.src}')`;
+        } else {
+            container.style.backgroundColor = '#34495e';
+            console.warn('Location background not found: location_construction');
+        }
+
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'sub-screen-header';
+        
+        const title = document.createElement('h1');
+        title.className = 'sub-screen-title';
+        title.textContent = 'Production';
+        header.appendChild(title);
+        
+        const subtitle = document.createElement('p');
+        subtitle.className = 'sub-screen-subtitle';
+        subtitle.textContent = `${port.name} - ${port.faction}`;
+        header.appendChild(subtitle);
+        
+        container.appendChild(header);
+
+        // Create content area
+        const content = document.createElement('div');
+        content.className = 'sub-screen-content';
+
+        // Buildings list
+        const buildingsContainer = document.createElement('div');
+        buildingsContainer.className = 'buildings-list';
+
+        if (!port.buildings || port.buildings.length === 0) {
+            const noBuildings = document.createElement('p');
+            noBuildings.textContent = 'No production buildings in this port.';
+            noBuildings.style.textAlign = 'center';
+            noBuildings.style.color = '#8B4513';
+            buildingsContainer.appendChild(noBuildings);
+        } else {
+            // Sort buildings by good tier (lower tier first)
+            const sortedBuildings = [...port.buildings].sort((a, b) => {
+                const tierA = GoodsData[a.goodId]?.tier || 0;
+                const tierB = GoodsData[b.goodId]?.tier || 0;
+                return tierA - tierB;
+            });
+
+            for (const building of sortedBuildings) {
+                const goodId = building.goodId;
+                const goodData = GoodsData[goodId];
+                
+                if (!goodData) {
+                    console.warn(`Missing good data for ${goodId}`);
+                    continue;
+                }
+
+                const buildingRow = document.createElement('div');
+                buildingRow.className = 'building-row';
+
+                // Building name with icon
+                const buildingInfo = document.createElement('div');
+                buildingInfo.className = 'building-info';
+                
+                // Good image next to building name
+                const goodImage = document.createElement('img');
+                const goodImageName = goodId.toLowerCase().replace(/ /g, '_');
+                goodImage.src = `assets/goods/${goodImageName}.png`;
+                goodImage.alt = goodId;
+                goodImage.className = 'good-icon';
+                goodImage.onerror = () => {
+                    // Hide image if it fails to load
+                    goodImage.style.display = 'none';
+                };
+                buildingInfo.appendChild(goodImage);
+                
+                const buildingName = document.createElement('div');
+                buildingName.className = 'building-name';
+                buildingName.textContent = goodData.building;
+                buildingInfo.appendChild(buildingName);
+                
+                buildingRow.appendChild(buildingInfo);
+
+                // Production info
+                const productionInfo = document.createElement('div');
+                productionInfo.className = 'production-info';
+                
+                const producesLabel = document.createElement('div');
+                producesLabel.className = 'production-label';
+                producesLabel.textContent = 'Produces:';
+                productionInfo.appendChild(producesLabel);
+                
+                const producesValue = document.createElement('div');
+                producesValue.className = 'production-value produces';
+                producesValue.textContent = `${goodId} (${building.productionRate}/week)`;
+                productionInfo.appendChild(producesValue);
+                
+                buildingRow.appendChild(productionInfo);
+
+                // Consumption info (what the building needs to produce)
+                const consumptionInfo = document.createElement('div');
+                consumptionInfo.className = 'consumption-info';
+                
+                // Check if this building consumes any input materials
+                if (goodData.consumes && goodData.consumes.length > 0) {
+                    const consumesLabel = document.createElement('div');
+                    consumesLabel.className = 'production-label';
+                    consumesLabel.textContent = 'Consumes:';
+                    consumptionInfo.appendChild(consumesLabel);
+                    
+                    const consumesValue = document.createElement('div');
+                    consumesValue.className = 'production-value consumes';
+                    // Show all input materials
+                    const inputList = goodData.consumes.join(', ');
+                    consumesValue.textContent = `${inputList} (${building.productionRate}/week)`;
+                    consumptionInfo.appendChild(consumesValue);
+                }
+                
+                buildingRow.appendChild(consumptionInfo);
+
+                buildingsContainer.appendChild(buildingRow);
+            }
+        }
+
+        content.appendChild(buildingsContainer);
+        container.appendChild(content);
+
+        // Create footer with back button
+        const footer = document.createElement('div');
+        footer.className = 'sub-screen-footer';
+        
+        const backBtn = document.createElement('button');
+        backBtn.className = 'back-button';
+        backBtn.textContent = '← Back to Port';
+        backBtn.onclick = () => this.showPortScreen(port);
+        footer.appendChild(backBtn);
+        
+        container.appendChild(footer);
+        modal.appendChild(container);
+        this.overlay.appendChild(modal);
     },
 
     // AIDEV-NOTE: Generic sub-screen display
@@ -1728,7 +1875,11 @@ const UI = {
             cargoList.appendChild(emptyMsg);
         } else {
             // Display cargo items
-            cargoEntries.forEach(([itemName, quantity]) => {
+            cargoEntries.forEach(([itemName, cargoData]) => {
+                // Handle both old format (number) and new format (object)
+                const quantity = typeof cargoData === 'number' ? cargoData : cargoData.quantity;
+                const avgPrice = typeof cargoData === 'object' ? cargoData.avgPrice : (GoodsData[itemName]?.basePrice || 0);
+                
                 const itemRow = document.createElement('div');
                 itemRow.className = 'cargo-item-row';
                 itemRow.style.display = 'flex';
@@ -1738,12 +1889,33 @@ const UI = {
                 itemRow.style.marginBottom = '8px';
                 itemRow.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
                 itemRow.style.borderRadius = '4px';
+                itemRow.style.gap = '15px';
                 
-                // Item name and quantity
+                // Good image
+                const goodImage = document.createElement('img');
+                const goodImageName = itemName.toLowerCase().replace(/ /g, '_');
+                goodImage.src = `assets/goods/${goodImageName}.png`;
+                goodImage.alt = itemName;
+                goodImage.style.width = '40px';
+                goodImage.style.height = '40px';
+                goodImage.style.objectFit = 'contain';
+                goodImage.onerror = () => {
+                    // Hide image if it fails to load
+                    goodImage.style.display = 'none';
+                };
+                itemRow.appendChild(goodImage);
+                
+                // Item name, quantity, and average price
                 const itemInfo = document.createElement('div');
                 itemInfo.style.color = '#f0e6d2';
                 itemInfo.style.fontSize = '16px';
-                itemInfo.textContent = `${itemName}: ${quantity}`;
+                itemInfo.style.flex = '1';
+                itemInfo.innerHTML = `
+                    <div style="font-weight: bold;">${itemName}</div>
+                    <div style="font-size: 14px; color: #ccc; margin-top: 4px;">
+                        Quantity: ${quantity} | Avg Price: ${avgPrice}g
+                    </div>
+                `;
                 itemRow.appendChild(itemInfo);
                 
                 // Discard button

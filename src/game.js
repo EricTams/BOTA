@@ -78,7 +78,11 @@ const Game = {
         day: 1,
         timeOfDay: 0.5, // Start at noon
         distancePerDay: 200, // Distance player must travel for one full day
-        distanceTraveled: 0
+        distanceTraveled: 0,
+        lastWeek: 1,      // Track last tick's week for change detection
+        lastDay: 1,       // Track last tick's day for change detection
+        weekChanged: false,  // Flag for week rollover
+        dayChanged: false    // Flag for day rollover
     },
 
     // Initialize game
@@ -642,6 +646,19 @@ const Game = {
                 time.week += 1;
                 console.log(`Week ${time.week} begins!`);
             }
+        }
+        
+        // Detect time changes and trigger economy simulation
+        time.weekChanged = (time.week !== time.lastWeek);
+        time.dayChanged = (time.day !== time.lastDay);
+        
+        // Call economy simulation if time changed
+        if (time.weekChanged || time.dayChanged) {
+            Economy.simulationTick(this.ports, time);
+            
+            // Update last values for next tick
+            time.lastWeek = time.week;
+            time.lastDay = time.day;
         }
     },
 

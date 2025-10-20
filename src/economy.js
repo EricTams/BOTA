@@ -2,52 +2,52 @@
 // Handles goods production, consumption, pricing, and trading
 
 // AIDEV-NOTE: Resource definitions from RESOURCES_AND_ECONOMY.md
-// All goods with base prices by tier
+// All goods with base prices by tier and production recipes (consumes)
 const GoodsData = {
-    // Tier 1 - Basic Raw Materials (40g/unit)
-    'Grain': { tier: 1, basePrice: 40, building: 'Farm' },
-    'Corn': { tier: 1, basePrice: 40, building: 'Farm' },
-    'Fish': { tier: 1, basePrice: 40, building: 'Fishery' },
-    'Wood': { tier: 1, basePrice: 40, building: 'Lumber Mill' },
-    'Clay': { tier: 1, basePrice: 40, building: 'Clay Pit' },
-    'Salt': { tier: 1, basePrice: 40, building: 'Salt Works' },
-    'Herbs': { tier: 1, basePrice: 40, building: 'Herb Garden' },
+    // Tier 1 - Basic Raw Materials (40g/unit) - No inputs required
+    'Grain': { tier: 1, basePrice: 40, building: 'Farm', consumes: [] },
+    'Corn': { tier: 1, basePrice: 40, building: 'Farm', consumes: [] },
+    'Fish': { tier: 1, basePrice: 40, building: 'Fishery', consumes: [] },
+    'Wood': { tier: 1, basePrice: 40, building: 'Lumber Mill', consumes: [] },
+    'Clay': { tier: 1, basePrice: 40, building: 'Clay Pit', consumes: [] },
+    'Salt': { tier: 1, basePrice: 40, building: 'Salt Works', consumes: [] },
+    'Herbs': { tier: 1, basePrice: 40, building: 'Herb Garden', consumes: [] },
     
-    // Tier 2 - Valuable Raw Materials (60g/unit)
-    'Cotton': { tier: 2, basePrice: 60, building: 'Cotton Plantation' },
-    'Sugar': { tier: 2, basePrice: 60, building: 'Sugar Plantation' },
-    'Meat': { tier: 2, basePrice: 60, building: 'Ranch' },
-    'Fruit': { tier: 2, basePrice: 60, building: 'Orchard' },
-    'Coal': { tier: 2, basePrice: 60, building: 'Coal Mine' },
-    'Iron Ore': { tier: 2, basePrice: 60, building: 'Iron Mine' },
-    'Mana Crystals': { tier: 2, basePrice: 60, building: 'Crystal Mine' },
+    // Tier 2 - Valuable Raw Materials (60g/unit) - No inputs required
+    'Cotton': { tier: 2, basePrice: 60, building: 'Cotton Plantation', consumes: [] },
+    'Sugar': { tier: 2, basePrice: 60, building: 'Sugar Plantation', consumes: [] },
+    'Meat': { tier: 2, basePrice: 60, building: 'Ranch', consumes: [] },
+    'Fruit': { tier: 2, basePrice: 60, building: 'Orchard', consumes: [] },
+    'Coal': { tier: 2, basePrice: 60, building: 'Coal Mine', consumes: [] },
+    'Iron Ore': { tier: 2, basePrice: 60, building: 'Iron Mine', consumes: [] },
+    'Mana Crystals': { tier: 2, basePrice: 60, building: 'Crystal Mine', consumes: [] },
     
-    // Tier 3 - Processed Tier 1 (90g/unit)
-    'Beer': { tier: 3, basePrice: 90, building: 'Brewery' },
-    'Dye': { tier: 3, basePrice: 90, building: 'Dye Works' },
-    'Pottery': { tier: 3, basePrice: 90, building: 'Pottery Workshop' },
-    'Flux': { tier: 3, basePrice: 90, building: 'Alchemy Lab' },
-    'Planks': { tier: 3, basePrice: 90, building: 'Sawmill' },
+    // Tier 3 - Processed Tier 1 (90g/unit) - Single ingredient
+    'Beer': { tier: 3, basePrice: 90, building: 'Brewery', consumes: ['Grain'] },
+    'Dye': { tier: 3, basePrice: 90, building: 'Dye Works', consumes: ['Herbs'] },
+    'Pottery': { tier: 3, basePrice: 90, building: 'Pottery Workshop', consumes: ['Clay'] },
+    'Flux': { tier: 3, basePrice: 90, building: 'Alchemy Lab', consumes: ['Salt'] },
+    'Planks': { tier: 3, basePrice: 90, building: 'Sawmill', consumes: ['Wood'] },
     
-    // Tier 4 - Processed Tier 2 (135g/unit)
-    'Cloth': { tier: 4, basePrice: 135, building: 'Textile Mill' },
-    'Rum': { tier: 4, basePrice: 135, building: 'Distillery' },
-    'Wine': { tier: 4, basePrice: 135, building: 'Winery' },
-    'Iron Ingots': { tier: 4, basePrice: 135, building: 'Foundry' },
-    'Coke': { tier: 4, basePrice: 135, building: 'Coking Plant' },
+    // Tier 4 - Processed Tier 2 (135g/unit) - Single ingredient
+    'Cloth': { tier: 4, basePrice: 135, building: 'Textile Mill', consumes: ['Cotton'] },
+    'Rum': { tier: 4, basePrice: 135, building: 'Distillery', consumes: ['Sugar'] },
+    'Wine': { tier: 4, basePrice: 135, building: 'Winery', consumes: ['Fruit'] },
+    'Iron Ingots': { tier: 4, basePrice: 135, building: 'Foundry', consumes: ['Iron Ore'] },
+    'Coke': { tier: 4, basePrice: 135, building: 'Coking Plant', consumes: ['Coal'] },
     
-    // Tier 5 - Combined Goods (200g/unit)
-    'Weapons': { tier: 5, basePrice: 200, building: 'Weaponsmith' },
-    'Armor': { tier: 5, basePrice: 200, building: 'Armorsmith' },
-    'Furniture': { tier: 5, basePrice: 200, building: 'Furniture Workshop' },
-    'Potions': { tier: 5, basePrice: 200, building: 'Apothecary' },
-    'Fine Clothing': { tier: 5, basePrice: 200, building: 'Tailor' },
+    // Tier 5 - Combined Goods (200g/unit) - Multiple ingredients
+    'Weapons': { tier: 5, basePrice: 200, building: 'Weaponsmith', consumes: ['Iron Ingots', 'Coke'] },
+    'Armor': { tier: 5, basePrice: 200, building: 'Armorsmith', consumes: ['Iron Ingots', 'Cloth'] },
+    'Furniture': { tier: 5, basePrice: 200, building: 'Furniture Workshop', consumes: ['Planks', 'Iron Ingots'] },
+    'Potions': { tier: 5, basePrice: 200, building: 'Apothecary', consumes: ['Wine', 'Herbs'] },
+    'Fine Clothing': { tier: 5, basePrice: 200, building: 'Tailor', consumes: ['Dye', 'Cloth'] },
     
-    // Tier 6 - Luxury Combinations (300g/unit)
-    'Magic Items': { tier: 6, basePrice: 300, building: 'Enchanter' },
-    'Enchanted Armor': { tier: 6, basePrice: 300, building: 'Magical Armory' },
-    'Artifacts': { tier: 6, basePrice: 300, building: 'Artificer' },
-    'Elixirs': { tier: 6, basePrice: 300, building: 'Master Alchemist' }
+    // Tier 6 - Luxury Combinations (300g/unit) - High-tier combinations
+    'Magic Items': { tier: 6, basePrice: 300, building: 'Enchanter', consumes: ['Weapons', 'Flux'] },
+    'Enchanted Armor': { tier: 6, basePrice: 300, building: 'Magical Armory', consumes: ['Armor', 'Mana Crystals'] },
+    'Artifacts': { tier: 6, basePrice: 300, building: 'Artificer', consumes: ['Fine Clothing', 'Mana Crystals'] },
+    'Elixirs': { tier: 6, basePrice: 300, building: 'Master Alchemist', consumes: ['Potions', 'Flux'] }
 };
 
 // AIDEV-NOTE: Faction preferences for goods
@@ -129,53 +129,164 @@ const FactionPreferences = {
 };
 
 const Economy = {
-    // AIDEV-NOTE: Generate production buildings for a port
-    // Based on port tier and faction preferences
-    generatePortBuildings(port) {
-        if (!port || !port.tier) {
-            throw new Error('Port must have a tier!');
+    // AIDEV-NOTE: Generate production buildings for ALL ports
+    // Uses deterministic "card dealing" approach to ensure balanced distribution
+    generateAllPortBuildings(ports) {
+        // Count total building slots by tier range
+        let tier12Slots = 0;
+        let tier34Slots = 0;
+        let tier56Slots = 0;
+        
+        for (const port of ports) {
+            if (port.tier === 1) {
+                tier12Slots += 3;
+                tier34Slots += 1;
+                tier56Slots += 0;
+            } else if (port.tier === 2) {
+                tier12Slots += 4;
+                tier34Slots += 2;
+                tier56Slots += 1;
+            } else { // tier 3
+                tier12Slots += 5;
+                tier34Slots += 3;
+                tier56Slots += 2;
+            }
         }
         
-        const buildings = [];
+        console.log(`Building slots: Tier1-2=${tier12Slots}, Tier3-4=${tier34Slots}, Tier5-6=${tier56Slots}`);
         
-        // Determine building counts by tier
-        let tier12Count, tier34Count, tier56Count;
-        if (port.tier === 1) {
-            tier12Count = 3;
-            tier34Count = 1;
-            tier56Count = 0;
-        } else if (port.tier === 2) {
-            tier12Count = 4;
-            tier34Count = 2;
-            tier56Count = 1;
-        } else { // tier 3
-            tier12Count = 5;
-            tier34Count = 3;
-            tier56Count = 2;
+        // Create "decks" of buildings for each tier range
+        const tier12Deck = this.createBuildingDeck([1, 2], tier12Slots);
+        const tier34Deck = this.createBuildingDeck([3, 4], tier34Slots);
+        const tier56Deck = this.createBuildingDeck([5, 6], tier56Slots);
+        
+        // Shuffle decks
+        this.shuffleArray(tier12Deck);
+        this.shuffleArray(tier34Deck);
+        this.shuffleArray(tier56Deck);
+        
+        // Deal buildings to ports
+        let tier12Index = 0;
+        let tier34Index = 0;
+        let tier56Index = 0;
+        
+        for (const port of ports) {
+            port.buildings = [];
+            
+            // Determine building counts by tier
+            let tier12Count, tier34Count, tier56Count;
+            if (port.tier === 1) {
+                tier12Count = 3;
+                tier34Count = 1;
+                tier56Count = 0;
+            } else if (port.tier === 2) {
+                tier12Count = 4;
+                tier34Count = 2;
+                tier56Count = 1;
+            } else { // tier 3
+                tier12Count = 5;
+                tier34Count = 3;
+                tier56Count = 2;
+            }
+            
+            // Deal tier 1/2 buildings
+            for (let i = 0; i < tier12Count; i++) {
+                const goodId = tier12Deck[tier12Index++];
+                const baseRate = 10;
+                // Flat 1.0x rate for consistency with increased baseline buildings
+                port.buildings.push({ goodId, productionRate: baseRate });
+            }
+            
+            // Deal tier 3/4 buildings
+            for (let i = 0; i < tier34Count; i++) {
+                const goodId = tier34Deck[tier34Index++];
+                const baseRate = 10;
+                // Flat 1.0x rate for consistency with increased baseline buildings
+                port.buildings.push({ goodId, productionRate: baseRate });
+            }
+            
+            // Deal tier 5/6 buildings
+            for (let i = 0; i < tier56Count; i++) {
+                const goodId = tier56Deck[tier56Index++];
+                const baseRate = 10;
+                // Flat 1.0x rate for consistency with increased baseline buildings
+                port.buildings.push({ goodId, productionRate: baseRate });
+            }
+        }
+    },
+    
+    // AIDEV-NOTE: Create a "deck" of building types to distribute
+    // Ensures balanced baseline, then adds random variation for exploitable trading
+    createBuildingDeck(tiers, totalSlots) {
+        const deck = [];
+        
+        // Get all goods in these tiers
+        const availableGoods = Object.keys(GoodsData).filter(goodId => {
+            return tiers.includes(GoodsData[goodId].tier);
+        });
+        
+        if (availableGoods.length === 0) {
+            throw new Error(`No goods found for tiers ${tiers.join(',')}`);
         }
         
-        // Get faction preferences
-        const factionPrefs = FactionPreferences[port.faction] || {};
-        
-        // Generate tier 1/2 buildings
-        for (let i = 0; i < tier12Count; i++) {
-            const goodId = this.pickGoodForPort(port, [1, 2], factionPrefs, 0.3);
-            buildings.push({ goodId, productionRate: 10 });
+        // Step 1: Guaranteed baseline (tier-dependent for realistic economics)
+        // Target: ~67% fixed, ~33% random for exploitable but stable economy
+        let baselinePerGood;
+        if (tiers.includes(1) || tiers.includes(2)) {
+            baselinePerGood = 7; // Tier 1-2: Raw materials very abundant (~70% fixed)
+        } else if (tiers.includes(3) || tiers.includes(4)) {
+            baselinePerGood = 4; // Tier 3-4: Processed goods moderate (~67% fixed)
+        } else {
+            baselinePerGood = 2; // Tier 5-6: Luxuries still somewhat scarce (~67% fixed)
         }
         
-        // Generate tier 3/4 buildings
-        for (let i = 0; i < tier34Count; i++) {
-            const goodId = this.pickGoodForPort(port, [3, 4], factionPrefs, 0.5);
-            buildings.push({ goodId, productionRate: 10 });
+        const baselineSlots = availableGoods.length * baselinePerGood;
+        
+        if (baselineSlots > totalSlots) {
+            // Not enough slots for baseline, just distribute evenly
+            const perGood = Math.floor(totalSlots / availableGoods.length);
+            for (const goodId of availableGoods) {
+                for (let i = 0; i < perGood; i++) {
+                    deck.push(goodId);
+                }
+            }
+            // Fill remaining slots
+            let index = 0;
+            while (deck.length < totalSlots) {
+                deck.push(availableGoods[index % availableGoods.length]);
+                index++;
+            }
+            return deck;
         }
         
-        // Generate tier 5/6 buildings
-        for (let i = 0; i < tier56Count; i++) {
-            const goodId = this.pickGoodForPort(port, [5, 6], factionPrefs, 0.7);
-            buildings.push({ goodId, productionRate: 10 });
+        // Add baseline buildings
+        for (const goodId of availableGoods) {
+            for (let i = 0; i < baselinePerGood; i++) {
+                deck.push(goodId);
+            }
         }
         
-        return buildings;
+        // Step 2: Distribute remaining slots randomly to create exploitable patterns
+        const remainingSlots = totalSlots - baselineSlots;
+        
+        // Random distribution for interesting patterns
+        for (let i = 0; i < remainingSlots; i++) {
+            // Pick a random good (weighted by tier for more interesting economics)
+            const randomGood = availableGoods[Math.floor(Math.random() * availableGoods.length)];
+            deck.push(randomGood);
+        }
+        
+        console.log(`Tier ${tiers.join('-')}: ${baselineSlots} baseline + ${remainingSlots} random = ${deck.length} total`);
+        
+        return deck;
+    },
+    
+    // AIDEV-NOTE: Fisher-Yates shuffle algorithm
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
     },
     
     // AIDEV-NOTE: Pick a random good for a port based on tiers and faction
@@ -204,7 +315,7 @@ const Economy = {
     },
     
     // AIDEV-NOTE: Generate initial stock for all ports
-    // Produces 8 weeks of goods for each building
+    // Produces 12 weeks of goods for each building
     generateInitialStock(ports) {
         for (const port of ports) {
             if (!port.buildings) {
@@ -214,7 +325,7 @@ const Economy = {
             port.stockpile = {};
             
             for (const building of port.buildings) {
-                const quantity = building.productionRate * 8; // 8 weeks of production
+                const quantity = building.productionRate * 12; // 12 weeks of production
                 if (!port.stockpile[building.goodId]) {
                     port.stockpile[building.goodId] = 0;
                 }
@@ -426,52 +537,161 @@ const Economy = {
         const factionPrefs = FactionPreferences[port.faction] || {};
         const consumption = {};
         
-        // Base consumption by tier
+        // Base consumption by tier (dramatically increased to create healthy scarcity)
         let totalConsumption;
         if (port.tier === 1) {
-            totalConsumption = 5; // 5 units/week total
+            totalConsumption = 50; // 50 units/week (small villages still need goods!)
         } else if (port.tier === 2) {
-            totalConsumption = 10;
+            totalConsumption = 120; // 120 units/week (prosperous towns consume a lot)
         } else {
-            totalConsumption = 15;
+            totalConsumption = 250; // 250 units/week (wealthy capitals are voracious)
         }
         
-        // Distribute consumption across multiple goods
-        // Lower tier goods consumed more, faction preferences apply
-        const consumedGoods = [];
+        // Every port consumes ALL goods up to their max tier
+        // Tier 1 ports → consume tier 1-4 goods
+        // Tier 2 ports → consume tier 1-5 goods
+        // Tier 3 ports → consume tier 1-6 goods (everything!)
+        const maxConsumptionTier = port.tier + 3; // Tier 1 → 4, Tier 2 → 5, Tier 3 → 6
         
-        // Always consume some tier 1 goods (food)
-        const tier1Foods = ['Grain', 'Corn', 'Fish'];
-        consumedGoods.push(...tier1Foods);
+        // Get all goods up to max tier
+        const consumedGoods = Object.keys(GoodsData).filter(goodId => {
+            return GoodsData[goodId].tier <= Math.min(maxConsumptionTier, 6);
+        });
         
-        // Add faction preferences
-        for (let tier = 1; tier <= Math.min(port.tier + 1, 4); tier++) {
-            const tierKey = `tier${tier}`;
-            if (factionPrefs[tierKey] && factionPrefs[tierKey].length > 0) {
-                const preferred = factionPrefs[tierKey][Math.floor(Math.random() * factionPrefs[tierKey].length)];
-                if (!consumedGoods.includes(preferred)) {
-                    consumedGoods.push(preferred);
+        // Identify which goods are NOT used as industrial inputs (final consumption goods)
+        const industrialInputs = new Set();
+        for (const goodId in GoodsData) {
+            const goodData = GoodsData[goodId];
+            if (goodData.consumes && goodData.consumes.length > 0) {
+                for (const inputGood of goodData.consumes) {
+                    industrialInputs.add(inputGood);
                 }
             }
         }
         
-        // Add some random goods based on tier
-        const maxTier = port.tier + 1;
-        const allGoods = Object.keys(GoodsData).filter(id => GoodsData[id].tier <= maxTier);
-        while (consumedGoods.length < 3 + port.tier) {
-            const randomGood = allGoods[Math.floor(Math.random() * allGoods.length)];
-            if (!consumedGoods.includes(randomGood)) {
-                consumedGoods.push(randomGood);
+        // Calculate weighted consumption with bonus for non-industrial goods
+        // Lower tier goods consumed more (tier1: 11x, tier2: 10x, tier3: 4x, tier4: 3x, tier5: 1x, tier6: 0.667x)
+        // Tier 1 reduced by 25% to balance citizen consumption
+        const tierWeights = { 1: 11, 2: 10, 3: 4, 4: 3, 5: 1, 6: 0.667 };
+        
+        // Calculate total weight (with bonuses for specific goods and port tiers)
+        let totalWeight = 0;
+        for (const goodId of consumedGoods) {
+            const tier = GoodsData[goodId].tier;
+            let weight = tierWeights[tier];
+            
+            // Boost consumption for goods NOT used in industry (final consumption goods)
+            const isIndustrialInput = industrialInputs.has(goodId);
+            if (!isIndustrialInput && tier === 1) {
+                weight *= 1.875; // 1.875x bonus for tier 1 food (Corn, Fish, Meat) - reduced 25%
+            } else if (!isIndustrialInput && tier === 2) {
+                weight *= 2.5; // 2.5x bonus for non-industrial tier 2 goods
+            } else if (!isIndustrialInput && tier === 3) {
+                weight *= 3.5; // 3.5x bonus for non-industrial tier 3 goods
+            } else if (!isIndustrialInput && tier === 4) {
+                weight *= 4.5; // 4.5x bonus for tier 4 (needs extra consumption to balance)
             }
+            
+            // Boost dead-end luxury goods (tier 5-6 not used in production)
+            if (!isIndustrialInput && tier >= 5) {
+                weight *= 3.0; // 3x bonus for dead-end luxury goods
+            }
+            
+            // EXTRA boost for tier 6 specifically (ultimate luxury items)
+            if (tier === 6) {
+                weight *= 2.0; // 2x bonus for tier 6 goods (reduced from 3x to slow consumption)
+            }
+            
+            // Boost luxury consumption for wealthy ports (tier 2-3 ports consume more tier 5-6 goods)
+            if (tier >= 5) {
+                if (port.tier === 3) {
+                    weight *= 3.5; // Tier 3 ports LOVE luxuries (reduced from 5x)
+                } else if (port.tier === 2) {
+                    weight *= 2.5; // Tier 2 ports want luxuries (reduced from 3x)
+                }
+            }
+            
+            totalWeight += weight;
         }
         
-        // Distribute total consumption among goods
-        const perGood = totalConsumption / consumedGoods.length;
+        // Distribute consumption proportionally by weight
         for (const goodId of consumedGoods) {
-            consumption[goodId] = perGood;
+            const tier = GoodsData[goodId].tier;
+            let weight = tierWeights[tier];
+            
+            // Apply same bonus calculation
+            const isIndustrialInput = industrialInputs.has(goodId);
+            if (!isIndustrialInput && tier === 1) {
+                weight *= 1.875; // Match first loop
+            } else if (!isIndustrialInput && tier === 2) {
+                weight *= 2.5; // Match first loop
+            } else if (!isIndustrialInput && tier === 3) {
+                weight *= 3.5; // Match first loop
+            } else if (!isIndustrialInput && tier === 4) {
+                weight *= 4.5; // Match first loop
+            }
+            
+            // Apply dead-end luxury bonus
+            if (!isIndustrialInput && tier >= 5) {
+                weight *= 3.0;
+            }
+            
+            // Apply tier 6 specific boost
+            if (tier === 6) {
+                weight *= 2.0; // Match first loop
+            }
+            
+            // Apply luxury boost for wealthy ports
+            if (tier >= 5) {
+                if (port.tier === 3) {
+                    weight *= 3.5; // Match first loop
+                } else if (port.tier === 2) {
+                    weight *= 2.5; // Match first loop
+                }
+            }
+            
+            consumption[goodId] = (weight / totalWeight) * totalConsumption;
+        }
+        
+        // Add industrial consumption (inputs for production)
+        const industrial = this.calculateIndustrialConsumption(port);
+        for (const goodId in industrial) {
+            if (!consumption[goodId]) {
+                consumption[goodId] = 0;
+            }
+            consumption[goodId] += industrial[goodId];
         }
         
         return consumption;
+    },
+    
+    // AIDEV-NOTE: Calculate industrial consumption for a port
+    // Based on what buildings need as inputs for production
+    calculateIndustrialConsumption(port) {
+        const industrial = {};
+        
+        if (!port.buildings) return industrial;
+        
+        for (const building of port.buildings) {
+            const goodData = GoodsData[building.goodId];
+            if (!goodData || !goodData.consumes) continue;
+            
+            // Calculate consumption ratio based on number of inputs
+            // 1 input: 1:1 ratio (e.g., Beer needs 1 Grain)
+            // 2 inputs: 0.5:1 ratio each (e.g., Weapons needs 0.5 Iron Ingots + 0.5 Coke)
+            const numInputs = goodData.consumes.length;
+            const consumptionRatio = numInputs === 1 ? 1.0 : 0.5;
+            
+            // For each input this building needs
+            for (const inputGoodId of goodData.consumes) {
+                if (!industrial[inputGoodId]) {
+                    industrial[inputGoodId] = 0;
+                }
+                industrial[inputGoodId] += building.productionRate * consumptionRatio;
+            }
+        }
+        
+        return industrial;
     },
     
     // AIDEV-NOTE: Calculate household supply target for a port
@@ -544,6 +764,8 @@ const Economy = {
     // Returns months of supply and equilibrium stock
     calculateSupplyStatus(port, goodId) {
         const marketStock = port.stockpile[goodId] || 0;
+        const householdStock = port.householdSupply[goodId] || 0;
+        const totalStock = marketStock + householdStock;
         const consumption = port.consumption[goodId] || 0;
         
         // Equilibrium = 2 months of consumption
@@ -552,7 +774,7 @@ const Economy = {
         // Calculate months of supply
         let monthsOfSupply = 0;
         if (consumption > 0) {
-            monthsOfSupply = marketStock / (consumption * 4);
+            monthsOfSupply = totalStock / (consumption * 4);
         }
         
         return { monthsOfSupply, equilibriumStock };
@@ -576,11 +798,13 @@ const Economy = {
         }
         
         const marketStock = port.stockpile[goodId] || 0;
+        const householdStock = port.householdSupply[goodId] || 0;
+        const totalStock = marketStock + householdStock;
         
         // Use asymptotic pricing formula
         const minMultiplier = 0.25;  // 25% floor
-        const numerator = equilibrium + minMultiplier * marketStock;
-        const denominator = minMultiplier * equilibrium + marketStock;
+        const numerator = equilibrium + minMultiplier * totalStock;
+        const denominator = minMultiplier * equilibrium + totalStock;
         const multiplier = numerator / denominator;
         
         return Math.round(basePrice * multiplier);
@@ -733,15 +957,17 @@ const Economy = {
     initializeEconomy(ports) {
         console.log('Initializing economy...');
         
-        // Generate buildings for each port
+        // Generate buildings for all ports (deterministic distribution)
+        this.generateAllPortBuildings(ports);
+        
+        // Calculate consumption and initialize prosperity
         for (const port of ports) {
-            port.buildings = this.generatePortBuildings(port);
             port.consumption = this.calculatePortConsumption(port);
             port.householdSupply = {};
             port.prosperity = 1.0;
         }
         
-        // Generate initial stock (8 weeks of production)
+        // Generate initial stock (12 weeks of production)
         this.generateInitialStock(ports);
         
         // Simulate initial trading to distribute goods
@@ -766,12 +992,12 @@ const Economy = {
     getCargoUsed(boat) {
         let total = 0;
         for (const goodId in boat.cargo) {
-            total += boat.cargo[goodId];
+            total += boat.cargo[goodId].quantity || boat.cargo[goodId];
         }
         return total;
     },
     
-    addCargoToBoat(boat, goodId, quantity) {
+    addCargoToBoat(boat, goodId, quantity, avgPrice) {
         const used = this.getCargoUsed(boat);
         const available = boat.cargoCapacity - used;
         
@@ -779,21 +1005,41 @@ const Economy = {
             return false; // Not enough space
         }
         
+        // Initialize cargo entry if it doesn't exist
         if (!boat.cargo[goodId]) {
-            boat.cargo[goodId] = 0;
+            boat.cargo[goodId] = { quantity: 0, avgPrice: 0 };
         }
-        boat.cargo[goodId] += quantity;
+        
+        // Handle old format (just number) by converting to new format
+        if (typeof boat.cargo[goodId] === 'number') {
+            boat.cargo[goodId] = { quantity: boat.cargo[goodId], avgPrice: GoodsData[goodId]?.basePrice || 0 };
+        }
+        
+        // Calculate new weighted average price
+        const currentTotal = boat.cargo[goodId].quantity;
+        const currentAvgPrice = boat.cargo[goodId].avgPrice || 0;
+        const newTotal = currentTotal + quantity;
+        const newAvgPrice = ((currentTotal * currentAvgPrice) + (quantity * avgPrice)) / newTotal;
+        
+        boat.cargo[goodId].quantity = newTotal;
+        boat.cargo[goodId].avgPrice = Math.round(newAvgPrice);
+        
         return true;
     },
     
     removeCargoFromBoat(boat, goodId, quantity) {
-        const current = boat.cargo[goodId] || 0;
+        // Handle old format (just number)
+        if (typeof boat.cargo[goodId] === 'number') {
+            boat.cargo[goodId] = { quantity: boat.cargo[goodId], avgPrice: GoodsData[goodId]?.basePrice || 0 };
+        }
+        
+        const current = boat.cargo[goodId]?.quantity || 0;
         if (quantity > current) {
             return false; // Not enough cargo
         }
         
-        boat.cargo[goodId] -= quantity;
-        if (boat.cargo[goodId] === 0) {
+        boat.cargo[goodId].quantity -= quantity;
+        if (boat.cargo[goodId].quantity === 0) {
             delete boat.cargo[goodId];
         }
         return true;
@@ -804,7 +1050,8 @@ const Economy = {
         for (const goodId in cargo) {
             const goodData = GoodsData[goodId];
             if (goodData) {
-                total += cargo[goodId] * goodData.basePrice;
+                const quantity = cargo[goodId].quantity || cargo[goodId];
+                total += quantity * goodData.basePrice;
             }
         }
         return total;
@@ -833,7 +1080,9 @@ const Economy = {
             } else {
                 // Selling to port
                 const sellAmount = -amount;
-                const current = boat.cargo[goodId] || 0;
+                // Handle both old and new cargo format
+                const cargoData = boat.cargo[goodId];
+                const current = cargoData ? (typeof cargoData === 'number' ? cargoData : cargoData.quantity) : 0;
                 if (sellAmount > current) {
                     return { success: false, error: `Not enough ${goodId} in cargo` };
                 }
@@ -841,13 +1090,18 @@ const Economy = {
                 cargoChange += amount; // amount is negative, so this reduces cargo
             }
             
-            // Use dynamic pricing calculation (same as UI preview)
-            const price = port.prices[goodId] || GoodsData[goodId].basePrice;
+            // Calculate total cost and average price for this transaction
             const tradeGoldChange = this.calculateTotalCostForTrade(port, goodId, amount);
             // calculateTotalCostForTrade returns negative for buying, positive for selling
             goldSpent -= tradeGoldChange; // Invert so goldSpent is positive for spending
             
-            changes.push({ goodId, amount, price });
+            // Calculate average price for buying transactions
+            let avgPrice = 0;
+            if (amount > 0) {
+                avgPrice = Math.round(Math.abs(tradeGoldChange) / amount);
+            }
+            
+            changes.push({ goodId, amount, avgPrice });
         }
         
         // Check if player has enough gold for the net transaction
@@ -867,7 +1121,7 @@ const Economy = {
             if (change.amount > 0) {
                 // Buy from port
                 port.stockpile[change.goodId] -= change.amount;
-                this.addCargoToBoat(boat, change.goodId, change.amount);
+                this.addCargoToBoat(boat, change.goodId, change.amount, change.avgPrice);
             } else {
                 // Sell to port
                 const sellAmount = -change.amount;
@@ -885,6 +1139,51 @@ const Economy = {
         }
         
         return { success: true, goldChange: goldSpent };
+    },
+    
+    // AIDEV-NOTE: Execute weekly production for a port
+    // Buildings produce goods and add to market stockpile
+    // For now, produce even without required inputs (shortage handling later)
+    produceWeeklyGoods(port) {
+        if (!port.buildings) return;
+        
+        for (const building of port.buildings) {
+            const goodId = building.goodId;
+            const amount = building.productionRate; // Weekly production
+            
+            if (!port.stockpile[goodId]) {
+                port.stockpile[goodId] = 0;
+            }
+            port.stockpile[goodId] += amount;
+        }
+    },
+    
+    // AIDEV-NOTE: Economy simulation tick
+    // Called from game loop based on time progression
+    simulationTick(ports, gameTime) {
+        // Check if week rolled over (trigger weekly production)
+        if (gameTime.weekChanged) {
+            for (const port of ports) {
+                this.produceWeeklyGoods(port);
+            }
+        }
+        
+        // Daily consumption (every day)
+        if (gameTime.dayChanged) {
+            for (const port of ports) {
+                this.simulateDailyConsumption(port);
+                this.calculateProsperity(port);
+            }
+        }
+        
+        // Recalculate prices after any stock changes
+        if (gameTime.weekChanged || gameTime.dayChanged) {
+            for (const port of ports) {
+                for (const goodId in GoodsData) {
+                    port.prices[goodId] = this.calculatePrice(port, goodId);
+                }
+            }
+        }
     }
 };
 
