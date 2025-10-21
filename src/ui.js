@@ -227,6 +227,165 @@ const UI = {
         this.overlay.appendChild(container);
     },
 
+    // AIDEV-NOTE: Show options screen with tabs
+    showOptions(onClose) {
+        this.clear();
+
+        const container = document.createElement('div');
+        container.className = 'menu-container';
+
+        const optionsBox = document.createElement('div');
+        optionsBox.className = 'options-container';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'options-header';
+        const title = document.createElement('h1');
+        title.className = 'options-title';
+        title.textContent = 'Options';
+        header.appendChild(title);
+        optionsBox.appendChild(header);
+
+        // Tabs
+        const tabsContainer = document.createElement('div');
+        tabsContainer.className = 'options-tabs';
+
+        const tabs = [
+            { id: 'changelog', label: 'Changelog' },
+            { id: 'audio', label: 'Audio' },
+            { id: 'controls', label: 'Controls' }
+        ];
+
+        const tabButtons = {};
+        const tabContents = {};
+
+        tabs.forEach((tab, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'options-tab';
+            if (index === 0) btn.classList.add('active');
+            btn.textContent = tab.label;
+            btn.onclick = () => this.switchOptionsTab(tab.id, tabButtons, tabContents);
+            tabButtons[tab.id] = btn;
+            tabsContainer.appendChild(btn);
+        });
+
+        optionsBox.appendChild(tabsContainer);
+
+        // Content area
+        const contentArea = document.createElement('div');
+        contentArea.className = 'options-content';
+
+        // Changelog tab
+        const changelogContent = document.createElement('div');
+        changelogContent.className = 'options-tab-content';
+        changelogContent.innerHTML = this.generateChangelogHTML();
+        tabContents.changelog = changelogContent;
+        contentArea.appendChild(changelogContent);
+
+        // Audio tab
+        const audioContent = document.createElement('div');
+        audioContent.className = 'options-tab-content';
+        audioContent.style.display = 'none';
+        audioContent.innerHTML = `
+            <div class="options-section">
+                <div class="options-section-title">Audio Settings</div>
+                <p style="color: #888; font-style: italic;">Audio settings coming soon!</p>
+                <p style="color: #aaa; margin-top: 15px;">Future features:</p>
+                <p style="color: #aaa; padding-left: 20px;">• Master Volume</p>
+                <p style="color: #aaa; padding-left: 20px;">• Music Volume</p>
+                <p style="color: #aaa; padding-left: 20px;">• Sound Effects Volume</p>
+                <p style="color: #aaa; padding-left: 20px;">• Ambient Sounds Volume</p>
+            </div>
+        `;
+        tabContents.audio = audioContent;
+        contentArea.appendChild(audioContent);
+
+        // Controls tab
+        const controlsContent = document.createElement('div');
+        controlsContent.className = 'options-tab-content';
+        controlsContent.style.display = 'none';
+        controlsContent.innerHTML = `
+            <div class="options-section">
+                <div class="options-section-title">Controls</div>
+                <p style="color: #aaa; margin-bottom: 10px;"><strong style="color: #d4af37;">WASD</strong> - Pan camera</p>
+                <p style="color: #aaa; margin-bottom: 10px;"><strong style="color: #d4af37;">Mouse Wheel</strong> - Zoom in/out</p>
+                <p style="color: #aaa; margin-bottom: 10px;"><strong style="color: #d4af37;">Left Click</strong> - Navigate boat / Select destination</p>
+                <p style="color: #aaa; margin-bottom: 10px;"><strong style="color: #d4af37;">Shift</strong> - Show port information on map</p>
+            </div>
+            <div class="options-section">
+                <div class="options-section-title">Camera</div>
+                <p style="color: #aaa;">Camera auto-follows your boat after 4 seconds of no input.</p>
+            </div>
+        `;
+        tabContents.controls = controlsContent;
+        contentArea.appendChild(controlsContent);
+
+        optionsBox.appendChild(contentArea);
+
+        // Footer
+        const footer = document.createElement('div');
+        footer.className = 'options-footer';
+        const closeBtn = document.createElement('button');
+        closeBtn.className = 'back-button';
+        closeBtn.textContent = 'Back';
+        closeBtn.onclick = onClose;
+        footer.appendChild(closeBtn);
+        optionsBox.appendChild(footer);
+
+        container.appendChild(optionsBox);
+        this.overlay.appendChild(container);
+    },
+
+    // Switch options tabs
+    switchOptionsTab(tabId, tabButtons, tabContents) {
+        // Update tab buttons
+        Object.keys(tabButtons).forEach(id => {
+            if (id === tabId) {
+                tabButtons[id].classList.add('active');
+            } else {
+                tabButtons[id].classList.remove('active');
+            }
+        });
+
+        // Update tab contents
+        Object.keys(tabContents).forEach(id => {
+            if (id === tabId) {
+                tabContents[id].style.display = 'block';
+            } else {
+                tabContents[id].style.display = 'none';
+            }
+        });
+    },
+
+    // Generate changelog HTML from LoadingScreen changelog data
+    generateChangelogHTML() {
+        if (!LoadingScreen || !LoadingScreen.changelog) {
+            return '<p style="color: #888;">Changelog not available.</p>';
+        }
+
+        let html = '';
+        
+        for (const section of LoadingScreen.changelog) {
+            html += '<div class="changelog-section">';
+            html += `<div class="changelog-version">${section.version}`;
+            if (section.date) {
+                html += `<span class="changelog-date">${section.date}</span>`;
+            }
+            html += '</div>';
+            
+            for (const change of section.changes) {
+                html += '<div class="changelog-item">';
+                html += `<span class="changelog-category">[${change.category}]</span>`;
+                html += change.text;
+                html += '</div>';
+            }
+            
+            html += '</div>';
+        }
+        
+        return html;
+    },
+
     // AIDEV-NOTE: Show error modal on top of existing screen
     showErrorModal(title, message) {
         // Remove any existing error modal
@@ -1063,6 +1222,7 @@ const UI = {
         const portQty = port.stockpile[goodId] || 0;
         const cargoData = Game.playerBoat.cargo[goodId];
         const playerQty = cargoData ? (typeof cargoData === 'number' ? cargoData : cargoData.quantity) : 0;
+        const playerAvgPrice = cargoData && typeof cargoData === 'object' ? cargoData.avgPrice : null;
         const householdQty = port.householdSupply ? (port.householdSupply[goodId] || 0) : 0;
         const basePrice = goodData.basePrice;
         
@@ -1163,6 +1323,12 @@ const UI = {
         const minAchievablePosition = multiplierToPosition(minAchievableMultiplier);
         const maxAchievablePosition = multiplierToPosition(maxAchievableMultiplier);
         
+        // Build cargo display with average price if available
+        let cargoDisplay = `You: ${playerQty}`;
+        if (playerQty > 0 && playerAvgPrice !== null) {
+            cargoDisplay += ` <span style="opacity: 0.7;">@${Math.round(playerAvgPrice)}g</span>`;
+        }
+        
         // Good info and slider in one compact row
         row.innerHTML = `
             <div class="good-name">${indicator}${goodId}</div>
@@ -1191,7 +1357,7 @@ const UI = {
                 </div>
                 <div class="slider-value">0</div>
             </div>
-            <div class="cargo-stock" style="color: ${playerQty > 0 ? '#4CAF50' : '#888'}">You: ${playerQty}</div>
+            <div class="cargo-stock" style="color: ${playerQty > 0 ? '#4CAF50' : '#888'}">${cargoDisplay}</div>
         `;
         
         const slider = row.querySelector('.trade-slider');

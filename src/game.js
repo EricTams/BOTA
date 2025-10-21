@@ -60,6 +60,7 @@ const Game = {
     
     // Port editing state
     draggedPort: null,
+    draggedPortEntry: null, // Track if dragging entry position instead of port
     hoveredPort: null,
     
     // Click position history
@@ -97,11 +98,20 @@ const Game = {
         console.log('BOTA - Initializing...');
 
         try {
+            // Initialize loading screen
+            LoadingScreen.init();
+            
+            // Count total assets to load
+            // 1 collision data + images from renderer + sounds
+            const totalAssets = 1 + this.countRendererAssets() + this.countSoundAssets();
+            LoadingScreen.setTotalAssets(totalAssets);
+            
             // Load collision data FIRST (required for boat spawning)
             await Collision.load();
             if (!Collision.loaded) {
                 throw new Error('Collision data failed to load - required for game!');
             }
+            LoadingScreen.assetLoaded();
             console.log('Collision system loaded successfully');
             
             // Initialize modules
@@ -110,45 +120,8 @@ const Game = {
             UI.init();
             Audio.init();
 
-            // Load assets
-            await Renderer.loadAssets();
-            
-            // Load sound effects
-            Audio.loadSound('boat_start', 'assets/sounds/boat_start.mp3');
-            Audio.loadSound('anchor_raise', 'assets/sounds/anchor_raise.mp3');
-            Audio.loadSound('money_click', 'assets/sounds/money_click.mp3');
-            
-            // Load music tracks
-            Audio.loadSound('steel_drums', 'assets/music/steel_drums.mp3');
-            Audio.loadSound('acoustic_guitar', 'assets/music/acoustic_guitar.mp3');
-            Audio.loadSound('maracas', 'assets/music/maracas.mp3');
-            Audio.loadSound('bamboo_flute', 'assets/music/bamboo_flute.mp3');
-            Audio.loadSound('calypso_bass', 'assets/music/calypso_bass.mp3');
-            
-            // Load continuous ambient sounds
-            Audio.loadSound('gentle_waves', 'assets/sounds/ambient/gentle_waves.mp3');
-            Audio.loadSound('wind_breeze', 'assets/sounds/ambient/wind_breeze.mp3');
-            Audio.loadSound('hull_splash', 'assets/sounds/ambient/hull_splash.mp3');
-            Audio.loadSound('rigging_creak', 'assets/sounds/ambient/rigging_creak.mp3');
-            Audio.loadSound('wood_groan', 'assets/sounds/ambient/wood_groan.mp3');
-            Audio.loadSound('sail_flutter', 'assets/sounds/ambient/sail_flutter.mp3');
-            
-            // Load occasional ambient sounds
-            Audio.loadSound('seagulls', 'assets/sounds/ambient/seagulls.mp3');
-            Audio.loadSound('dolphins', 'assets/sounds/ambient/dolphins.mp3');
-            Audio.loadSound('distant_thunder', 'assets/sounds/ambient/distant_thunder.mp3');
-            Audio.loadSound('bell_buoy', 'assets/sounds/ambient/bell_buoy.mp3');
-            
-            // Load port ambient sounds (by faction)
-            Audio.loadSound('artifact_traders', 'assets/sounds/port_ambient/artifact_traders.mp3');
-            Audio.loadSound('claddish_navy', 'assets/sounds/port_ambient/claddish_navy.mp3');
-            Audio.loadSound('free_captains', 'assets/sounds/port_ambient/free_captains.mp3');
-            Audio.loadSound('keen_folk_engineers', 'assets/sounds/port_ambient/keen_folk_engineers.mp3');
-            Audio.loadSound('oglodi_raiders', 'assets/sounds/port_ambient/oglodi_raiders.mp3');
-            Audio.loadSound('revtel', 'assets/sounds/port_ambient/revtel.mp3');
-            Audio.loadSound('roseleaf_traders', 'assets/sounds/port_ambient/roseleaf_traders.mp3');
-            Audio.loadSound('slithereen_guard', 'assets/sounds/port_ambient/slithereen_guard.mp3');
-            Audio.loadSound('stonehall_merchants', 'assets/sounds/port_ambient/stonehall_merchants.mp3');
+            // Load assets with progress tracking
+            await this.loadAssetsWithProgress();
             
             // Initialize music manager with tracks and ambient sounds
             MusicManager.init(
@@ -181,6 +154,9 @@ const Game = {
             // Check for save game
             this.loadSaveData();
 
+            // Hide loading screen
+            LoadingScreen.hide();
+
             // Show main menu
             this.showMainMenu();
 
@@ -194,6 +170,213 @@ const Game = {
             console.error('BOTA - Initialization failed:', error);
             alert('Failed to initialize game: ' + error.message);
         }
+    },
+
+    // Count assets to load from renderer
+    countRendererAssets() {
+        // Count all images that will be loaded
+        // 4 UI images + 1 map + 10 ships + 9 captains + 33 goods + 25 ports + 14 port backgrounds
+        return 4 + 1 + 10 + 9 + 33 + 25 + 14;
+    },
+
+    // Count sound assets to load
+    countSoundAssets() {
+        // 3 sound effects + 5 music tracks + 6 continuous ambient + 4 occasional ambient + 9 port ambient
+        return 3 + 5 + 6 + 4 + 9;
+    },
+
+    // Load all assets with progress tracking
+    async loadAssetsWithProgress() {
+        // Load renderer images
+        await this.loadRendererImages();
+        
+        // Load sounds
+        await this.loadSoundAssets();
+    },
+
+    // Load all renderer images with progress tracking
+    async loadRendererImages() {
+        const assets = Renderer.assets;
+        
+        // Load logo
+        assets.logo = await LoadingScreen.loadImage('assets/ui/bota_logo.png');
+        
+        // Load map
+        assets.map = await LoadingScreen.loadImage('assets/map/world_map.png');
+        
+        // Load parchment background
+        assets.parchmentBg = await LoadingScreen.loadImage('assets/ui/parchment_bg.png');
+        
+        // Load small boat sprite (legacy)
+        assets.smallBoat = await LoadingScreen.loadImage('assets/ships/small_boat.png');
+        
+        // Load all starter ship sprites
+        assets.ships = {};
+        assets.ships.merchant_barge = await LoadingScreen.loadImage('assets/ships/merchant_barge.png');
+        assets.ships.patrol_cutter = await LoadingScreen.loadImage('assets/ships/patrol_cutter.png');
+        assets.ships.mystic_skiff = await LoadingScreen.loadImage('assets/ships/mystic_skiff.png');
+        assets.ships.granite_trader = await LoadingScreen.loadImage('assets/ships/granite_trader.png');
+        assets.ships.tide_runner = await LoadingScreen.loadImage('assets/ships/tide_runner.png');
+        assets.ships.coral_skiff = await LoadingScreen.loadImage('assets/ships/coral_skiff.png');
+        assets.ships.rogues_sloop = await LoadingScreen.loadImage('assets/ships/rogues_sloop.png');
+        assets.ships.willowbark_trader = await LoadingScreen.loadImage('assets/ships/willowbark_trader.png');
+        assets.ships.oglodi_longboat = await LoadingScreen.loadImage('assets/ships/oglodi_longboat.png');
+        assets.ships.tinkers_barge = await LoadingScreen.loadImage('assets/ships/tinkers_barge.png');
+        
+        // Load green X marker
+        assets.greenXMarker = await LoadingScreen.loadImage('assets/ui/green_x_marker.png');
+        
+        // Load sun/moon circle
+        assets.sunMoonCircle = await LoadingScreen.loadImage('assets/ui/sun_moon_circle.png');
+        
+        // Load captain portraits
+        assets.captains = {};
+        assets.captains.captain_kunkka = await LoadingScreen.loadImage('assets/characters/captain_kunkka.png');
+        assets.captains.captain_rubick = await LoadingScreen.loadImage('assets/characters/captain_rubick.png');
+        assets.captains.captain_alchemist = await LoadingScreen.loadImage('assets/characters/captain_alchemist.png');
+        assets.captains.captain_slardar = await LoadingScreen.loadImage('assets/characters/captain_slardar.png');
+        assets.captains.captain_naga_siren = await LoadingScreen.loadImage('assets/characters/captain_naga_siren.png');
+        assets.captains.captain_tidehunter = await LoadingScreen.loadImage('assets/characters/captain_tidehunter.png');
+        assets.captains.captain_enchantress = await LoadingScreen.loadImage('assets/characters/captain_enchantress.png');
+        assets.captains.captain_axe = await LoadingScreen.loadImage('assets/characters/captain_axe.png');
+        assets.captains.captain_tinker = await LoadingScreen.loadImage('assets/characters/captain_tinker.png');
+        
+        // Load goods icons
+        assets.goods = {};
+        const goodsList = [
+            'grain', 'corn', 'fish', 'wood', 'clay', 'salt', 'herbs',
+            'cotton', 'sugar', 'meat', 'fruit', 'coal', 'iron_ore', 'mana_crystals',
+            'beer', 'dye', 'pottery', 'flux', 'planks',
+            'cloth', 'rum', 'wine', 'iron_ingots', 'coke',
+            'weapons', 'armor', 'furniture', 'potions', 'fine_clothing',
+            'magic_items', 'enchanted_armor', 'artifacts', 'elixirs'
+        ];
+        
+        for (const good of goodsList) {
+            assets.goods[good] = await LoadingScreen.loadImage(`assets/goods/${good}.png`);
+        }
+        
+        // Port images by faction and tier
+        assets.ports = {};
+        
+        // Claddish Navy
+        assets.ports.claddish_navy_tier1 = await LoadingScreen.loadImage('assets/ports/claddish_navy_port_tier1.png');
+        assets.ports.claddish_navy_tier2 = await LoadingScreen.loadImage('assets/ports/claddish_navy_port_tier2.png');
+        assets.ports.claddish_navy_tier3 = await LoadingScreen.loadImage('assets/ports/claddish_navy_port_tier3.png');
+        
+        // Stonehall Merchants
+        assets.ports.stonehall_merchants_tier1 = await LoadingScreen.loadImage('assets/ports/stonehall_merchants_port_tier1.png');
+        assets.ports.stonehall_merchants_tier2 = await LoadingScreen.loadImage('assets/ports/stonehall_merchants_port_tier2.png');
+        assets.ports.stonehall_merchants_tier3 = await LoadingScreen.loadImage('assets/ports/stonehall_merchants_port_tier3.png');
+        
+        // Keen Folk Engineers
+        assets.ports.keen_folk_engineers_tier1 = await LoadingScreen.loadImage('assets/ports/keen_folk_engineers_port_tier1.png');
+        assets.ports.keen_folk_engineers_tier2 = await LoadingScreen.loadImage('assets/ports/keen_folk_engineers_port_tier2.png');
+        
+        // Roseleaf Traders
+        assets.ports.roseleaf_traders_tier1 = await LoadingScreen.loadImage('assets/ports/roseleaf_traders_port_tier1.png');
+        assets.ports.roseleaf_traders_tier2 = await LoadingScreen.loadImage('assets/ports/roseleaf_traders_port_tier2.png');
+        assets.ports.roseleaf_traders_tier3 = await LoadingScreen.loadImage('assets/ports/roseleaf_traders_port_tier3.png');
+        
+        // Artifact Traders
+        assets.ports.artifact_traders_tier1 = await LoadingScreen.loadImage('assets/ports/artifact_traders_port_tier1.png');
+        assets.ports.artifact_traders_tier2 = await LoadingScreen.loadImage('assets/ports/artifact_traders_port_tier2.png');
+        assets.ports.artifact_traders_tier3 = await LoadingScreen.loadImage('assets/ports/artifact_traders_port_tier3.png');
+        
+        // Slithereen Guard
+        assets.ports.slithereen_guard_tier1 = await LoadingScreen.loadImage('assets/ports/slithereen_guard_port_tier1.png');
+        assets.ports.slithereen_guard_tier2 = await LoadingScreen.loadImage('assets/ports/slithereen_guard_port_tier2.png');
+        assets.ports.slithereen_guard_tier3 = await LoadingScreen.loadImage('assets/ports/slithereen_guard_port_tier3.png');
+        
+        // Revtel
+        assets.ports.revtel_tier1 = await LoadingScreen.loadImage('assets/ports/revtel_port_tier1.png');
+        assets.ports.revtel_tier2 = await LoadingScreen.loadImage('assets/ports/revtel_port_tier2.png');
+        assets.ports.revtel_tier3 = await LoadingScreen.loadImage('assets/ports/revtel_port_tier3.png');
+        
+        // Free Captains
+        assets.ports.free_captains_tier1 = await LoadingScreen.loadImage('assets/ports/free_captains_port_tier1.png');
+        assets.ports.free_captains_tier2 = await LoadingScreen.loadImage('assets/ports/free_captains_port_tier2.png');
+        assets.ports.free_captains_tier3 = await LoadingScreen.loadImage('assets/ports/free_captains_port_tier3.png');
+        
+        // Oglodi Raiders
+        assets.ports.oglodi_raiders_tier1 = await LoadingScreen.loadImage('assets/ports/oglodi_raiders_port_tier1.png');
+        assets.ports.oglodi_raiders_tier2 = await LoadingScreen.loadImage('assets/ports/oglodi_raiders_port_tier2.png');
+        assets.ports.oglodi_raiders_tier3 = await LoadingScreen.loadImage('assets/ports/oglodi_raiders_port_tier3.png');
+        
+        // Load faction settlement backgrounds (for port screens)
+        Renderer.portBackgrounds = {};
+        
+        const factions = [
+            'Artifact Traders',
+            'Claddish Navy',
+            'Free Captains',
+            'Keen Folk Engineers',
+            'Oglodi Raiders',
+            'Revtel',
+            'Roseleaf Traders',
+            'Slithereen Guard',
+            'Stonehall Merchants'
+        ];
+        
+        for (const faction of factions) {
+            const key = faction.toLowerCase().replace(/\s+/g, '_');
+            Renderer.portBackgrounds[faction] = await LoadingScreen.loadImage(`assets/ports/backgrounds/${key}_settlement.png`);
+        }
+        
+        // Load location backgrounds (for sub-screens)
+        Renderer.locationBackgrounds = {};
+        
+        const locations = [
+            'location_marketplace',
+            'location_shipyard',
+            'location_tavern',
+            'location_town_square',
+            'location_construction'
+        ];
+        
+        for (const location of locations) {
+            Renderer.locationBackgrounds[location] = await LoadingScreen.loadImage(`assets/ports/backgrounds/${location}.png`);
+        }
+    },
+
+    // Load all sound assets with progress tracking
+    async loadSoundAssets() {
+        // Load sound effects
+        Audio.sounds.boat_start = await LoadingScreen.loadAudio('assets/sounds/boat_start.mp3');
+        Audio.sounds.anchor_raise = await LoadingScreen.loadAudio('assets/sounds/anchor_raise.mp3');
+        Audio.sounds.money_click = await LoadingScreen.loadAudio('assets/sounds/money_click.mp3');
+        
+        // Load music tracks
+        Audio.sounds.steel_drums = await LoadingScreen.loadAudio('assets/music/steel_drums.mp3');
+        Audio.sounds.acoustic_guitar = await LoadingScreen.loadAudio('assets/music/acoustic_guitar.mp3');
+        Audio.sounds.maracas = await LoadingScreen.loadAudio('assets/music/maracas.mp3');
+        Audio.sounds.bamboo_flute = await LoadingScreen.loadAudio('assets/music/bamboo_flute.mp3');
+        Audio.sounds.calypso_bass = await LoadingScreen.loadAudio('assets/music/calypso_bass.mp3');
+        
+        // Load continuous ambient sounds
+        Audio.sounds.gentle_waves = await LoadingScreen.loadAudio('assets/sounds/ambient/gentle_waves.mp3');
+        Audio.sounds.wind_breeze = await LoadingScreen.loadAudio('assets/sounds/ambient/wind_breeze.mp3');
+        Audio.sounds.hull_splash = await LoadingScreen.loadAudio('assets/sounds/ambient/hull_splash.mp3');
+        Audio.sounds.rigging_creak = await LoadingScreen.loadAudio('assets/sounds/ambient/rigging_creak.mp3');
+        Audio.sounds.wood_groan = await LoadingScreen.loadAudio('assets/sounds/ambient/wood_groan.mp3');
+        Audio.sounds.sail_flutter = await LoadingScreen.loadAudio('assets/sounds/ambient/sail_flutter.mp3');
+        
+        // Load occasional ambient sounds
+        Audio.sounds.seagulls = await LoadingScreen.loadAudio('assets/sounds/ambient/seagulls.mp3');
+        Audio.sounds.dolphins = await LoadingScreen.loadAudio('assets/sounds/ambient/dolphins.mp3');
+        Audio.sounds.distant_thunder = await LoadingScreen.loadAudio('assets/sounds/ambient/distant_thunder.mp3');
+        Audio.sounds.bell_buoy = await LoadingScreen.loadAudio('assets/sounds/ambient/bell_buoy.mp3');
+        
+        // Load port ambient sounds (by faction)
+        Audio.sounds.artifact_traders = await LoadingScreen.loadAudio('assets/sounds/port_ambient/artifact_traders.mp3');
+        Audio.sounds.claddish_navy = await LoadingScreen.loadAudio('assets/sounds/port_ambient/claddish_navy.mp3');
+        Audio.sounds.free_captains = await LoadingScreen.loadAudio('assets/sounds/port_ambient/free_captains.mp3');
+        Audio.sounds.keen_folk_engineers = await LoadingScreen.loadAudio('assets/sounds/port_ambient/keen_folk_engineers.mp3');
+        Audio.sounds.oglodi_raiders = await LoadingScreen.loadAudio('assets/sounds/port_ambient/oglodi_raiders.mp3');
+        Audio.sounds.revtel = await LoadingScreen.loadAudio('assets/sounds/port_ambient/revtel.mp3');
+        Audio.sounds.roseleaf_traders = await LoadingScreen.loadAudio('assets/sounds/port_ambient/roseleaf_traders.mp3');
+        Audio.sounds.slithereen_guard = await LoadingScreen.loadAudio('assets/sounds/port_ambient/slithereen_guard.mp3');
+        Audio.sounds.stonehall_merchants = await LoadingScreen.loadAudio('assets/sounds/port_ambient/stonehall_merchants.mp3');
     },
 
     // Main game loop
@@ -471,9 +654,12 @@ const Game = {
         // Check if player clicked on a port
         const clickedPort = this.getPortAtPosition(worldPos.x, worldPos.y, 30);
         if (clickedPort) {
-            // Navigate to nearest water position near the port
-            // Search in a circle around port to find closest water
-            const waterPos = Collision.findNearestWater(clickedPort.x, clickedPort.y, 80);
+            // Use entry position if available, otherwise port position
+            const targetX = clickedPort.entryX !== undefined ? clickedPort.entryX : clickedPort.x;
+            const targetY = clickedPort.entryY !== undefined ? clickedPort.entryY : clickedPort.y;
+            
+            // Navigate to entry position (or nearest water near it)
+            const waterPos = Collision.findNearestWater(targetX, targetY, 80);
             
             if (waterPos.found) {
                 worldPos.x = waterPos.x;
@@ -601,36 +787,85 @@ const Game = {
         const worldPos = this.screenToWorld(Input.mouse.x, Input.mouse.y);
         this.hoveredPort = this.getPortAtPosition(worldPos.x, worldPos.y, 30);
         
-        // Start dragging a port or flip it with shift+click
+        // Ctrl+C to copy port data
+        if (Input.isKeyPressed('Control') && Input.consumeKeyPress('c')) {
+            if (this.hoveredPort) {
+                this.copyPortData(this.hoveredPort);
+            }
+        }
+        
+        // Start dragging a port/entry or flip it with shift+click
         if (Input.mouse.justClicked && Input.mouse.button === 0) {
             if (this.hoveredPort) {
-                // Check for Shift key (both 'Shift' and 'shift' for cross-browser compatibility)
+                // Check for modifier keys
                 const shiftPressed = Input.isKeyPressed('Shift') || Input.isKeyPressed('shift');
+                const altPressed = Input.isKeyPressed('Alt') || Input.isKeyPressed('alt');
                 
                 if (shiftPressed) {
                     // Shift+click to flip port
                     this.hoveredPort.flipped = !this.hoveredPort.flipped;
                     console.log('Flipped port:', this.hoveredPort.name, '- flipped:', this.hoveredPort.flipped);
-                } else {
-                    // Normal click to start dragging
+                } else if (altPressed) {
+                    // Alt+click to drag entry position
                     this.draggedPort = this.hoveredPort;
+                    this.draggedPortEntry = true;
+                    console.log('Started dragging entry position for port:', this.draggedPort.name);
+                } else {
+                    // Normal click to start dragging port
+                    this.draggedPort = this.hoveredPort;
+                    this.draggedPortEntry = false;
                     console.log('Started dragging port:', this.draggedPort.name);
                 }
             }
         }
         
-        // Update dragged port position (drag immediately while mouse is down)
+        // Update dragged position (port or entry) (drag immediately while mouse is down)
         if (this.draggedPort && Input.mouse.clicked) {
             const newWorldPos = this.screenToWorld(Input.mouse.x, Input.mouse.y);
-            this.draggedPort.x = Math.round(newWorldPos.x);
-            this.draggedPort.y = Math.round(newWorldPos.y);
+            
+            if (this.draggedPortEntry) {
+                // Dragging entry position
+                this.draggedPort.entryX = Math.round(newWorldPos.x);
+                this.draggedPort.entryY = Math.round(newWorldPos.y);
+            } else {
+                // Dragging port position
+                this.draggedPort.x = Math.round(newWorldPos.x);
+                this.draggedPort.y = Math.round(newWorldPos.y);
+            }
         }
         
         // Stop dragging
         if (!Input.mouse.clicked && this.draggedPort) {
-            console.log('Stopped dragging port:', this.draggedPort.name, 'at', this.draggedPort.x, this.draggedPort.y);
+            if (this.draggedPortEntry) {
+                console.log('Stopped dragging entry position for port:', this.draggedPort.name, 'at', this.draggedPort.entryX, this.draggedPort.entryY);
+            } else {
+                console.log('Stopped dragging port:', this.draggedPort.name, 'at', this.draggedPort.x, this.draggedPort.y);
+            }
             this.draggedPort = null;
+            this.draggedPortEntry = null;
         }
+    },
+    
+    // AIDEV-NOTE: Copy port data to console for easy export
+    copyPortData(port) {
+        // Build port data string with all properties
+        let portLine = `    { id: "${port.id}", name: "${port.name}", faction: "${port.faction}", x: ${port.x}, y: ${port.y}, tier: ${port.tier}, size: ${port.size}`;
+        
+        // Add flipped if present
+        if (port.flipped) {
+            portLine += ', flipped: true';
+        }
+        
+        // Add entry positions (default to port position if not set)
+        const entryX = port.entryX !== undefined ? port.entryX : port.x;
+        const entryY = port.entryY !== undefined ? port.entryY : port.y;
+        portLine += `, entryX: ${entryX}, entryY: ${entryY}`;
+        
+        portLine += ' },';
+        
+        console.log('=== Port Data Copied ===');
+        console.log(portLine);
+        console.log('========================');
     },
 
     // AIDEV-NOTE: Check if boat is on land and push towards nearest waypoint
@@ -951,19 +1186,27 @@ const Game = {
         this.hoveredPort = this.getPortAtPosition(worldPos.x, worldPos.y, 30);
     },
 
-    // AIDEV-NOTE: Check if player boat is near any port
+    // AIDEV-NOTE: Check if player boat is near any port entry position
     // Called when boat stops moving
     checkPortProximity() {
         if (!this.playerBoat) return;
         
-        const nearbyPort = this.getPortAtPosition(
-            this.playerBoat.x, 
-            this.playerBoat.y, 
-            this.PORT_PROXIMITY_DISTANCE
-        );
-        
-        if (nearbyPort) {
-            this.enterPort(nearbyPort);
+        // Check distance to entry position of each port
+        for (const port of this.ports) {
+            // Use entry position if available, otherwise port position
+            const entryX = port.entryX !== undefined ? port.entryX : port.x;
+            const entryY = port.entryY !== undefined ? port.entryY : port.y;
+            
+            // Calculate distance to entry position
+            const dx = this.playerBoat.x - entryX;
+            const dy = this.playerBoat.y - entryY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // If within proximity distance, enter the port
+            if (distance <= this.PORT_PROXIMITY_DISTANCE) {
+                this.enterPort(port);
+                return;
+            }
         }
     },
 
@@ -998,25 +1241,33 @@ const Game = {
         // Play anchor raising sound
         Audio.play('anchor_raise');
         
-        // Push boat out from the closest island center by exactly 10 units
-        if (this.playerBoat) {
-            const closestResult = Collision.getClosestIsland(this.playerBoat.x, this.playerBoat.y);
-            
-            if (closestResult && closestResult.island) {
-                const center = Collision.getIslandCenter(closestResult.island);
+        // Place boat at port entry position
+        if (this.playerBoat && this.currentPort) {
+            // Use entry position if available
+            if (this.currentPort.entryX !== undefined && this.currentPort.entryY !== undefined) {
+                this.playerBoat.x = this.currentPort.entryX;
+                this.playerBoat.y = this.currentPort.entryY;
+                console.log(`Placed boat at entry position (${this.currentPort.entryX}, ${this.currentPort.entryY})`);
+            } else {
+                // Fallback: push boat out from the closest island center by exactly 10 units
+                const closestResult = Collision.getClosestIsland(this.playerBoat.x, this.playerBoat.y);
                 
-                // Calculate direction from island center to boat
-                let dx = this.playerBoat.x - center.x;
-                let dy = this.playerBoat.y - center.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                // Normalize and push out exactly 10 units
-                if (dist > 0) {
-                    dx /= dist;
-                    dy /= dist;
-                    this.playerBoat.x += dx * 10;
-                    this.playerBoat.y += dy * 10;
-                    console.log(`Pushed boat 10 units away from island ${closestResult.island.id} center`);
+                if (closestResult && closestResult.island) {
+                    const center = Collision.getIslandCenter(closestResult.island);
+                    
+                    // Calculate direction from island center to boat
+                    let dx = this.playerBoat.x - center.x;
+                    let dy = this.playerBoat.y - center.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Normalize and push out exactly 10 units
+                    if (dist > 0) {
+                        dx /= dist;
+                        dy /= dist;
+                        this.playerBoat.x += dx * 10;
+                        this.playerBoat.y += dy * 10;
+                        console.log(`Pushed boat 10 units away from island ${closestResult.island.id} center`);
+                    }
                 }
             }
         }
@@ -1142,12 +1393,12 @@ const Game = {
             throw new Error('Starting port not found: ' + this.selectedCaptain.startingPort);
         }
 
-        // Start exactly at port position
-        const startX = startPort.x;
-        const startY = startPort.y;
+        // Start at entry position (or port position if no entry defined)
+        const startX = startPort.entryX !== undefined ? startPort.entryX : startPort.x;
+        const startY = startPort.entryY !== undefined ? startPort.entryY : startPort.y;
         const startRotation = 0; // Facing up/north by default (0 = north, sprites have bow pointing up)
         
-        console.log('Starting at port:', startPort.name, 'at position:', startX, startY);
+        console.log('Starting at port:', startPort.name, 'at entry position:', startX, startY);
 
         // Create player boat from ship data
         // AIDEV-NOTE: Ship speed in data is pixels/sec, divide by 10 for game speed
@@ -1239,11 +1490,7 @@ const Game = {
 
     onOptions() {
         console.log('Options clicked');
-        UI.showMessage(
-            'Options',
-            'Options menu coming soon!\n\nSettings: Audio, Graphics, Controls',
-            () => this.showMainMenu()
-        );
+        UI.showOptions(() => this.showMainMenu());
     },
 
     onCredits() {
@@ -1267,7 +1514,8 @@ const Game = {
         code += '// - faction: Claddish Navy, Artifact Traders, Stonehall Merchants, Revtel, Free Captains, Slithereen Guard, etc.\n';
         code += '// - x, y: World coordinates (centered, where 0,0 is map center, range approximately -512 to +512)\n';
         code += '// - size: Visual size in pixels for rendering (based on tier: tier1=30, tier2=40, tier3=50)\n';
-        code += '// - tier: Port tier (1, 2, or 3)\n\n';
+        code += '// - tier: Port tier (1, 2, or 3)\n';
+        code += '// - entryX, entryY: Entry position for boats (for pathfinding to inland ports)\n\n';
         code += 'const PortData = [\n';
         
         // Group ports by faction
@@ -1295,6 +1543,11 @@ const Game = {
                 if (port.flipped) {
                     code += `, flipped: true`;
                 }
+                
+                // Add entry positions (default to port position if not set)
+                const entryX = port.entryX !== undefined ? port.entryX : port.x;
+                const entryY = port.entryY !== undefined ? port.entryY : port.y;
+                code += `, entryX: ${entryX}, entryY: ${entryY}`;
                 
                 code += ` }`;
                 

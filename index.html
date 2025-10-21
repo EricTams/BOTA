@@ -12,7 +12,21 @@
         <div id="ui-overlay"></div>
     </div>
 
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-changelog">
+            <div class="loading-changelog-header">Recent Changes</div>
+            <div id="loading-changelog-content" class="loading-changelog-content">
+                <!-- Changelog content will be populated by loading.js -->
+            </div>
+        </div>
+        <div class="loading-bar-container">
+            <div id="loading-bar-fill" class="loading-bar-fill"></div>
+        </div>
+    </div>
+
     <!-- Game modules -->
+    <script src="src/loading.js"></script>
     <script src="src/renderer.js"></script>
     <script src="src/input.js"></script>
     <script src="src/collision_data.js"></script>

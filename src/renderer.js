@@ -816,6 +816,51 @@ const Renderer = {
         ctx.restore();
     },
 
+    // AIDEV-NOTE: Draw port entry position (green X) in edit mode
+    drawPortEntryPosition(port, ctx) {
+        if (!port.entryX || !port.entryY) return;
+        
+        ctx.save();
+        
+        // Draw line from entry position to port
+        ctx.beginPath();
+        ctx.moveTo(port.entryX, port.entryY);
+        ctx.lineTo(port.x, port.y);
+        ctx.strokeStyle = '#00FF00';
+        ctx.lineWidth = 2 / ctx.getTransform().a; // Adjust for zoom
+        ctx.setLineDash([5, 5]); // Dashed line
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset dash
+        
+        // Draw green X at entry position
+        ctx.translate(port.entryX, port.entryY);
+        
+        const xSize = 10 / ctx.getTransform().a; // Scale with zoom
+        const lineWidth = 3 / ctx.getTransform().a;
+        
+        // Draw green X
+        ctx.strokeStyle = '#00FF00';
+        ctx.lineWidth = lineWidth;
+        
+        ctx.beginPath();
+        ctx.moveTo(-xSize, -xSize);
+        ctx.lineTo(xSize, xSize);
+        ctx.moveTo(xSize, -xSize);
+        ctx.lineTo(-xSize, xSize);
+        ctx.stroke();
+        
+        // Draw circle background for better visibility
+        ctx.beginPath();
+        ctx.arc(0, 0, xSize * 1.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.2)';
+        ctx.fill();
+        ctx.strokeStyle = '#00FF00';
+        ctx.lineWidth = lineWidth * 0.5;
+        ctx.stroke();
+        
+        ctx.restore();
+    },
+
     // AIDEV-NOTE: Draw target marker (green X)
     // Marker is drawn in world space at the target position
     drawTargetMarker(marker, ctx) {
@@ -1271,6 +1316,11 @@ const Renderer = {
                 const isHovered = hoveredPort && port.id === hoveredPort.id;
                 const isDragged = draggedPort && port.id === draggedPort.id;
                 this.drawPort(port, ctx, debug.portEditMode, isHovered, isDragged);
+                
+                // Draw entry position in edit mode
+                if (debug.portEditMode) {
+                    this.drawPortEntryPosition(port, ctx);
+                }
                 
                 // Draw production icons if Shift is pressed (only in normal play mode)
                 if (shiftPressed && !debug.portEditMode) {
