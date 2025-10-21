@@ -13,18 +13,24 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
-            version: 'Current Session',
-            date: 'October 20, 2025',
+            version: 'October 21, 2025',
+            date: 'October 21, 2025',
             changes: [
                 { category: 'Added', text: '+1/-1 buttons to trading sliders for precise one-unit adjustments' },
                 { category: 'Added', text: 'Yellow zero-trade marker on sliders showing current price point' },
                 { category: 'Added', text: 'Mouse wheel scrolling support for trading screen' },
+                { category: 'Improved', text: 'Trading slider constraints now account for other pending trades' },
+                { category: 'Improved', text: 'Slider deadzone prevents accidental tiny trades near zero' },
+                { category: 'Improved', text: 'Price marker positioning for better visual accuracy' }
+            ]
+        },
+        {
+            version: 'October 20, 2025',
+            date: 'October 20, 2025',
+            changes: [
                 { category: 'Added', text: 'Options screen with Changelog, Audio, and Controls tabs' },
                 { category: 'Added', text: 'Changelog window on loading screen for tracking changes' },
                 { category: 'Added', text: 'Loading screen with progress bar showing asset loading' },
-                { category: 'Improved', text: 'Trading slider constraints now account for other pending trades' },
-                { category: 'Improved', text: 'Slider deadzone prevents accidental tiny trades near zero' },
-                { category: 'Improved', text: 'Price marker positioning for better visual accuracy' },
                 { category: 'Improved', text: 'Port entry positions for better navigation to inland ports' },
                 { category: 'Improved', text: 'Boat placement when leaving ports uses entry positions' },
                 { category: 'Improved', text: 'Port proximity detection uses entry positions instead of port centers' },

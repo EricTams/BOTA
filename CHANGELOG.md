@@ -34,20 +34,33 @@ changelog: [
 
 ---
 
-## Current Session - October 20, 2025
+## October 21, 2025
 
 ### Added
 - +1/-1 buttons to trading sliders for precise one-unit adjustments
 - Yellow zero-trade marker on sliders showing current price point
 - Mouse wheel scrolling support for trading screen
-- Options screen with Changelog, Audio, and Controls tabs
-- Changelog window on loading screen for tracking changes
-- Loading screen with progress bar showing asset loading
 
 ### Improved
 - Trading slider constraints now account for other pending trades
 - Slider deadzone prevents accidental tiny trades near zero
 - Price marker positioning for better visual accuracy
+
+### Technical
+- Trading system now calculates available cargo/gold after other pending trades
+- Button states update dynamically based on trade constraints
+- Added debug logging for trade execution verification
+
+---
+
+## October 20, 2025
+
+### Added
+- Options screen with Changelog, Audio, and Controls tabs
+- Changelog window on loading screen for tracking changes
+- Loading screen with progress bar showing asset loading
+
+### Improved
 - Port entry positions for better navigation to inland ports
 - Boat placement when leaving ports uses entry positions
 - Port proximity detection uses entry positions instead of port centers
