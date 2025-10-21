@@ -10,10 +10,11 @@ const LoadingScreen = {
 
     // AIDEV-NOTE: Changelog entries for loading screen
     // Add new changes to the top of the list
+    // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
             version: 'Current Session',
-            date: 'October 21, 2025',
+            date: 'October 20, 2025',
             changes: [
                 { category: 'Added', text: 'Loading screen with progress bar showing asset loading' },
                 { category: 'Added', text: 'Changelog window on loading screen for tracking changes' },

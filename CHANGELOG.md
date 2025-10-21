@@ -6,11 +6,13 @@ This changelog tracks all notable changes to the game. Changes shown on the load
 
 Edit the `changelog` array in `src/loading.js`:
 
+**IMPORTANT:** Use the date from your local system timezone (not UTC or server time).
+
 ```javascript
 changelog: [
     {
         version: 'Current Session',  // Version or session name
-        date: 'October 21, 2025',    // Date of changes
+        date: 'October 20, 2025',    // Date of changes (use local timezone)
         changes: [
             { category: 'Added', text: 'Description of what was added' },
             { category: 'Improved', text: 'Description of improvement' },
@@ -32,7 +34,7 @@ changelog: [
 
 ---
 
-## Current Session - October 21, 2025
+## Current Session - October 20, 2025
 
 ### Added
 - Loading screen with progress bar showing asset loading
