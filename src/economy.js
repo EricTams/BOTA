@@ -1060,77 +1060,58 @@ const Economy = {
     // AIDEV-NOTE: Execute trade transaction between port and boat
     // transactions: { goodId: amount } (positive = buy from port, negative = sell to port)
     executeTrade(port, boat, transactions, playerGold) {
+        // AIDEV-NOTE: Execute trades exactly as requested by UI
+        // All validation should happen in the UI before calling this
+        // This function trusts the UI and executes unconditionally
+        
         let goldSpent = 0;
-        let cargoChange = 0;
         const changes = [];
         
-        // Calculate net gold and cargo changes, validate all transactions
+        // Process all transactions - SELL FIRST, then BUY
+        // This ensures we free up cargo space and earn gold before buying
+        const sellTransactions = [];
+        const buyTransactions = [];
+        
         for (const goodId in transactions) {
             const amount = transactions[goodId];
             if (amount === 0) continue;
             
-            if (amount > 0) {
-                // Buying from port
-                const available = port.stockpile[goodId] || 0;
-                if (amount > available) {
-                    return { success: false, error: `Not enough ${goodId} at port` };
-                }
-                
-                cargoChange += amount;
+            if (amount < 0) {
+                sellTransactions.push({ goodId, amount });
             } else {
-                // Selling to port
-                const sellAmount = -amount;
-                // Handle both old and new cargo format
-                const cargoData = boat.cargo[goodId];
-                const current = cargoData ? (typeof cargoData === 'number' ? cargoData : cargoData.quantity) : 0;
-                if (sellAmount > current) {
-                    return { success: false, error: `Not enough ${goodId} in cargo` };
-                }
-                
-                cargoChange += amount; // amount is negative, so this reduces cargo
+                buyTransactions.push({ goodId, amount });
             }
-            
-            // Calculate total cost and average price for this transaction
+        }
+        
+        // Execute sells first
+        for (const { goodId, amount } of sellTransactions) {
+            const sellAmount = -amount;
             const tradeGoldChange = this.calculateTotalCostForTrade(port, goodId, amount);
-            // calculateTotalCostForTrade returns negative for buying, positive for selling
-            goldSpent -= tradeGoldChange; // Invert so goldSpent is positive for spending
+            goldSpent -= tradeGoldChange; // Invert convention
             
-            // Calculate average price for buying transactions
-            let avgPrice = 0;
-            if (amount > 0) {
-                avgPrice = Math.round(Math.abs(tradeGoldChange) / amount);
+            // Sell to port
+            this.removeCargoFromBoat(boat, goodId, sellAmount);
+            if (!port.stockpile[goodId]) {
+                port.stockpile[goodId] = 0;
             }
+            port.stockpile[goodId] += sellAmount;
+            
+            changes.push({ goodId, amount });
+        }
+        
+        // Execute buys second (after cargo space and gold freed up)
+        for (const { goodId, amount } of buyTransactions) {
+            const tradeGoldChange = this.calculateTotalCostForTrade(port, goodId, amount);
+            goldSpent -= tradeGoldChange; // Invert convention
+            
+            // Calculate average price for tracking
+            const avgPrice = Math.round(Math.abs(tradeGoldChange) / amount);
+            
+            // Buy from port
+            port.stockpile[goodId] = (port.stockpile[goodId] || 0) - amount;
+            this.addCargoToBoat(boat, goodId, amount, avgPrice);
             
             changes.push({ goodId, amount, avgPrice });
-        }
-        
-        // Check if player has enough gold for the net transaction
-        if (goldSpent > playerGold) {
-            return { success: false, error: 'Not enough gold' };
-        }
-        
-        // Check if player has enough cargo space for the net transaction
-        const currentCargoUsed = this.getCargoUsed(boat);
-        const availableCargoSpace = boat.cargoCapacity - currentCargoUsed;
-        if (cargoChange > availableCargoSpace) {
-            return { success: false, error: 'Not enough cargo space' };
-        }
-        
-        // Execute all transactions
-        for (const change of changes) {
-            if (change.amount > 0) {
-                // Buy from port
-                port.stockpile[change.goodId] -= change.amount;
-                this.addCargoToBoat(boat, change.goodId, change.amount, change.avgPrice);
-            } else {
-                // Sell to port
-                const sellAmount = -change.amount;
-                this.removeCargoFromBoat(boat, change.goodId, sellAmount);
-                if (!port.stockpile[change.goodId]) {
-                    port.stockpile[change.goodId] = 0;
-                }
-                port.stockpile[change.goodId] += sellAmount;
-            }
         }
         
         // Recalculate prices after trade

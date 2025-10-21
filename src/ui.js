@@ -1125,6 +1125,12 @@ const UI = {
         const content = document.createElement('div');
         content.className = 'trading-content';
         
+        // Add mouse wheel support for scrolling
+        content.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            content.scrollTop += e.deltaY;
+        });
+        
         // Get all goods that are either at port or in player cargo
         const availableGoods = this.getAvailableGoodsForTrading(port);
         
@@ -1257,23 +1263,10 @@ const UI = {
         const minMultiplier = 0.25;  // 25% of base (surplus floor)
         const maxMultiplier = 4.0;   // 400% of base (shortage ceiling)
         
-        // Calculate what player can afford to trade
-        const maxPlayerCanSell = playerQty;
-        const cargoSpace = Game.playerBoat.cargoCapacity - Economy.getCargoUsed(Game.playerBoat);
-        const maxPlayerCanBuy = Math.min(portQty, cargoSpace + playerQty);
-        
-        // Slider always spans full price range for visual consistency
+        // AIDEV-NOTE: No pre-clamping of slider range - let user drag freely
+        // Constraints will be applied dynamically in updateTrade() based on current state
         const sliderMin = minMultiplier;  // 0.25
         const sliderMax = maxMultiplier;  // 4.0
-        
-        // Calculate achievable price range for limiting slider movement
-        // When player BUYS, port stock DECREASES (min stock, max price)
-        // When player SELLS, port stock INCREASES (max stock, min price)
-        const minStock = Math.max(0, portQty - maxPlayerCanBuy);  // After buying FROM port
-        const maxStock = portQty + maxPlayerCanSell;  // After selling TO port
-        
-        const minAchievableMultiplier = Economy.getPriceMultiplierFromStock(maxStock, equilibrium);  // Low price (can sell)
-        const maxAchievableMultiplier = Economy.getPriceMultiplierFromStock(minStock, equilibrium);  // High price (can buy)
         
         // Initial price
         const initialPrice = Math.round(basePrice * currentMultiplier);
@@ -1303,25 +1296,24 @@ const UI = {
         // The thumb is 16px wide, and the visual percentage needs adjustment.
         const valueToVisualPercent = (value) => {
             // For a slider with min=0, max=100, the visual position formula is:
-            // visual% = (value / max) * 100, but adjusted for thumb width
-            // Empirically: when slider value=50, it appears at ~55.5% visually
-            // This means we need to compensate by shifting markers right
-            const thumbWidthPercent = 5.5; // Measured from actual slider rendering
-            return thumbWidthPercent + (value / 100) * (100 - 2 * thumbWidthPercent);
+            // The marker uses transform: translate(-50%, -50%) to center on the position
+            // We just need to match where the thumb center actually appears
+            // Adjusted from 5.5 to 2.0 for better alignment
+            const thumbOffset = 2.0;
+            return thumbOffset + (value / 100) * (100 - 2 * thumbOffset);
         };
         
-        // Position markers at exact visual percentages
-        // Since 0.5x→pos25, 1.0x→pos50, 2.0x→pos75, just use those directly
-        const cheapMarkerPos = 25.0;      // 0.5x multiplier
-        const baseMarkerPos = 50.0;        // 1.0x multiplier
-        const expensiveMarkerPos = 75.0;   // 2.0x multiplier
+        // AIDEV-NOTE: Calculate zero-trade position (where tradeAmount = 0)
+        // This is where targetStock equals initialStock (current port stock)
+        const zeroMultiplier = Economy.getPriceMultiplierFromStock(portQty, equilibrium);
+        const zeroPosition = multiplierToPosition(zeroMultiplier);
         
-        // Convert current multiplier to slider position
-        const currentPosition = multiplierToPosition(currentMultiplier);
-        
-        // Convert achievable range to positions
-        const minAchievablePosition = multiplierToPosition(minAchievableMultiplier);
-        const maxAchievablePosition = multiplierToPosition(maxAchievableMultiplier);
+        // Position markers at exact visual percentages accounting for thumb offset
+        // The price markers use slider values, but need visual adjustment for CSS positioning
+        const cheapMarkerPos = valueToVisualPercent(25.0);      // 0.5x multiplier
+        const baseMarkerPos = valueToVisualPercent(50.0);        // 1.0x multiplier
+        const expensiveMarkerPos = valueToVisualPercent(75.0);   // 2.0x multiplier
+        const zeroMarkerPos = valueToVisualPercent(zeroPosition); // Current price (no trade)
         
         // Build cargo display with average price if available
         let cargoDisplay = `You: ${playerQty}`;
@@ -1338,23 +1330,26 @@ const UI = {
                 <span class="price" data-good-id="${goodId}">${initialPrice}g</span>
             </div>
             <div class="slider-container" data-good-id="${goodId}">
+                <button class="slider-adjust-btn minus-btn" data-good-id="${goodId}" title="Sell one more unit">-1</button>
                 <div class="slider-track-wrapper">
                     ${cheapMarkerPos !== null ? `<div class="price-marker cheap-marker" style="left: ${cheapMarkerPos.toFixed(1)}%"></div>` : ''}
                     ${baseMarkerPos !== null ? `<div class="price-marker base-marker" style="left: ${baseMarkerPos.toFixed(1)}%"></div>` : ''}
                     ${expensiveMarkerPos !== null ? `<div class="price-marker expensive-marker" style="left: ${expensiveMarkerPos.toFixed(1)}%"></div>` : ''}
+                    <div class="price-marker zero-marker" style="left: ${zeroMarkerPos.toFixed(1)}%" title="No trade"></div>
                     <input type="range" 
                         class="trade-slider" 
                         min="0" 
                         max="100" 
-                        value="${currentPosition.toFixed(2)}"
+                        value="${zeroPosition.toFixed(2)}"
                         step="0.1"
                         data-good-id="${goodId}"
                         data-base-price="${basePrice}"
                         data-initial-stock="${portQty}"
                         data-equilibrium="${equilibrium}"
-                        data-min-achievable-pos="${minAchievablePosition.toFixed(2)}"
-                        data-max-achievable-pos="${maxAchievablePosition.toFixed(2)}">
+                        data-player-qty="${playerQty}"
+                        data-zero-pos="${zeroPosition.toFixed(2)}">
                 </div>
+                <button class="slider-adjust-btn plus-btn" data-good-id="${goodId}" title="Buy one more unit">+1</button>
                 <div class="slider-value">0</div>
             </div>
             <div class="cargo-stock" style="color: ${playerQty > 0 ? '#4CAF50' : '#888'}">${cargoDisplay}</div>
@@ -1363,59 +1358,179 @@ const UI = {
         const slider = row.querySelector('.trade-slider');
         const valueDisplay = row.querySelector('.slider-value');
         const priceDisplay = row.querySelector('.price');
+        const minusBtn = row.querySelector('.minus-btn');
+        const plusBtn = row.querySelector('.plus-btn');
         
-        slider.oninput = () => {
-            // Convert slider position (0-100) to multiplier
-            let position = parseFloat(slider.value);
+        // AIDEV-NOTE: Shared update function for slider and buttons
+        const updateTrade = (requestedTradeAmount = null) => {
             const initialStock = parseInt(slider.getAttribute('data-initial-stock'));
             const equilibriumStock = parseInt(slider.getAttribute('data-equilibrium'));
             const basePriceValue = parseInt(slider.getAttribute('data-base-price'));
-            const minAchievablePos = parseFloat(slider.getAttribute('data-min-achievable-pos'));
-            const maxAchievablePos = parseFloat(slider.getAttribute('data-max-achievable-pos'));
+            const playerQuantity = parseInt(slider.getAttribute('data-player-qty'));
+            const zeroPos = parseFloat(slider.getAttribute('data-zero-pos'));
             
-            // Clamp to achievable range
-            position = Math.max(minAchievablePos, Math.min(maxAchievablePos, position));
+            let tradeAmount;
+            let position;
             
-            // Update slider position to clamped value
-            slider.value = position;
+            if (requestedTradeAmount !== null) {
+                // Called from +1/-1 buttons with explicit trade amount
+                tradeAmount = requestedTradeAmount;
+                
+                // Update slider position to match requested trade
+                if (tradeAmount === 0) {
+                    position = zeroPos;
+                } else {
+                    const targetStock = initialStock - tradeAmount;
+                    const targetMultiplier = Economy.getPriceMultiplierFromStock(targetStock, equilibriumStock);
+                    position = multiplierToPosition(targetMultiplier);
+                }
+                slider.value = position;
+            } else {
+                // Called from slider - convert position to trade amount
+                position = parseFloat(slider.value);
+                
+                // AIDEV-NOTE: Snap to zero deadzone (±0.5% of slider range around zero position)
+                // This prevents rounding errors from causing small unwanted trades
+                const deadzoneRadius = 0.5;
+                if (Math.abs(position - zeroPos) < deadzoneRadius) {
+                    position = zeroPos;
+                    slider.value = zeroPos;
+                    tradeAmount = 0;
+                } else {
+                    // Convert position to multiplier to stock to trade amount
+                    const targetMultiplier = positionToMultiplier(position);
+                    const targetStock = Math.round(Economy.getStockFromPriceMultiplier(targetMultiplier, equilibriumStock));
+                    tradeAmount = initialStock - targetStock;
+                    
+                    // Additional check: if calculated trade is tiny (±0.5 units), snap to zero
+                    if (Math.abs(tradeAmount) < 0.5) {
+                        tradeAmount = 0;
+                        slider.value = zeroPos;
+                    }
+                }
+            }
             
-            // Convert position to multiplier
-            const targetMultiplier = positionToMultiplier(position);
+            // AIDEV-NOTE: Calculate post-trade state from OTHER pending trades
+            // This gives us accurate cargo space and gold available for THIS trade
+            let otherTradesCargo = 0;
+            let otherTradesGold = 0;
+            for (const otherGoodId in this.currentTransactions) {
+                if (otherGoodId !== goodId) {
+                    const otherAmount = this.currentTransactions[otherGoodId] || 0;
+                    if (otherAmount !== 0) {
+                        // Cargo: positive = buying (uses space), negative = selling (frees space)
+                        otherTradesCargo += otherAmount;
+                        
+                        // Gold: calculate cost/earnings from other trades
+                        const otherGoldChange = Economy.calculateTotalCostForTrade(port, otherGoodId, otherAmount);
+                        otherTradesGold -= otherGoldChange; // Invert: negative = spending, positive = earning
+                    }
+                }
+            }
             
-            // Calculate target stock from price multiplier
-            const targetStock = Math.round(Economy.getStockFromPriceMultiplier(targetMultiplier, equilibriumStock));
+            // Calculate available resources AFTER other trades
+            const currentCargo = Economy.getCargoUsed(Game.playerBoat);
+            const postTradeCargoUsed = currentCargo + otherTradesCargo;
+            const postTradeGold = Game.player.gold - otherTradesGold;
+            const availableSpace = Game.playerBoat.cargoCapacity - postTradeCargoUsed;
             
-            // Calculate trade amount (positive = buying from port, negative = selling to port)
-            const tradeAmount = initialStock - targetStock;
+            // AIDEV-NOTE: Apply trade constraints (gold, cargo, inventory)
+            if (tradeAmount > 0) {
+                // BUYING from port: check gold and cargo space (post-trade)
+                
+                // Calculate max we can afford with post-trade gold
+                let maxCanAfford = 0;
+                let goldSpent = 0;
+                for (let i = 1; i <= tradeAmount; i++) {
+                    const stockLevel = initialStock - i;
+                    const unitPrice = Economy.calculatePriceAtStockLevel(goodId, stockLevel, equilibriumStock);
+                    if (goldSpent + unitPrice <= postTradeGold) {
+                        goldSpent += unitPrice;
+                        maxCanAfford = i;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Clamp to constraints (using post-trade available space)
+                const maxCanBuy = Math.min(tradeAmount, maxCanAfford, availableSpace, initialStock);
+                if (tradeAmount > maxCanBuy) {
+                    tradeAmount = maxCanBuy;
+                    // Recalculate slider position from clamped amount
+                    const clampedStock = initialStock - tradeAmount;
+                    const clampedMultiplier = Economy.getPriceMultiplierFromStock(clampedStock, equilibriumStock);
+                    position = multiplierToPosition(clampedMultiplier);
+                    slider.value = position;
+                }
+            } else if (tradeAmount < 0) {
+                // SELLING to port: ensure we don't sell more than we have
+                const maxCanSell = playerQuantity;
+                if (Math.abs(tradeAmount) > maxCanSell) {
+                    tradeAmount = -maxCanSell;
+                    // Recalculate slider position from clamped amount
+                    const clampedStock = initialStock - tradeAmount;
+                    const clampedMultiplier = Economy.getPriceMultiplierFromStock(clampedStock, equilibriumStock);
+                    position = multiplierToPosition(clampedMultiplier);
+                    slider.value = position;
+                }
+            }
             
-            // Calculate prices
+            // Calculate final prices
             const originalPrice = Math.round(basePriceValue * Economy.getPriceMultiplierFromStock(initialStock, equilibriumStock));
-            const newPrice = Math.round(basePriceValue * targetMultiplier);
+            const finalStock = initialStock - tradeAmount;
+            const newPrice = Math.round(basePriceValue * Economy.getPriceMultiplierFromStock(finalStock, equilibriumStock));
             
             // Calculate total gold cost and average price
             const totalGold = Economy.calculateTotalCostForTrade(port, goodId, tradeAmount);
             const avgPrice = tradeAmount !== 0 ? Math.abs(totalGold / tradeAmount) : originalPrice;
             
             // Update displays
-            // Left side: original price → new price
             if (tradeAmount === 0) {
                 priceDisplay.textContent = `${originalPrice}g`;
-            } else {
-                priceDisplay.textContent = `${originalPrice}g → ${newPrice}g`;
-            }
-            
-            // Right side: units @ average price
-            if (tradeAmount === 0) {
                 valueDisplay.textContent = '0';
             } else {
+                priceDisplay.textContent = `${originalPrice}g → ${newPrice}g`;
                 const unitsText = tradeAmount > 0 ? `+${tradeAmount}` : tradeAmount;
                 valueDisplay.textContent = `${unitsText} @ ${Math.round(avgPrice)}g`;
             }
+            
+            // AIDEV-NOTE: Update button states
+            // -1: Sell more OR reduce a purchase (tradeAmount - 1)
+            // +1: Buy more OR reduce a sale (tradeAmount + 1)
+            
+            // Can use -1 button if:
+            // - Currently buying and can reduce (tradeAmount > 0), OR
+            // - Can sell from inventory (tradeAmount > -playerQuantity)
+            const canMinusOne = tradeAmount > 0 || (playerQuantity > 0 && tradeAmount > -playerQuantity);
+            
+            // Can use +1 button if:
+            // - Currently selling and can reduce (tradeAmount < 0), OR  
+            // - Can buy more from port (tradeAmount < initialStock)
+            const canPlusOne = tradeAmount < 0 || tradeAmount < initialStock;
+            
+            plusBtn.disabled = !canPlusOne;
+            minusBtn.disabled = !canMinusOne;
             
             // Store transaction
             this.currentTransactions[goodId] = tradeAmount;
             this.updateTransactionSummary(port);
         };
+        
+        slider.oninput = () => updateTrade();
+        
+        // AIDEV-NOTE: +1/-1 button handlers
+        plusBtn.onclick = () => {
+            const currentAmount = this.currentTransactions[goodId] || 0;
+            updateTrade(currentAmount + 1);
+        };
+        
+        minusBtn.onclick = () => {
+            const currentAmount = this.currentTransactions[goodId] || 0;
+            updateTrade(currentAmount - 1);
+        };
+        
+        // Initialize button states
+        updateTrade();
         
         return row;
     },
@@ -1483,14 +1598,63 @@ const UI = {
             return;
         }
         
+        // DEBUG: Capture state before trade
+        console.log('=== TRADE EXECUTION DEBUG ===');
+        console.log('Port:', port.name);
+        console.log('Player Gold Before:', Game.player.gold);
+        console.log('Cargo Before:', Economy.getCargoUsed(Game.playerBoat), '/', Game.playerBoat.cargoCapacity);
+        
+        // Deep copy cargo before trade
+        const cargoBefore = {};
+        for (const goodId in Game.playerBoat.cargo) {
+            const cargoItem = Game.playerBoat.cargo[goodId];
+            cargoBefore[goodId] = typeof cargoItem === 'number' ? cargoItem : cargoItem.quantity;
+        }
+        
+        console.log('UI Requested Transactions:');
+        for (const goodId in this.currentTransactions) {
+            const amount = this.currentTransactions[goodId];
+            if (amount !== 0) {
+                console.log(`  ${goodId}: ${amount > 0 ? '+' : ''}${amount} (${amount > 0 ? 'BUY' : 'SELL'})`);
+            }
+        }
+        
         // Execute trade through economy system
         const result = Economy.executeTrade(port, Game.playerBoat, this.currentTransactions, Game.player.gold);
         
         if (!result.success) {
+            console.log('Trade FAILED:', result.error);
+            console.log('=== END TRADE DEBUG ===');
             // Show error modal on top of trading screen
             this.showErrorModal('Trade Failed', result.error);
             return;
         }
+        
+        // DEBUG: Capture state after trade
+        console.log('Trade Result:', result);
+        console.log('Player Gold After:', Game.player.gold - result.goldChange);
+        console.log('Cargo After:', Economy.getCargoUsed(Game.playerBoat), '/', Game.playerBoat.cargoCapacity);
+        
+        console.log('Actual Cargo Changes:');
+        const cargoAfter = {};
+        for (const goodId in Game.playerBoat.cargo) {
+            const cargoItem = Game.playerBoat.cargo[goodId];
+            cargoAfter[goodId] = typeof cargoItem === 'number' ? cargoItem : cargoItem.quantity;
+        }
+        
+        // Show changes
+        const allGoods = new Set([...Object.keys(cargoBefore), ...Object.keys(cargoAfter)]);
+        for (const goodId of allGoods) {
+            const before = cargoBefore[goodId] || 0;
+            const after = cargoAfter[goodId] || 0;
+            const change = after - before;
+            if (change !== 0) {
+                const expected = this.currentTransactions[goodId] || 0;
+                const match = change === expected ? '✓' : '❌ MISMATCH';
+                console.log(`  ${goodId}: ${before} → ${after} (${change > 0 ? '+' : ''}${change}) Expected: ${expected} ${match}`);
+            }
+        }
+        console.log('=== END TRADE DEBUG ===');
         
         // Play money click sound on successful transaction
         Audio.play('money_click');

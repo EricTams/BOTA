@@ -86,8 +86,11 @@ const Input = {
 
         // Mouse wheel events
         window.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            this.wheelDelta += e.deltaY;
+            // Only process zoom if no UI modal is open
+            if (!UI.hasActiveOverlay()) {
+                e.preventDefault();
+                this.wheelDelta += e.deltaY;
+            }
         }, { passive: false });
 
         console.log('Input initialized');

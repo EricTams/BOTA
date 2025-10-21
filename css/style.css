@@ -1113,7 +1113,41 @@ body {
     position: relative;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
+}
+
+.slider-adjust-btn {
+    width: 32px;
+    height: 24px;
+    padding: 0;
+    background: linear-gradient(to bottom, #d4af37, #b8941f);
+    border: 1px solid #8B7355;
+    border-radius: 4px;
+    color: #2c1810;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.slider-adjust-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #e5c047, #c9a52f);
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+}
+
+.slider-adjust-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.slider-adjust-btn:disabled {
+    background: linear-gradient(to bottom, #8B7355, #6B5845);
+    color: #4a3a2a;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .slider-track-wrapper {
@@ -1148,6 +1182,14 @@ body {
 .price-marker.expensive-marker {
     background: rgba(244, 67, 54, 0.7);
     box-shadow: 0 0 2px rgba(244, 67, 54, 0.7);
+}
+
+.price-marker.zero-marker {
+    background: rgba(255, 193, 7, 0.9);
+    box-shadow: 0 0 4px rgba(255, 193, 7, 0.9);
+    height: 20px;
+    width: 3px;
+    z-index: 3;
 }
 
 .trade-slider {
