@@ -14,7 +14,15 @@ const DiceSystem = {
         draggedDieIndex: null, // Currently dragged die
         dragOffset: { x: 0, y: 0 }, // Offset for drag rendering
         rollsAvailable: 1, // Number of rerolls remaining
-        hoveredButton: null // Which button is hovered
+        hoveredButton: null, // Which button is hovered
+        tooltip: { // Tooltip state
+            visible: false,
+            dieIndex: null, // Which die is being hovered
+            faceIndex: null, // Which face (0-5) is being hovered
+            x: 0,
+            y: 0,
+            filledSlots: [] // Array of booleans for each power-up slot
+        }
     },
 
     // Color palette
@@ -214,6 +222,9 @@ const DiceSystem = {
         if (this.testState.draggedDieIndex !== null) {
             this.renderDraggedDie(ctx);
         }
+
+        // Draw tooltip (must be last to appear on top)
+        this.renderTooltip(ctx, canvas);
     },
 
     // Render unwrapped dice (all 6 faces in a row)
@@ -1047,7 +1058,10 @@ const DiceSystem = {
 
     // Handle mouse move
     onMouseMove(mousePos, canvas) {
-        // Only update button hover states
+        // Check for face hover (for tooltip)
+        this.updateTooltip(mousePos, canvas);
+        
+        // Check button hovers
         const centerX = canvas.width / 2;
         const buttonY = this.layout.buttonY;
         
@@ -1085,6 +1099,145 @@ const DiceSystem = {
             mousePos.y >= buttonY && mousePos.y <= buttonY + this.layout.buttonHeight) {
             this.rerollSelected();
             return;
+        }
+    },
+
+    // AIDEV-NOTE: Tooltip system
+    // Updates tooltip state based on mouse position
+    updateTooltip(mousePos, canvas) {
+        const tooltip = this.testState.tooltip;
+        tooltip.visible = false;
+        tooltip.dieIndex = null;
+        tooltip.faceIndex = null;
+        
+        // TODO: In the future, also check unwrapped dice faces
+        // For now, only check the camera-facing die face in the rolling box
+        
+        const centerX = canvas.width / 2;
+        const rollingBoxY = this.layout.rollingBoxY;
+        const dieSize = this.layout.dieSize;
+        const dieSpacing = this.layout.dieSpacing;
+        
+        // Check each die in the rolling box
+        for (let i = 0; i < this.testState.dice.length; i++) {
+            const dieX = centerX - (this.testState.dice.length - 1) * dieSpacing / 2 + i * dieSpacing;
+            const dieY = rollingBoxY + this.layout.rollingBoxHeight / 2;
+            
+            // Simple box check around the die
+            const hitboxSize = dieSize * 1.5;
+            if (Math.abs(mousePos.x - dieX) < hitboxSize / 2 && 
+                Math.abs(mousePos.y - dieY) < hitboxSize / 2) {
+                
+                const state = this.testState.diceStates[i];
+                tooltip.visible = true;
+                tooltip.dieIndex = i;
+                tooltip.faceIndex = state.targetFace;
+                tooltip.x = mousePos.x + 15; // Offset from cursor
+                tooltip.y = mousePos.y + 15;
+                tooltip.filledSlots = []; // Start with empty slots
+                break;
+            }
+        }
+    },
+
+    // Render tooltip if visible
+    renderTooltip(ctx, canvas) {
+        const tooltip = this.testState.tooltip;
+        if (!tooltip.visible || tooltip.dieIndex === null) {
+            return;
+        }
+        
+        const die = this.testState.dice[tooltip.dieIndex];
+        const face = die.faces[tooltip.faceIndex];
+        
+        // Skip blank faces
+        if (!face.icon) {
+            return;
+        }
+        
+        // Get ability data
+        const ability = getAbilityData(face.icon);
+        if (!ability) {
+            return;
+        }
+        
+        // Calculate filled slots
+        const filledCount = tooltip.filledSlots.filter(f => f).length;
+        const formatted = formatAbilityDescription(ability, filledCount);
+        const calc = formatted.calculation;
+        
+        // Measure tooltip dimensions
+        ctx.font = 'bold 16px Arial';
+        const titleWidth = ctx.measureText(ability.displayName).width;
+        ctx.font = '14px Arial';
+        const descWidth = ctx.measureText(formatted.description).width;
+        const formulaText = calc.hasSlots ? `${calc.formula} = ${calc.result} ${calc.valueType}` : `${calc.result} ${calc.valueType}`;
+        const formulaWidth = ctx.measureText(formulaText).width;
+        
+        const tooltipWidth = Math.max(titleWidth, descWidth, formulaWidth, 200) + 40;
+        const slotRowHeight = ability.powerUpSlots > 0 ? 30 : 0;
+        const tooltipHeight = 100 + slotRowHeight;
+        
+        // Keep tooltip on screen
+        let x = tooltip.x;
+        let y = tooltip.y;
+        if (x + tooltipWidth > canvas.width) {
+            x = canvas.width - tooltipWidth - 10;
+        }
+        if (y + tooltipHeight > canvas.height) {
+            y = canvas.height - tooltipHeight - 10;
+        }
+        
+        // Draw tooltip background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.fillRect(x, y, tooltipWidth, tooltipHeight);
+        ctx.strokeRect(x, y, tooltipWidth, tooltipHeight);
+        
+        // Draw title
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(ability.displayName, x + 20, y + 25);
+        
+        // Draw description
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '14px Arial';
+        ctx.fillText(formatted.description, x + 20, y + 50);
+        
+        // Draw formula and result
+        ctx.fillStyle = '#AAFFAA';
+        ctx.fillText(formulaText, x + 20, y + 70);
+        
+        // Draw power-up slots if ability has them
+        if (ability.powerUpSlots > 0) {
+            ctx.fillStyle = '#CCCCCC';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Power-up slots (X = ${filledCount}):`, x + 20, y + 90);
+            
+            const slotSize = 20;
+            const slotSpacing = 5;
+            for (let i = 0; i < ability.powerUpSlots; i++) {
+                const slotX = x + 20 + i * (slotSize + slotSpacing);
+                const slotY = y + 95;
+                
+                const slotColor = ability.powerUpColors[i];
+                const isFilled = tooltip.filledSlots[i] === true;
+                
+                // Draw slot border
+                ctx.strokeStyle = this.colors[slotColor] || '#888888';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(slotX, slotY, slotSize, slotSize);
+                
+                // Fill if filled
+                if (isFilled) {
+                    ctx.fillStyle = this.colors[slotColor] || '#888888';
+                    ctx.fillRect(slotX + 2, slotY + 2, slotSize - 4, slotSize - 4);
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.fillRect(slotX + 2, slotY + 2, slotSize - 4, slotSize - 4);
+                }
+            }
         }
     }
 };
