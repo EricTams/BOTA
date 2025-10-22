@@ -196,6 +196,41 @@ const UI = {
         menuContainer.appendChild(exitBtn);
 
         this.overlay.appendChild(menuContainer);
+        
+        // Debug Tools section (positioned in top-right corner)
+        const debugContainer = document.createElement('div');
+        debugContainer.style.position = 'absolute';
+        debugContainer.style.top = '20px';
+        debugContainer.style.right = '20px';
+        debugContainer.style.textAlign = 'right';
+        
+        const debugTitle = document.createElement('div');
+        debugTitle.textContent = 'Debug Tools';
+        debugTitle.style.color = '#999';
+        debugTitle.style.fontSize = '14px';
+        debugTitle.style.marginBottom = '10px';
+        debugContainer.appendChild(debugTitle);
+        
+        // Dice Test button
+        const diceTestBtn = document.createElement('button');
+        diceTestBtn.className = 'menu-button';
+        diceTestBtn.textContent = 'Dice Test';
+        diceTestBtn.style.fontSize = '14px';
+        diceTestBtn.style.padding = '8px 16px';
+        diceTestBtn.style.marginBottom = '8px';
+        diceTestBtn.onclick = () => window.open('dice_test_standalone.html', '_blank');
+        debugContainer.appendChild(diceTestBtn);
+        
+        // Economy Analyzer button
+        const econBtn = document.createElement('button');
+        econBtn.className = 'menu-button';
+        econBtn.textContent = 'Economy Analyzer';
+        econBtn.style.fontSize = '14px';
+        econBtn.style.padding = '8px 16px';
+        econBtn.onclick = () => window.open('economy_analyzer.html', '_blank');
+        debugContainer.appendChild(econBtn);
+        
+        this.overlay.appendChild(debugContainer);
     },
 
     // Show simple message screen

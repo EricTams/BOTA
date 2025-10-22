@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Test - Standalone</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+        }
+        #game-canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Minimal setup for dice test -->
+    <script>
+        // Minimal Input module
+        const Input = {
+            keys: {},
+            mouse: { x: 0, y: 0, clicked: false, justClicked: false, button: 0 },
+            drag: { active: false },
+            init() {
+                window.addEventListener('mousemove', (e) => {
+                    this.mouse.x = e.clientX;
+                    this.mouse.y = e.clientY;
+                });
+                window.addEventListener('mousedown', (e) => {
+                    this.mouse.clicked = true;
+                    this.mouse.justClicked = true;
+                    this.mouse.button = e.button;
+                    
+                    // Prevent context menu on right click
+                    if (e.button === 2) {
+                        e.preventDefault();
+                    }
+                });
+                window.addEventListener('mouseup', (e) => {
+                    this.mouse.clicked = false;
+                });
+                // Prevent context menu
+                window.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                });
+                console.log('Input initialized');
+            },
+            getMousePosition() {
+                return { x: this.mouse.x, y: this.mouse.y };
+            },
+            reset() {
+                this.mouse.justClicked = false;
+            }
+        };
+
+        // Minimal Renderer module
+        const Renderer = {
+            canvas: null,
+            ctx: null,
+            init(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                console.log('Renderer initialized:', this.canvas.width, 'x', this.canvas.height);
+            }
+        };
+    </script>
+
+    <!-- Load dice modules -->
+    <script src="src/dice_data.js"></script>
+    <script src="src/dice_abilities.js"></script>
+    <script src="src/dice.js"></script>
+
+    <script>
+        console.log('=== Starting Dice Test ===');
+        
+        // Initialize
+        Renderer.init('game-canvas');
+        Input.init();
+        
+        console.log('DiceSystem:', DiceSystem);
+        DiceSystem.init();
+        
+        console.log('Dice loaded:', DiceSystem.testState.dice);
+        
+        // Game loop
+        let lastFrameTime = 0;
+        function gameLoop(currentTime) {
+            const deltaTime = lastFrameTime ? (currentTime - lastFrameTime) / 1000 : 0;
+            lastFrameTime = currentTime;
+            
+            // Update
+            DiceSystem.update(deltaTime);
+            
+            // Handle input
+            const mousePos = Input.getMousePosition();
+            if (mousePos) {
+                // Mouse down
+                if (Input.mouse.justClicked) {
+                    DiceSystem.onMouseDown(mousePos, Renderer.canvas);
+                }
+                
+                // Mouse up
+                if (!Input.mouse.clicked && DiceSystem.dragState && DiceSystem.dragState.active) {
+                    DiceSystem.onMouseUp(mousePos, Renderer.canvas);
+                }
+                
+                // Mouse move
+                DiceSystem.onMouseMove(mousePos, Renderer.canvas);
+            }
+            
+            // Render
+            DiceSystem.render(Renderer.ctx, Renderer.canvas);
+            
+            // Reset input
+            Input.reset();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        console.log('Starting game loop...');
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
+

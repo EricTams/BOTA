@@ -68,12 +68,17 @@ const Input = {
             this.mouse.clickY = e.clientY;
             
             // Start drag tracking
-            if (!clickedOnUI && e.button === 0) {
+            if (!clickedOnUI && (e.button === 0 || e.button === 2)) {
                 this.drag.startX = e.clientX;
                 this.drag.startY = e.clientY;
                 this.drag.currentX = e.clientX;
                 this.drag.currentY = e.clientY;
                 // Don't set active yet - wait for actual movement
+            }
+            
+            // Prevent context menu on right click
+            if (e.button === 2) {
+                e.preventDefault();
             }
         });
 

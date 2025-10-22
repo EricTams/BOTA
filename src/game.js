@@ -3,7 +3,7 @@
 
 const Game = {
     // Game state
-    state: 'loading', // loading, main_menu, playing, paused
+    state: 'main_menu', // loading, main_menu, playing, paused, dice_test
     running: false,
     lastFrameTime: 0,
     
@@ -96,6 +96,25 @@ const Game = {
     // Initialize game
     async init() {
         console.log('BOTA - Initializing...');
+
+        // AIDEV-NOTE: Dice test mode - skip normal initialization
+        if (this.state === 'dice_test') {
+            console.log('DICE TEST MODE - Skipping normal game initialization');
+            
+            // Hide loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.style.display = 'none';
+            }
+            
+            Renderer.init('game-canvas');
+            Input.init();
+            DiceSystem.init();
+            this.state = 'dice_test';
+            this.running = true;
+            requestAnimationFrame((time) => this.gameLoop(time));
+            return;
+        }
 
         try {
             // Initialize loading screen
@@ -400,8 +419,29 @@ const Game = {
     update(deltaTime) {
         // Update based on current state
         switch (this.state) {
+            case 'dice_test':
+                // AIDEV-NOTE: Dice test mode
+                DiceSystem.update(deltaTime);
+                
+                // Handle dice test input
+                const mousePos = Input.getMousePosition();
+                if (mousePos) {
+                    // Mouse down - start dragging
+                    if (Input.mouse.justClicked) {
+                        DiceSystem.onMouseDown(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse up - end dragging
+                    if (!Input.mouse.clicked && DiceSystem.dragState && DiceSystem.dragState.active) {
+                        DiceSystem.onMouseUp(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse move - update drag or hover
+                    DiceSystem.onMouseMove(mousePos, Renderer.canvas);
+                }
+                break;
             case 'main_menu':
-                // Main menu has no update logic (UI-driven)
+                // Main menu handled by UI module
                 break;
             case 'playing':
                 this.updateCamera(deltaTime);
@@ -492,6 +532,10 @@ const Game = {
     render() {
         // Render based on current state
         switch (this.state) {
+            case 'dice_test':
+                // AIDEV-NOTE: Dice test mode
+                DiceSystem.render(Renderer.ctx, Renderer.canvas);
+                break;
             case 'main_menu':
                 Renderer.renderMainMenu();
                 break;

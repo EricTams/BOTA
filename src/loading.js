@@ -13,6 +13,20 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
+            version: 'October 22, 2025',
+            date: 'October 22, 2025',
+            changes: [
+                { category: 'Added', text: 'Dice system with 3D rendering and animation' },
+                { category: 'Added', text: 'Dice test screen for development and testing' },
+                { category: 'Added', text: "Axe's personal and equipment dice with unique abilities" },
+                { category: 'Added', text: 'Dice rolling animation using axis-angle rotation' },
+                { category: 'Added', text: 'Debug tools menu on main menu screen' },
+                { category: 'Added', text: 'Right-click support for camera panning' },
+                { category: 'Technical', text: 'Implemented 3D cube rendering with perspective projection' },
+                { category: 'Technical', text: 'Implemented texture mapping for die faces' }
+            ]
+        },
+        {
             version: 'October 21, 2025',
             date: 'October 21, 2025',
             changes: [

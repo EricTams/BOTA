@@ -34,6 +34,33 @@ changelog: [
 
 ---
 
+## October 22, 2025
+
+### Added
+- Dice system with 3D rendering and animation
+- Dice test screen for development and testing
+- Axe's personal and equipment dice with unique abilities
+- Dice ability system with culling_blade, counter_helix, berserkers_call, chop, jab, and dodge
+- 3D perspective dice rendering with textured faces
+- Dice rolling animation using axis-angle rotation
+- Dice reroll functionality with drag-and-drop
+- Debug tools menu on main menu (Dice Test and Economy Analyzer buttons)
+- Right-click support for camera panning
+
+### Improved
+- Main menu now shows debug tools in top-right corner
+- Context menu prevention on right-click
+
+### Technical
+- Added dice_data.js for dice definitions
+- Added dice_abilities.js for ability metadata
+- Added dice.js for dice rendering and animation system
+- Implemented 3D cube rendering with proper perspective projection
+- Implemented texture mapping for die faces
+- Added proper Rodrigues' rotation formula for axis-angle rotation
+
+---
+
 ## October 21, 2025
 
 ### Added
