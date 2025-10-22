@@ -150,7 +150,7 @@ const DiceSystem = {
                 const animationDuration = 0.7; // Total animation time (playing backwards from 0.7s to 0.0s)
                 
                 if (t < animationDuration) {
-                    // Calculate backwards time: we start at t=7.0 and move towards t=0.0
+                    // Calculate backwards time: we start at t=0.7 and move towards t=0.0
                     const backwardsTime = animationDuration - t;
                     const progress = backwardsTime / animationDuration; // 1.0 -> 0.0 as animation plays
                     
@@ -161,6 +161,15 @@ const DiceSystem = {
                     const angle = progress * Math.PI * 4; // Starts at 2 full rotations, ends at 0
                     this.applyAxisRotation(state, state.rollAxis, angle, state.targetRotationX, state.targetRotationY, state.targetRotationZ);
                     
+                    // On the very last frame before completion, snap to exact target to avoid any visual drift
+                    if (t >= animationDuration - 0.016) { // Within one frame (60fps = ~16ms)
+                        state.rotationX = state.targetRotationX;
+                        state.rotationY = state.targetRotationY;
+                        state.rotationZ = state.targetRotationZ;
+                        state.yOffset = 0;
+                        state.axisRotation = null; // Clear axis rotation
+                    }
+                    
                 } else {
                     // Animation complete - lock to target orientation
                     state.rolling = false;
@@ -169,6 +178,7 @@ const DiceSystem = {
                     state.rotationY = state.targetRotationY;
                     state.rotationZ = state.targetRotationZ;
                     state.yOffset = 0;
+                    state.axisRotation = null; // Clear axis rotation
                     state.currentFace = state.targetFace;
                     console.log(`Die landed on face ${state.targetFace}`);
                 }
