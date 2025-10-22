@@ -12,6 +12,11 @@
 // - targeting: Self, ally, allies, enemy, enemies
 // - powerUpSlots: number of additional dice that can enhance this ability
 // - powerUpColors: array of colors accepted in power-up slots
+// - effectType: 'instant', 'damage', 'heal', 'shield', 'dot', 'hot', 'buff', 'debuff'
+// - duration: turns for DoT/HoT/buffs/debuffs (optional)
+// - stackable: boolean for poison-like effects (optional)
+// - targetingRestriction: 'melee' (front row only), 'ranged' (any), null (default)
+// - aoeType: null, 'cleave' (adjacent), 'chain' (bounce), 'all' (everyone) (optional)
 
 const AbilityData = {
     // Axe-specific abilities
@@ -23,6 +28,8 @@ const AbilityData = {
         damagePerSlot: 10,
         color: "Red",
         targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "melee",
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
     },
@@ -35,6 +42,8 @@ const AbilityData = {
         damagePerSlot: 4,
         color: "Red",
         targeting: "enemies",
+        effectType: "damage",
+        aoeType: "all",
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
     },
@@ -46,7 +55,8 @@ const AbilityData = {
         baseArmor: 10,
         armorPerSlot: 5,
         color: "Red",
-        targeting: "enemies",
+        targeting: "self",
+        effectType: "shield",
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
     },
@@ -60,6 +70,8 @@ const AbilityData = {
         damagePerSlot: 3,
         color: "Red",
         targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "melee",
         powerUpSlots: 1,
         powerUpColors: ["Red"]
     },
@@ -72,6 +84,8 @@ const AbilityData = {
         damagePerSlot: 2,
         color: "Green",
         targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "melee",
         powerUpSlots: 1,
         powerUpColors: ["Red"]
     },
@@ -83,9 +97,95 @@ const AbilityData = {
         baseEvasion: 5,
         evasionPerSlot: 3,
         color: "Green",
-        targeting: "Self",
+        targeting: "self",
+        effectType: "shield",
         powerUpSlots: 1,
         powerUpColors: ["Green"]
+    },
+
+    // New abilities for combat testing
+    slash: {
+        icon: "slash",
+        displayName: "Slash",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 8,
+        damagePerSlot: 4,
+        color: "Red",
+        targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "ranged",
+        powerUpSlots: 1,
+        powerUpColors: ["Red"]
+    },
+
+    heal: {
+        icon: "heal",
+        displayName: "Heal",
+        description: "Restore {base} + {perSlot}*{X} HP",
+        baseHeal: 10,
+        healPerSlot: 5,
+        color: "Blue",
+        targeting: "self",
+        effectType: "heal",
+        powerUpSlots: 1,
+        powerUpColors: ["Blue"]
+    },
+
+    bleed: {
+        icon: "bleed",
+        displayName: "Bleed",
+        description: "Inflict {base} + {perSlot}*{X} damage per turn for 3 turns",
+        baseDamage: 3,
+        damagePerSlot: 2,
+        color: "Green",
+        targeting: "enemy",
+        effectType: "dot",
+        duration: 3,
+        stackable: false,
+        powerUpSlots: 1,
+        powerUpColors: ["Green"]
+    },
+
+    poison: {
+        icon: "poison",
+        displayName: "Poison",
+        description: "Inflict {base} stacking poison damage per turn for 4 turns",
+        baseDamage: 2,
+        damagePerSlot: 1,
+        color: "Green",
+        targeting: "enemy",
+        effectType: "dot",
+        duration: 4,
+        stackable: true,
+        powerUpSlots: 1,
+        powerUpColors: ["Green"]
+    },
+
+    regenerate: {
+        icon: "regenerate",
+        displayName: "Regenerate",
+        description: "Restore {base} + {perSlot}*{X} HP per turn for 3 turns",
+        baseHeal: 4,
+        healPerSlot: 2,
+        color: "Blue",
+        targeting: "self",
+        effectType: "hot",
+        duration: 3,
+        powerUpSlots: 1,
+        powerUpColors: ["Blue"]
+    },
+
+    shield: {
+        icon: "shield",
+        displayName: "Shield",
+        description: "Gain {base} + {perSlot}*{X} armor",
+        baseArmor: 8,
+        armorPerSlot: 4,
+        color: "Red",
+        targeting: "self",
+        effectType: "shield",
+        powerUpSlots: 1,
+        powerUpColors: ["Red"]
     }
 };
 

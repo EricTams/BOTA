@@ -22,7 +22,9 @@ const DiceSystem = {
             x: 0,
             y: 0,
             filledSlots: [] // Array of booleans for each power-up slot
-        }
+        },
+        combatMode: true, // AIDEV-NOTE: Combat mode enabled for testing
+        selectedDieForAbility: null // Index of die face selected to execute as ability
     },
 
     // Color palette
@@ -101,6 +103,28 @@ const DiceSystem = {
 
         // Pre-render face textures for all dice
         this.faceTextures = this.testState.dice.map(die => this.createFaceTextures(die));
+
+        // Initialize combat if in combat mode
+        if (this.testState.combatMode) {
+            // Create mock captain objects for Axe vs Axe testing
+            const playerCaptain = {
+                id: 'player_axe',
+                name: 'Player Axe',
+                hp: 100,
+                maxHp: 100,
+                dice: ['axe_personal', 'axe_equipment']
+            };
+            const enemyCaptain = {
+                id: 'enemy_axe',
+                name: 'Enemy Axe',
+                hp: 100,
+                maxHp: 100,
+                dice: ['axe_personal', 'axe_equipment']
+            };
+            
+            Combat.init(playerCaptain, enemyCaptain);
+            Combat.startTurn();
+        }
 
         console.log('DiceSystem - Initialized with', this.testState.dice.length, 'die');
     },
@@ -225,6 +249,11 @@ const DiceSystem = {
 
         // Draw tooltip (must be last to appear on top)
         this.renderTooltip(ctx, canvas);
+
+        // Draw combat UI if in combat mode
+        if (this.testState.combatMode && Combat.state.active) {
+            this.renderCombatUI(ctx, canvas);
+        }
     },
 
     // Render unwrapped dice (all 6 faces in a row)
@@ -1061,14 +1090,35 @@ const DiceSystem = {
         // Check for face hover (for tooltip)
         this.updateTooltip(mousePos, canvas);
         
-        // Check button hovers
+        this.testState.hoveredButton = null;
+
+        // Check combat button hovers if in combat mode
+        if (this.testState.combatMode && Combat.state.active) {
+            const centerX = canvas.width / 2;
+            const buttonY = canvas.height - 80;
+            const buttonWidth = 150;
+            const buttonHeight = 40;
+            const buttonSpacing = 20;
+
+            const executeX = centerX - buttonWidth - buttonSpacing / 2;
+            const endTurnX = centerX + buttonSpacing / 2;
+
+            if (mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
+                if (mousePos.x >= executeX && mousePos.x <= executeX + buttonWidth) {
+                    this.testState.hoveredButton = 'execute';
+                } else if (mousePos.x >= endTurnX && mousePos.x <= endTurnX + buttonWidth) {
+                    this.testState.hoveredButton = 'end_turn';
+                }
+            }
+            return; // Skip normal button checks in combat mode
+        }
+        
+        // Check normal button hovers
         const centerX = canvas.width / 2;
         const buttonY = this.layout.buttonY;
         
         const rollButtonX = centerX + 50;
         const rerollButtonX = centerX + 50 + this.layout.buttonWidth + 20;
-        
-        this.testState.hoveredButton = null;
         
         if (mousePos.y >= buttonY && mousePos.y <= buttonY + this.layout.buttonHeight) {
             if (mousePos.x >= rollButtonX && mousePos.x <= rollButtonX + this.layout.buttonWidth) {
@@ -1081,6 +1131,34 @@ const DiceSystem = {
 
     // Check if a button was clicked
     checkButtonClick(mousePos, canvas) {
+        // Handle combat button clicks if in combat mode
+        if (this.testState.combatMode && Combat.state.active) {
+            const centerX = canvas.width / 2;
+            const buttonY = canvas.height - 80;
+            const buttonWidth = 150;
+            const buttonHeight = 40;
+            const buttonSpacing = 20;
+
+            const executeX = centerX - buttonWidth - buttonSpacing / 2;
+            const endTurnX = centerX + buttonSpacing / 2;
+
+            // Execute Ability button
+            if (mousePos.x >= executeX && mousePos.x <= executeX + buttonWidth &&
+                mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
+                this.executeCombatAbility();
+                return;
+            }
+
+            // End Turn button
+            if (mousePos.x >= endTurnX && mousePos.x <= endTurnX + buttonWidth &&
+                mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
+                Combat.endTurn();
+                return;
+            }
+            return; // Skip normal button checks in combat mode
+        }
+
+        // Normal button clicks
         const centerX = canvas.width / 2;
         const buttonY = this.layout.buttonY;
         
@@ -1100,6 +1178,41 @@ const DiceSystem = {
             this.rerollSelected();
             return;
         }
+    },
+
+    // Execute ability from rolled dice
+    executeCombatAbility() {
+        if (!Combat.state.active) return;
+
+        // Get all rolled dice faces
+        const rolledFaces = [];
+        for (let i = 0; i < this.testState.dice.length; i++) {
+            const die = this.testState.dice[i];
+            const state = this.testState.diceStates[i];
+            const face = die.faces[state.targetFace];
+            
+            if (face && face.icon) {
+                rolledFaces.push({
+                    dieIndex: i,
+                    faceIndex: state.targetFace,
+                    face: face,
+                    ability: getAbilityData(face.icon)
+                });
+            }
+        }
+
+        if (rolledFaces.length === 0) {
+            console.log('No abilities to execute');
+            return;
+        }
+
+        // Execute first ability (TODO: let player choose which one)
+        const chosen = rolledFaces[0];
+        const caster = Combat.getCurrentUnit();
+        const target = Combat.getOpponentUnit();
+        const filledSlots = 0; // TODO: implement power-up slot filling
+
+        Combat.executeAbility(chosen.ability, caster, target, filledSlots);
     },
 
     // AIDEV-NOTE: Tooltip system
@@ -1239,6 +1352,153 @@ const DiceSystem = {
                 }
             }
         }
+    },
+
+    // AIDEV-NOTE: Combat UI rendering
+    renderCombatUI(ctx, canvas) {
+        if (!Combat.state.active) return;
+
+        const playerUnit = Combat.state.playerUnit;
+        const enemyUnit = Combat.state.enemyUnit;
+
+        // Draw combat info panel on the left
+        const panelX = 20;
+        const panelY = 20;
+        const panelWidth = 300;
+        const panelHeight = 400;
+
+        // Panel background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+
+        // Title
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Combat', panelX + 20, panelY + 35);
+
+        // Turn indicator
+        const currentTurnText = Combat.state.currentTurn === 'player' ? 'Your Turn' : 'Enemy Turn';
+        ctx.fillStyle = Combat.state.currentTurn === 'player' ? '#44FF44' : '#FF4444';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`Turn ${Combat.state.turnNumber} - ${currentTurnText}`, panelX + 20, panelY + 60);
+
+        // Player unit
+        this.renderUnitInfo(ctx, playerUnit, panelX + 20, panelY + 90, true);
+
+        // Enemy unit
+        this.renderUnitInfo(ctx, enemyUnit, panelX + 20, panelY + 200, false);
+
+        // Combat log (last 5 entries)
+        ctx.fillStyle = '#CCCCCC';
+        ctx.font = '12px Arial';
+        ctx.fillText('Combat Log:', panelX + 20, panelY + 320);
+        
+        const logEntries = Combat.state.combatLog.slice(-5);
+        logEntries.forEach((entry, i) => {
+            const truncated = entry.message.length > 35 ? entry.message.substring(0, 32) + '...' : entry.message;
+            ctx.fillText(truncated, panelX + 20, panelY + 340 + i * 15);
+        });
+
+        // Action buttons (bottom of screen)
+        this.renderCombatButtons(ctx, canvas);
+    },
+
+    // Render unit info (HP, armor, status effects)
+    renderUnitInfo(ctx, unit, x, y, isPlayer) {
+        const width = 260;
+        
+        // Unit name
+        ctx.fillStyle = isPlayer ? '#44CCFF' : '#FF8844';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText(unit.name, x, y);
+
+        // HP bar
+        const hpBarWidth = width;
+        const hpBarHeight = 20;
+        const hpPercent = unit.hp / unit.maxHp;
+        
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(x, y + 5, hpBarWidth, hpBarHeight);
+        
+        ctx.fillStyle = hpPercent > 0.5 ? '#44FF44' : (hpPercent > 0.25 ? '#FFAA44' : '#FF4444');
+        ctx.fillRect(x, y + 5, hpBarWidth * hpPercent, hpBarHeight);
+        
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x, y + 5, hpBarWidth, hpBarHeight);
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`HP: ${unit.hp}/${unit.maxHp}`, x + hpBarWidth / 2, y + 20);
+        ctx.textAlign = 'left';
+
+        // Armor
+        if (unit.armor > 0) {
+            ctx.fillStyle = '#AAAAFF';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Armor: ${unit.armor}`, x, y + 40);
+        }
+
+        // Status effects
+        if (unit.statusEffects && unit.statusEffects.length > 0) {
+            ctx.fillStyle = '#FFAA44';
+            ctx.font = '12px Arial';
+            let statusY = y + (unit.armor > 0 ? 55 : 40);
+            unit.statusEffects.forEach((effect) => {
+                let statusText = effect.type;
+                if (effect.type === 'poison' && effect.stacks > 1) {
+                    statusText += ` (${effect.stacks}x)`;
+                }
+                statusText += ` [${effect.duration} turns]`;
+                ctx.fillText(statusText, x, statusY);
+                statusY += 15;
+            });
+        }
+    },
+
+    // Render combat action buttons
+    renderCombatButtons(ctx, canvas) {
+        const centerX = canvas.width / 2;
+        const buttonY = canvas.height - 80;
+        const buttonWidth = 150;
+        const buttonHeight = 40;
+        const buttonSpacing = 20;
+
+        // Execute Ability button (for rolled dice)
+        const executeX = centerX - buttonWidth - buttonSpacing / 2;
+        const executeHovered = this.testState.hoveredButton === 'execute';
+        
+        ctx.fillStyle = executeHovered ? '#44AA44' : '#336633';
+        ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
+        ctx.strokeStyle = '#88FF88';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Execute Ability', executeX + buttonWidth / 2, buttonY + 25);
+
+        // End Turn button
+        const endTurnX = centerX + buttonSpacing / 2;
+        const endTurnHovered = this.testState.hoveredButton === 'end_turn';
+        
+        ctx.fillStyle = endTurnHovered ? '#AA4444' : '#663333';
+        ctx.fillRect(endTurnX, buttonY, buttonWidth, buttonHeight);
+        ctx.strokeStyle = '#FF8888';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(endTurnX, buttonY, buttonWidth, buttonHeight);
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText('End Turn', endTurnX + buttonWidth / 2, buttonY + 25);
+
+        ctx.textAlign = 'left'; // Reset alignment
     }
 };
 
