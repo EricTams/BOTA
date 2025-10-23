@@ -1361,102 +1361,161 @@ const DiceSystem = {
         const playerUnit = Combat.state.playerUnit;
         const enemyUnit = Combat.state.enemyUnit;
 
-        // Draw combat info panel on the left
-        const panelX = 20;
-        const panelY = 20;
-        const panelWidth = 300;
-        const panelHeight = 400;
+        // Draw player unit on the left
+        const leftPanelX = 20;
+        const leftPanelY = 20;
+        const panelWidth = 280;
+        const panelHeight = 200;
 
-        // Panel background
+        // Player panel background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.strokeStyle = '#FFD700';
+        ctx.strokeStyle = '#44CCFF';
         ctx.lineWidth = 2;
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+        ctx.fillRect(leftPanelX, leftPanelY, panelWidth, panelHeight);
+        ctx.strokeRect(leftPanelX, leftPanelY, panelWidth, panelHeight);
 
-        // Title
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('Combat', panelX + 20, panelY + 35);
+        // Player unit info
+        this.renderUnitInfo(ctx, playerUnit, leftPanelX + 20, leftPanelY + 20, true);
 
-        // Turn indicator
+        // Draw enemy unit on the right
+        const rightPanelX = canvas.width - panelWidth - 20;
+        const rightPanelY = 20;
+
+        // Enemy panel background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.strokeStyle = '#FF8844';
+        ctx.lineWidth = 2;
+        ctx.fillRect(rightPanelX, rightPanelY, panelWidth, panelHeight);
+        ctx.strokeRect(rightPanelX, rightPanelY, panelWidth, panelHeight);
+
+        // Enemy unit info
+        this.renderUnitInfo(ctx, enemyUnit, rightPanelX + 20, rightPanelY + 20, false);
+
+        // Draw turn indicator in top center
+        const turnBoxWidth = 300;
+        const turnBoxHeight = 60;
+        const turnBoxX = canvas.width / 2 - turnBoxWidth / 2;
+        const turnBoxY = 20;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 3;
+        ctx.fillRect(turnBoxX, turnBoxY, turnBoxWidth, turnBoxHeight);
+        ctx.strokeRect(turnBoxX, turnBoxY, turnBoxWidth, turnBoxHeight);
+
         const currentTurnText = Combat.state.currentTurn === 'player' ? 'Your Turn' : 'Enemy Turn';
         ctx.fillStyle = Combat.state.currentTurn === 'player' ? '#44FF44' : '#FF4444';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`Turn ${Combat.state.turnNumber} - ${currentTurnText}`, panelX + 20, panelY + 60);
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Turn ${Combat.state.turnNumber}`, turnBoxX + turnBoxWidth / 2, turnBoxY + 28);
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText(currentTurnText, turnBoxX + turnBoxWidth / 2, turnBoxY + 50);
+        ctx.textAlign = 'left';
 
-        // Player unit
-        this.renderUnitInfo(ctx, playerUnit, panelX + 20, panelY + 90, true);
+        // Combat log at bottom left
+        const logX = 20;
+        const logY = canvas.height - 180;
+        const logWidth = 320;
+        const logHeight = 100;
 
-        // Enemy unit
-        this.renderUnitInfo(ctx, enemyUnit, panelX + 20, panelY + 200, false);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.strokeStyle = '#888888';
+        ctx.lineWidth = 2;
+        ctx.fillRect(logX, logY, logWidth, logHeight);
+        ctx.strokeRect(logX, logY, logWidth, logHeight);
 
-        // Combat log (last 5 entries)
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('Combat Log:', logX + 10, logY + 20);
+        
         ctx.fillStyle = '#CCCCCC';
         ctx.font = '12px Arial';
-        ctx.fillText('Combat Log:', panelX + 20, panelY + 320);
-        
-        const logEntries = Combat.state.combatLog.slice(-5);
+        const logEntries = Combat.state.combatLog.slice(-4);
         logEntries.forEach((entry, i) => {
-            const truncated = entry.message.length > 35 ? entry.message.substring(0, 32) + '...' : entry.message;
-            ctx.fillText(truncated, panelX + 20, panelY + 340 + i * 15);
+            const truncated = entry.message.length > 38 ? entry.message.substring(0, 35) + '...' : entry.message;
+            ctx.fillText(truncated, logX + 10, logY + 40 + i * 15);
         });
 
-        // Action buttons (bottom of screen)
+        // Action buttons (bottom center)
         this.renderCombatButtons(ctx, canvas);
     },
 
     // Render unit info (HP, armor, status effects)
     renderUnitInfo(ctx, unit, x, y, isPlayer) {
-        const width = 260;
+        const width = 240;
         
         // Unit name
         ctx.fillStyle = isPlayer ? '#44CCFF' : '#FF8844';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 16px Arial';
         ctx.fillText(unit.name, x, y);
 
         // HP bar
         const hpBarWidth = width;
-        const hpBarHeight = 20;
+        const hpBarHeight = 30;
         const hpPercent = unit.hp / unit.maxHp;
         
-        ctx.fillStyle = '#333333';
-        ctx.fillRect(x, y + 5, hpBarWidth, hpBarHeight);
+        // Dark red background
+        ctx.fillStyle = '#3D0000';
+        ctx.fillRect(x, y + 10, hpBarWidth, hpBarHeight);
         
-        ctx.fillStyle = hpPercent > 0.5 ? '#44FF44' : (hpPercent > 0.25 ? '#FFAA44' : '#FF4444');
-        ctx.fillRect(x, y + 5, hpBarWidth * hpPercent, hpBarHeight);
+        // HP fill (gradient red)
+        const gradient = ctx.createLinearGradient(x, y + 10, x + hpBarWidth * hpPercent, y + 10);
+        if (hpPercent > 0.5) {
+            gradient.addColorStop(0, '#8B0000');
+            gradient.addColorStop(1, '#B22222');
+        } else if (hpPercent > 0.25) {
+            gradient.addColorStop(0, '#8B0000');
+            gradient.addColorStop(1, '#DC143C');
+        } else {
+            gradient.addColorStop(0, '#B22222');
+            gradient.addColorStop(1, '#FF0000');
+        }
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y + 10, hpBarWidth * hpPercent, hpBarHeight);
         
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(x, y + 5, hpBarWidth, hpBarHeight);
+        // HP bar border
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x, y + 10, hpBarWidth, hpBarHeight);
         
+        // HP text (white)
         ctx.fillStyle = '#FFFFFF';
-        ctx.font = '12px Arial';
+        ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`HP: ${unit.hp}/${unit.maxHp}`, x + hpBarWidth / 2, y + 20);
+        ctx.fillText(`${unit.hp} / ${unit.maxHp} HP`, x + hpBarWidth / 2, y + 30);
         ctx.textAlign = 'left';
 
         // Armor
         if (unit.armor > 0) {
             ctx.fillStyle = '#AAAAFF';
-            ctx.font = '12px Arial';
-            ctx.fillText(`Armor: ${unit.armor}`, x, y + 40);
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText(`🛡 Armor: ${unit.armor}`, x, y + 55);
         }
 
         // Status effects
         if (unit.statusEffects && unit.statusEffects.length > 0) {
-            ctx.fillStyle = '#FFAA44';
-            ctx.font = '12px Arial';
-            let statusY = y + (unit.armor > 0 ? 55 : 40);
+            let statusY = y + (unit.armor > 0 ? 73 : 55);
             unit.statusEffects.forEach((effect) => {
                 let statusText = effect.type;
-                if (effect.type === 'poison' && effect.stacks > 1) {
-                    statusText += ` (${effect.stacks}x)`;
+                let statusColor = '#FFAA44';
+                
+                // Color code by effect type
+                if (effect.type === 'poison') {
+                    statusColor = '#66FF66';
+                    if (effect.stacks > 1) {
+                        statusText += ` (${effect.stacks}x)`;
+                    }
+                } else if (effect.type === 'bleed') {
+                    statusColor = '#FF6666';
+                } else if (effect.type === 'regen') {
+                    statusColor = '#66FFAA';
                 }
-                statusText += ` [${effect.duration} turns]`;
+                
+                statusText += ` [${effect.duration}]`;
+                ctx.fillStyle = statusColor;
+                ctx.font = 'bold 11px Arial';
                 ctx.fillText(statusText, x, statusY);
-                statusY += 15;
+                statusY += 16;
             });
         }
     },
