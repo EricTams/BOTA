@@ -104,22 +104,28 @@ const DiceSystem = {
         // Pre-render face textures for all dice
         this.faceTextures = this.testState.dice.map(die => this.createFaceTextures(die));
 
+        // Load captain portraits for combat UI
+        this.portraits = {};
+        this.loadPortrait('captain_axe', 'assets/characters/captain_axe.png');
+
         // Initialize combat if in combat mode
         if (this.testState.combatMode) {
             // Create mock captain objects for Axe vs Axe testing
             const playerCaptain = {
-                id: 'player_axe',
+                id: 'captain_axe',
                 name: 'Player Axe',
                 hp: 100,
                 maxHp: 100,
-                dice: ['axe_personal', 'axe_equipment']
+                dice: ['axe_personal', 'axe_equipment'],
+                portrait: 'assets/characters/captain_axe.png'
             };
             const enemyCaptain = {
-                id: 'enemy_axe',
+                id: 'captain_axe',
                 name: 'Enemy Axe',
                 hp: 100,
                 maxHp: 100,
-                dice: ['axe_personal', 'axe_equipment']
+                dice: ['axe_personal', 'axe_equipment'],
+                portrait: 'assets/characters/captain_axe.png'
             };
             
             Combat.init(playerCaptain, enemyCaptain);
@@ -127,6 +133,19 @@ const DiceSystem = {
         }
 
         console.log('DiceSystem - Initialized with', this.testState.dice.length, 'die');
+    },
+
+    // Load captain portrait image
+    loadPortrait(captainId, imagePath) {
+        const img = new Image();
+        img.onload = () => {
+            this.portraits[captainId] = img;
+            console.log('DiceSystem - Loaded portrait for', captainId);
+        };
+        img.onerror = () => {
+            console.warn('DiceSystem - Failed to load portrait:', imagePath);
+        };
+        img.src = imagePath;
     },
 
     // Create pre-rendered textures for all 6 faces of a die
@@ -1365,7 +1384,7 @@ const DiceSystem = {
         const leftPanelX = 20;
         const leftPanelY = 20;
         const panelWidth = 280;
-        const panelHeight = 200;
+        const panelHeight = 250;
 
         // Player panel background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -1444,22 +1463,54 @@ const DiceSystem = {
     renderUnitInfo(ctx, unit, x, y, isPlayer) {
         const width = 240;
         
-        // Unit name
+        // Draw portrait if available
+        const portraitSize = 80;
+        const portraitX = x;
+        const portraitY = y;
+        
+        if (unit.portrait && this.portraits && this.portraits[unit.id]) {
+            // Draw portrait with border
+            ctx.save();
+            ctx.strokeStyle = isPlayer ? '#44CCFF' : '#FF8844';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(portraitX, portraitY, portraitSize, portraitSize);
+            ctx.drawImage(this.portraits[unit.id], portraitX, portraitY, portraitSize, portraitSize);
+            ctx.restore();
+        } else {
+            // Draw placeholder if no portrait
+            ctx.fillStyle = '#222222';
+            ctx.fillRect(portraitX, portraitY, portraitSize, portraitSize);
+            ctx.strokeStyle = isPlayer ? '#44CCFF' : '#FF8844';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(portraitX, portraitY, portraitSize, portraitSize);
+            
+            // Draw first letter of name as placeholder
+            ctx.fillStyle = isPlayer ? '#44CCFF' : '#FF8844';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(unit.name.charAt(0), portraitX + portraitSize / 2, portraitY + portraitSize / 2 + 16);
+            ctx.textAlign = 'left';
+        }
+        
+        // Unit name (to the right of portrait)
+        const nameX = x + portraitSize + 10;
         ctx.fillStyle = isPlayer ? '#44CCFF' : '#FF8844';
         ctx.font = 'bold 16px Arial';
-        ctx.fillText(unit.name, x, y);
+        ctx.fillText(unit.name, nameX, y + 16);
 
-        // HP bar
-        const hpBarWidth = width;
+        // HP bar (to the right of portrait)
+        const hpBarX = nameX;
+        const hpBarY = y + 30;
+        const hpBarWidth = width - portraitSize - 10;
         const hpBarHeight = 30;
         const hpPercent = unit.hp / unit.maxHp;
         
         // Dark red background
         ctx.fillStyle = '#3D0000';
-        ctx.fillRect(x, y + 10, hpBarWidth, hpBarHeight);
+        ctx.fillRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
         
         // HP fill (gradient red)
-        const gradient = ctx.createLinearGradient(x, y + 10, x + hpBarWidth * hpPercent, y + 10);
+        const gradient = ctx.createLinearGradient(hpBarX, hpBarY, hpBarX + hpBarWidth * hpPercent, hpBarY);
         if (hpPercent > 0.5) {
             gradient.addColorStop(0, '#8B0000');
             gradient.addColorStop(1, '#B22222');
@@ -1471,30 +1522,31 @@ const DiceSystem = {
             gradient.addColorStop(1, '#FF0000');
         }
         ctx.fillStyle = gradient;
-        ctx.fillRect(x, y + 10, hpBarWidth * hpPercent, hpBarHeight);
+        ctx.fillRect(hpBarX, hpBarY, hpBarWidth * hpPercent, hpBarHeight);
         
         // HP bar border
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 2;
-        ctx.strokeRect(x, y + 10, hpBarWidth, hpBarHeight);
+        ctx.strokeRect(hpBarX, hpBarY, hpBarWidth, hpBarHeight);
         
         // HP text (white)
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${unit.hp} / ${unit.maxHp} HP`, x + hpBarWidth / 2, y + 30);
+        ctx.fillText(`${unit.hp} / ${unit.maxHp}`, hpBarX + hpBarWidth / 2, hpBarY + 20);
         ctx.textAlign = 'left';
 
-        // Armor
+        // Armor (below portrait)
+        const infoY = y + portraitSize + 10;
         if (unit.armor > 0) {
             ctx.fillStyle = '#AAAAFF';
             ctx.font = 'bold 12px Arial';
-            ctx.fillText(`🛡 Armor: ${unit.armor}`, x, y + 55);
+            ctx.fillText(`🛡 Armor: ${unit.armor}`, x, infoY);
         }
 
-        // Status effects
+        // Status effects (below armor)
         if (unit.statusEffects && unit.statusEffects.length > 0) {
-            let statusY = y + (unit.armor > 0 ? 73 : 55);
+            let statusY = infoY + (unit.armor > 0 ? 18 : 0);
             unit.statusEffects.forEach((effect) => {
                 let statusText = effect.type;
                 let statusColor = '#FFAA44';
