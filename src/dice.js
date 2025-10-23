@@ -24,7 +24,13 @@ const DiceSystem = {
             filledSlots: [] // Array of booleans for each power-up slot
         },
         combatMode: true, // AIDEV-NOTE: Combat mode enabled for testing
-        selectedDieForAbility: null // Index of die face selected to execute as ability
+        selectedDieForAbility: null, // Index of die face selected to execute as ability
+        // AIDEV-NOTE: New dice selection system
+        rolledDice: [], // Pool of rolled dice: { dieIndex, faceIndex, face, ability, selected, assigned }
+        savedDice: [], // Dice saved from pool (won't be rerolled)
+        assignedDice: {}, // Dice assigned to abilities: { abilityKey: [dieIndices] }
+        activeAbility: null, // Currently selected ability to assign dice to
+        dragState: null // Drag state: { dieIndex, startX, startY }
     },
 
     // Color palette
@@ -190,6 +196,9 @@ const DiceSystem = {
 
     // Update animations
     update(deltaTime) {
+        // Track if any dice just finished rolling
+        let anyJustFinished = false;
+        
         // Update each die's animation
         for (let i = 0; i < this.testState.diceStates.length; i++) {
             const state = this.testState.diceStates[i];
@@ -232,8 +241,14 @@ const DiceSystem = {
                     state.axisRotation = null; // Clear axis rotation
                     state.currentFace = state.targetFace;
                     console.log(`Die landed on face ${state.targetFace}`);
+                    anyJustFinished = true;
                 }
             }
+        }
+        
+        // Populate rolled dice pool when all dice finish rolling
+        if (anyJustFinished && !this.isAnyRolling()) {
+            this.populateRolledDicePool();
         }
     },
 
@@ -1004,6 +1019,12 @@ const DiceSystem = {
         
         console.log('Rolling all dice...');
         
+        // Clear previous roll data
+        this.testState.rolledDice = [];
+        this.testState.savedDice = [];
+        this.testState.assignedDice = {};
+        this.testState.activeAbility = null;
+        
         for (let i = 0; i < this.testState.diceStates.length; i++) {
             const state = this.testState.diceStates[i];
             
@@ -1023,9 +1044,129 @@ const DiceSystem = {
             state.animationTime = 0;
         }
         
+        // Populate rolled dice pool after animation completes
+        // (will be done in update() when rolling finishes)
+        
         // Clear reroll tray
         this.testState.rerollTray = [];
         this.testState.rollsAvailable = 1;
+    },
+
+    // Populate the rolled dice pool after dice finish rolling
+    populateRolledDicePool() {
+        this.testState.rolledDice = [];
+        
+        for (let i = 0; i < this.testState.dice.length; i++) {
+            const die = this.testState.dice[i];
+            const state = this.testState.diceStates[i];
+            const face = die.faces[state.targetFace];
+            
+            if (face && face.icon) {
+                const ability = getAbilityData(face.icon);
+                this.testState.rolledDice.push({
+                    poolIndex: this.testState.rolledDice.length, // Unique index in pool
+                    dieIndex: i,
+                    faceIndex: state.targetFace,
+                    face: face,
+                    ability: ability,
+                    selected: false, // Whether it's been clicked/saved
+                    assigned: false, // Whether it's been assigned to an ability
+                    color: face.color
+                });
+            }
+        }
+        
+        console.log('Rolled dice pool:', this.testState.rolledDice);
+    },
+
+    // Toggle die selection in the pool
+    toggleDieSelection(poolIndex) {
+        const rolledDie = this.testState.rolledDice[poolIndex];
+        if (!rolledDie || rolledDie.assigned) return;
+        
+        rolledDie.selected = !rolledDie.selected;
+        
+        if (rolledDie.selected) {
+            // Add to saved dice
+            if (!this.testState.savedDice.includes(poolIndex)) {
+                this.testState.savedDice.push(poolIndex);
+            }
+        } else {
+            // Remove from saved dice
+            const idx = this.testState.savedDice.indexOf(poolIndex);
+            if (idx !== -1) {
+                this.testState.savedDice.splice(idx, 1);
+            }
+        }
+    },
+
+    // Assign a die to an ability slot
+    assignDieToAbility(poolIndex, abilityKey) {
+        const rolledDie = this.testState.rolledDice[poolIndex];
+        if (!rolledDie) return;
+        
+        // Mark as assigned
+        rolledDie.assigned = true;
+        rolledDie.selected = true;
+        
+        // Add to assigned dice for this ability
+        if (!this.testState.assignedDice[abilityKey]) {
+            this.testState.assignedDice[abilityKey] = [];
+        }
+        this.testState.assignedDice[abilityKey].push(poolIndex);
+        
+        // Remove from saved dice if it was there
+        const idx = this.testState.savedDice.indexOf(poolIndex);
+        if (idx !== -1) {
+            this.testState.savedDice.splice(idx, 1);
+        }
+        
+        console.log(`Assigned die ${poolIndex} to ability ${abilityKey}`);
+    },
+
+    // Unassign a die from an ability
+    unassignDieFromAbility(poolIndex, abilityKey) {
+        const rolledDie = this.testState.rolledDice[poolIndex];
+        if (!rolledDie) return;
+        
+        // Mark as not assigned
+        rolledDie.assigned = false;
+        rolledDie.selected = false;
+        
+        // Remove from assigned dice
+        if (this.testState.assignedDice[abilityKey]) {
+            const idx = this.testState.assignedDice[abilityKey].indexOf(poolIndex);
+            if (idx !== -1) {
+                this.testState.assignedDice[abilityKey].splice(idx, 1);
+            }
+        }
+        
+        console.log(`Unassigned die ${poolIndex} from ability ${abilityKey}`);
+    },
+
+    // Calculate power-up bonus from burned dice
+    calculatePowerUpBonus(abilityKey) {
+        const assignedDice = this.testState.assignedDice[abilityKey] || [];
+        if (assignedDice.length === 0) return { primaryDie: null, burnedCount: 0 };
+        
+        // First die is the primary (executes the ability)
+        const primaryPoolIndex = assignedDice[0];
+        const primaryDie = this.testState.rolledDice[primaryPoolIndex];
+        
+        // Count matching colored dice as burned (power-up)
+        let burnedCount = 0;
+        for (let i = 1; i < assignedDice.length; i++) {
+            const poolIndex = assignedDice[i];
+            const die = this.testState.rolledDice[poolIndex];
+            if (die && die.color === primaryDie.color) {
+                burnedCount++;
+            }
+        }
+        
+        return {
+            primaryDie: primaryDie,
+            burnedCount: burnedCount
+        };
     },
 
     // Set rotation to display a specific die face pointing toward the camera
