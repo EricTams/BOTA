@@ -287,6 +287,11 @@ const DiceSystem = {
         // Draw combat UI if in combat mode
         if (this.testState.combatMode && Combat.state.active) {
             this.renderCombatUI(ctx, canvas);
+            
+            // Draw rolled dice pool
+            if (this.testState.rolledDice.length > 0) {
+                this.renderRolledDicePool(ctx, canvas);
+            }
         }
     },
 
@@ -1254,6 +1259,11 @@ const DiceSystem = {
 
         // Check combat button hovers if in combat mode
         if (this.testState.combatMode && Combat.state.active) {
+            // Check rolled dice pool hovers
+            if (this.testState.rolledDice.length > 0) {
+                this.checkDicePoolHover(mousePos, canvas);
+            }
+            
             const centerX = canvas.width / 2;
             const buttonY = canvas.height - 80;
             const buttonWidth = 150;
@@ -1289,10 +1299,42 @@ const DiceSystem = {
         }
     },
 
+    // Check if mouse is over a die in the pool
+    checkDicePoolHover(mousePos, canvas) {
+        const poolX = canvas.width / 2 - 200;
+        const poolY = canvas.height - 250;
+        const dieSize = 50;
+        const dieSpacing = 10;
+        const startX = poolX + 20;
+        const startY = poolY + 55;
+        
+        this.testState.hoveredDieIndex = null;
+        
+        for (let i = 0; i < this.testState.rolledDice.length; i++) {
+            const x = startX + i * (dieSize + dieSpacing);
+            const y = startY;
+            
+            if (mousePos.x >= x && mousePos.x <= x + dieSize &&
+                mousePos.y >= y && mousePos.y <= y + dieSize) {
+                this.testState.hoveredDieIndex = i;
+                break;
+            }
+        }
+    },
+
     // Check if a button was clicked
     checkButtonClick(mousePos, canvas) {
         // Handle combat button clicks if in combat mode
         if (this.testState.combatMode && Combat.state.active) {
+            // Check if clicking on a die in the pool
+            if (this.testState.rolledDice.length > 0) {
+                const dieClicked = this.checkDicePoolClick(mousePos, canvas);
+                if (dieClicked !== null) {
+                    this.toggleDieSelection(dieClicked);
+                    return;
+                }
+            }
+            
             const centerX = canvas.width / 2;
             const buttonY = canvas.height - 80;
             const buttonWidth = 150;
@@ -1340,39 +1382,65 @@ const DiceSystem = {
         }
     },
 
+    // Check if a die in the pool was clicked, return poolIndex or null
+    checkDicePoolClick(mousePos, canvas) {
+        const poolX = canvas.width / 2 - 200;
+        const poolY = canvas.height - 250;
+        const dieSize = 50;
+        const dieSpacing = 10;
+        const startX = poolX + 20;
+        const startY = poolY + 55;
+        
+        for (let i = 0; i < this.testState.rolledDice.length; i++) {
+            const x = startX + i * (dieSize + dieSpacing);
+            const y = startY;
+            
+            if (mousePos.x >= x && mousePos.x <= x + dieSize &&
+                mousePos.y >= y && mousePos.y <= y + dieSize) {
+                return i;
+            }
+        }
+        
+        return null;
+    },
+
     // Execute ability from rolled dice
     executeCombatAbility() {
         if (!Combat.state.active) return;
 
-        // Get all rolled dice faces
-        const rolledFaces = [];
-        for (let i = 0; i < this.testState.dice.length; i++) {
-            const die = this.testState.dice[i];
-            const state = this.testState.diceStates[i];
-            const face = die.faces[state.targetFace];
-            
-            if (face && face.icon) {
-                rolledFaces.push({
-                    dieIndex: i,
-                    faceIndex: state.targetFace,
-                    face: face,
-                    ability: getAbilityData(face.icon)
-                });
-            }
-        }
-
-        if (rolledFaces.length === 0) {
-            console.log('No abilities to execute');
+        // Find first selected die that hasn't been assigned yet
+        const selectedDie = this.testState.rolledDice.find(d => d.selected && !d.assigned);
+        
+        if (!selectedDie) {
+            console.log('No selected dice to execute');
             return;
         }
 
-        // Execute first ability (TODO: let player choose which one)
-        const chosen = rolledFaces[0];
+        // For now, simple execution: use the selected die
+        // Count any other selected dice of matching color as power-ups
+        const matchingColor = selectedDie.color;
+        let burnedCount = 0;
+        
+        for (let rolledDie of this.testState.rolledDice) {
+            if (rolledDie !== selectedDie && 
+                rolledDie.selected && 
+                !rolledDie.assigned && 
+                rolledDie.color === matchingColor) {
+                burnedCount++;
+                rolledDie.assigned = true; // Mark as burned
+            }
+        }
+        
+        // Mark primary die as assigned
+        selectedDie.assigned = true;
+        
+        // Execute the ability with power-up bonus
         const caster = Combat.getCurrentUnit();
         const target = Combat.getOpponentUnit();
-        const filledSlots = 0; // TODO: implement power-up slot filling
-
-        Combat.executeAbility(chosen.ability, caster, target, filledSlots);
+        
+        Combat.executeAbility(selectedDie.ability, caster, target, burnedCount);
+        
+        console.log(`Executed ${selectedDie.ability.displayName} with ${burnedCount} burned dice`);
     },
 
     // AIDEV-NOTE: Tooltip system
@@ -1711,6 +1779,80 @@ const DiceSystem = {
                 statusY += 16;
             });
         }
+    },
+
+    // AIDEV-NOTE: Render rolled dice pool for selection
+    renderRolledDicePool(ctx, canvas) {
+        const poolX = canvas.width / 2 - 200;
+        const poolY = canvas.height - 250;
+        const poolWidth = 400;
+        const poolHeight = 140;
+        
+        // Background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.fillRect(poolX, poolY, poolWidth, poolHeight);
+        ctx.strokeRect(poolX, poolY, poolWidth, poolHeight);
+        
+        // Title
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Rolled Dice Pool', poolX + poolWidth / 2, poolY + 20);
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#CCCCCC';
+        ctx.fillText('Click to select • Drag to ability slots', poolX + poolWidth / 2, poolY + 38);
+        ctx.textAlign = 'left';
+        
+        // Render each die in the pool
+        const dieSize = 50;
+        const dieSpacing = 10;
+        const startX = poolX + 20;
+        const startY = poolY + 55;
+        
+        this.testState.rolledDice.forEach((rolledDie, i) => {
+            const x = startX + i * (dieSize + dieSpacing);
+            const y = startY;
+            
+            // Skip if off-screen
+            if (x + dieSize > poolX + poolWidth - 20) return;
+            
+            // Die background color based on state
+            let bgColor = this.colors[rolledDie.color + 'Light'] || '#888888';
+            let borderColor = this.colors[rolledDie.color] || '#666666';
+            let borderWidth = 2;
+            
+            if (rolledDie.assigned) {
+                // Assigned dice are semi-transparent
+                ctx.globalAlpha = 0.4;
+            } else if (rolledDie.selected) {
+                // Selected dice have thicker gold border
+                borderColor = '#FFD700';
+                borderWidth = 4;
+            }
+            
+            // Draw die background
+            ctx.fillStyle = bgColor;
+            ctx.fillRect(x, y, dieSize, dieSize);
+            
+            // Draw border
+            ctx.strokeStyle = borderColor;
+            ctx.lineWidth = borderWidth;
+            ctx.strokeRect(x, y, dieSize, dieSize);
+            
+            // Draw icon (simplified - just show first letter of ability name)
+            ctx.fillStyle = this.colors[rolledDie.color] || '#666666';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            const iconText = rolledDie.ability.displayName.substring(0, 2).toUpperCase();
+            ctx.fillText(iconText, x + dieSize / 2, y + dieSize / 2 + 8);
+            
+            // Reset alpha
+            ctx.globalAlpha = 1.0;
+        });
+        
+        ctx.textAlign = 'left';
     },
 
     // Render combat action buttons
