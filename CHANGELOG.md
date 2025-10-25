@@ -34,6 +34,51 @@ changelog: [
 
 ---
 
+## October 25, 2025
+
+### Added
+- Complete combat system with turn-based dice mechanics
+- Combat UI with character panels showing HP, armor, and status effects
+- Dice system redesign: separate Die class for state, DiceSystem for rendering
+- Character Panel component for reusable unit display
+- Crew units in combat (separate from captains)
+- Ship weapon dice operated by crew units
+- Crew data system with generic crew portraits
+- Status effect system (buffs, debuffs, DoTs, HoTs)
+- Status effect tooltips with hover detection
+- Dice abilities: Slam (ship ram weapon)
+- Combat manager for orchestrating combat flow
+- Dice icons: Slam icon for ram attacks
+- Combat UI module for managing combat rendering and interaction
+- Dice test bootstrap for testing combat scenarios
+
+### Improved
+- Dice system now uses object-oriented design (Die class)
+- Dice rendering separated from dice state
+- Combat state management now explicit and testable
+- Character panels show armor values when present
+- Status effects display with duration and value indicators
+
+### Changed
+- Refactored dice system into separate Die.js and DiceSystem.js
+- Moved combat UI rendering into dedicated ui_combat.js module
+- Combat now supports both captain and crew units
+- Dice ownership model: captains own personal/equipment dice, crew own ship weapon dice
+
+### Removed
+- Old dice.js module (replaced by die.js + dice_system.js)
+
+### Technical
+- Created CharacterPanel component for consistent UI rendering
+- Added combat_manager.js for pure combat logic
+- Added ui_combat.js for combat rendering and interaction
+- Added crew_data.js for crew definitions
+- Added dice_icons.js for custom ability icons
+- Implemented status effect hover bounds tracking
+- Separated combat state from rendering logic
+
+---
+
 ## October 22, 2025
 
 ### Added

@@ -1,0 +1,306 @@
+# Character Asset Art Guidance
+
+## Overview
+Character portraits for captains and crew members in the maritime trading simulation.
+All portraits are 1024x1024 bust shots with opaque painterly backgrounds, rendered in epic fantasy game style.
+
+---
+
+## Captain Portraits (9 Total)
+
+### General Specifications
+- **Size**: 1024x1024 pixels
+- **Format**: PNG with opaque painterly backgrounds
+- **Style**: Epic fantasy game character portrait, painted art style, DOTA-inspired
+- **Composition**: Close-up bust shot showing face and shoulders
+- **Background**: Painterly themed backgrounds (ocean, magic, forest, battlefield, etc.)
+- **Art Direction**: Dota 2 character designs, thematically matched to factions
+- **Lighting**: Dramatic lighting appropriate to character theme
+
+### Captain List
+
+1. **Kunkka (Claddish Navy)** - `captain_kunkka.png` ✓ Generated
+   - Legendary Admiral with tricorn hat, naval uniform, Tidebringer sword
+   - Colors: White and gold, dramatic lighting
+   - Background: Ocean waves and stormy seas
+
+2. **Rubick (Artifact Traders)** - `captain_rubick.png` ✓ Generated
+   - Grand Magus with tall pointed green hood, glowing green eyes, arcane energy
+   - Colors: Green and gold, magical glow lighting
+   - Background: Magical runes and mystical energy
+
+3. **Alchemist (Stonehall Merchants)** - `captain_alchemist.png` ✓ Generated
+   - Goblin alchemist riding ogre, merchant robes, counting gold
+   - Colors: Brown and gold, warm lighting
+   - Background: Treasure vault and gold
+
+4. **Slardar (Slithereen Guard)** - `captain_slardar.png` ✓ Generated
+   - Slithereen warrior with purple scaled skin, golden crown, trident
+   - Colors: Purple and gold, dramatic underwater lighting
+   - Background: Underwater coral and deep ocean
+
+5. **Naga Siren (Revtel)** - `captain_naga_siren.png` ✓ Generated
+   - Serpentine warrior queen with teal scaled skin, golden jewelry
+   - Colors: Teal and gold, soft magical lighting
+   - Background: Coral reefs and tropical ocean
+
+6. **Tidehunter (Free Captains)** - `captain_tidehunter.png` ✓ Generated
+   - Massive sea creature, wide mouth with sharp teeth, pirate aesthetic
+   - Colors: Teal and dark blue-green, dramatic harsh lighting
+   - Background: Rough seas and pirate ships
+
+7. **Enchantress (Roseleaf Traders)** - `captain_enchantress.png` ✓ Generated
+   - Cheerful fawn-like creature, red hair with flowers, nature magic
+   - Colors: Green and floral, soft warm lighting
+   - Background: Magical forest and blooming flowers
+
+8. **Axe (Oglodi Raiders)** - `captain_axe.png` ✓ Generated
+   - Massive brutal red-skinned Oglodi warrior, war paint, huge axe
+   - Colors: Red and black, dramatic harsh lighting
+   - Background: Burning battlefield and war banners
+
+9. **Tinker (Keen Folk Engineers)** - `captain_tinker.png` ✓ Generated
+   - Small keen folk inventor with goggles, mechanical armor, gadgets
+   - Colors: Blue and copper, bright technical lighting
+   - Background: Inventor's workshop and mechanical devices
+
+### Generation Template for Captains
+
+```bash
+# Navigate to Imagine directory first
+cd Imagine
+
+# Generation command format:
+python imagine.py generate "Close-up portrait of [CHARACTER] from Dota 2, [DETAILED DESCRIPTION], [FACTION AESTHETIC]. Epic fantasy game character portrait, painted art style, [LIGHTING], [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [THEME]." ../assets/characters/captain_[name].png --size 1024x1024 --quality high --background opaque
+
+# Return to project root
+cd ..
+```
+
+### Usage in Game
+Captain portraits appear in:
+- **Captain Select Screen**: Grid of small portraits for choosing starting captain
+- **Faction Details Panel**: Large portrait display showing captain, name, faction, description
+- **Game UI**: Character sheets and captain-related features during gameplay
+
+### Data Integration
+All captain portraits are referenced in `src/captain_data.js` with the `image` property pointing to the corresponding PNG file.
+
+### Dice Pool Information
+Each captain has:
+- **Personal dice pool**: 6 dice (various color combinations)
+- **Equipment dice pool**: 6 dice (from faction-specific equipment)
+- **Color balance**: Red (Strength), Green (Agility), Blue (Magic)
+
+See `docs/CAPTAIN_PORTRAITS.md` for detailed dice pool breakdowns per captain.
+
+### Starting Ports
+Each captain begins at a specific port:
+- Kunkka: Naval Command (port_claddish_02)
+- Rubick: Arcane Crossroads (port_artifact_02)
+- Alchemist: Merchant's District (port_stonehall_02)
+- Slardar: Guard Outpost (port_slithereen_02)
+- Naga Siren: Reef Sanctuary (port_revtel_02)
+- Tidehunter: Smuggler's Cove (port_freecaptains_02)
+- Enchantress: Leafwhisper Trading Post (port_roseleaf_02)
+- Axe: Warblade Fortress (port_oglodi_02)
+- Tinker: Cogwheel Port (port_keenfolk_01)
+
+---
+
+## Crew Portraits
+
+### General Specifications
+- **Size**: 1024x1024 pixels
+- **Format**: PNG with opaque painterly backgrounds
+- **Style**: Epic fantasy game character portrait, painted art style
+- **Composition**: Close-up bust shot
+- **Background**: Painterly backgrounds matching character theme
+
+### Crew Types
+
+#### Warrior Crew
+- **Dice Pool**: 2 dice, heavy Red (Strength)
+- **Specialization**: Physical challenges, intimidation, combat
+- **Visual Style**: Armored, muscular, weapons visible
+- **Example**: Thorgrim Ironbeard (Stonehall warrior)
+
+#### Mage Crew
+- **Dice Pool**: 2 dice, heavy Blue (Magic)
+- **Specialization**: Arcane challenges, persuasion, mysticism
+- **Visual Style**: Robes, magical energy, mystical aesthetic
+- **Example**: Arcane scholars, wizards
+
+#### Rogue Crew
+- **Dice Pool**: 2 dice, heavy Green (Agility)
+- **Specialization**: Stealth, navigation, trickery
+- **Visual Style**: Light armor, quick appearance, sneaky aesthetic
+- **Example**: Thieves, scouts, rangers
+
+#### Sailor Crew
+- **Dice Pool**: 2 dice, Green/Blue mix
+- **Specialization**: Navigation, weather, water challenges
+- **Visual Style**: Naval clothing, nautical equipment
+- **Example**: Navigators, ship's crew
+
+#### Merchant Crew
+- **Dice Pool**: 2 dice, Blue/Green mix
+- **Specialization**: Negotiation, trading, social challenges
+- **Visual Style**: Fine clothing, merchant aesthetic
+- **Example**: Traders, diplomats
+
+### Crew Quality Tiers
+
+**Novice** (50-100g):
+- Simple appearance, basic equipment
+- 1-2 colored faces per die
+
+**Skilled** (200-500g):
+- Professional appearance, quality equipment
+- 3-4 colored faces per die
+
+**Expert** (800-1500g):
+- Veteran appearance, exceptional equipment
+- 4-5 colored faces per die
+
+**Legendary** (2000g+):
+- Heroic appearance, unique/magical equipment
+- 5-6 colored faces per die
+
+### Current Crew Portraits
+
+**Generic Crew Portrait** - `crew/generic_crew_portrait.png` ✓ Generated
+- Placeholder portrait for crew members
+- Neutral appearance, suitable for any class
+- Can be used as fallback when specific portrait not available
+
+### Future Crew Generation
+
+When generating specific crew portraits:
+1. Follow captain portrait style (1024x1024, painted art, bust shot)
+2. Match faction aesthetic if crew is faction-specific
+3. Include visual cues for class (armor for warrior, robes for mage, etc.)
+4. Quality tier should be visible in equipment/appearance
+5. Name files as: `crew_[class]_[faction]_[number].png`
+   Example: `crew_warrior_stonehall_01.png`
+
+### Generation Template for Crew
+
+```bash
+cd Imagine
+
+python imagine.py generate "Close-up portrait of a [QUALITY] [CLASS] character, [RACE/FACTION DESCRIPTION], [EQUIPMENT], [VISUAL DETAILS]. Epic fantasy game character portrait, painted art style, [LIGHTING], [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [THEME]." ../assets/characters/crew/crew_[class]_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+
+cd ..
+```
+
+**Example - Expert Warrior**:
+```bash
+python imagine.py generate "Close-up portrait of an expert dwarven warrior character, Stonehall Merchants faction, gray beard with bronze armor and battle axe, experienced veteran with scars, strong and sturdy. Epic fantasy game character portrait, painted art style, dramatic lighting, gray and bronze color scheme. Bust shot, face and shoulders visible. Painterly background with forge and anvil." ../assets/characters/crew/crew_warrior_stonehall_01.png --size 1024x1024 --quality high --background opaque
+```
+
+---
+
+## Character Data Structure
+
+Characters are defined in `src/captain_data.js` and `src/crew_data.js`:
+
+```javascript
+{
+    characterId: "warrior_stonehall_01",
+    name: "Thorgrim Ironbeard",
+    class: "Warrior",
+    quality: "Expert",
+    faction: "StonehallMerchants",
+    portrait: "assets/characters/crew/crew_warrior_stonehall_01.png",
+    dice: [ /* dice definitions */ ],
+    recruitmentCost: 800
+}
+```
+
+---
+
+## Color Palette Guide by Faction
+
+**Claddish Navy**: Navy blue, white, gold
+**Artifact Traders**: Purple, gold, arcane blue
+**Stonehall Merchants**: Gray, copper, brown
+**Slithereen Guard**: Teal, silver, aqua, purple
+**Revtel**: Coral pink, turquoise, pearl white
+**Free Captains**: Black, blood red
+**Roseleaf Traders**: Green, gold, natural wood
+**Oglodi Raiders**: Blood red, bone white, iron gray
+**Keen Folk Engineers**: Brass, copper, industrial gray
+
+---
+
+## Technical Notes
+
+- All portraits loaded as Image objects in JavaScript
+- Rendered in UI panels (DOM, not Canvas)
+- Used in captain selection, crew roster, character details
+- File paths must match exactly with data in captain_data.js/crew_data.js
+- Use PNG format for quality and transparency support (backgrounds are opaque)
+
+---
+
+## Batch Generation Script (Future)
+
+For generating multiple crew portraits at once:
+
+```powershell
+# generate_crew_portraits.ps1
+cd Imagine
+
+# Warriors
+python imagine.py generate "..." ../assets/characters/crew/crew_warrior_stonehall_01.png --size 1024x1024 --quality high --background opaque
+python imagine.py generate "..." ../assets/characters/crew/crew_warrior_claddish_01.png --size 1024x1024 --quality high --background opaque
+
+# Mages
+python imagine.py generate "..." ../assets/characters/crew/crew_mage_artifact_01.png --size 1024x1024 --quality high --background opaque
+
+# Rogues
+python imagine.py generate "..." ../assets/characters/crew/crew_rogue_freecaptains_01.png --size 1024x1024 --quality high --background opaque
+
+# Continue for all crew types...
+
+cd ..
+```
+
+---
+
+## Design Principles
+
+1. **Distinctive characters**: Each portrait should have unique, memorable appearance
+2. **Faction consistency**: Use faction color schemes and themes
+3. **Class clarity**: Visual cues should indicate character class/role
+4. **Quality visible**: Higher tier characters should look more impressive/heroic
+5. **DOTA inspiration**: Reference Dota 2 character designs for style consistency
+6. **Painterly style**: Not photorealistic, but detailed painted art
+7. **Dramatic composition**: Epic fantasy aesthetic, heroic presentation
+8. **Readable at scale**: Must be recognizable when displayed at smaller sizes
+
+---
+
+## Regeneration Commands
+
+All captain portrait generation commands are available in:
+- `generate_captain_portraits.txt` (root directory)
+
+For detailed specifications and documentation:
+- `docs/CAPTAIN_PORTRAITS.md`
+- `docs/CHARACTERS_AND_CREW.md`
+
+---
+
+## AIDEV-NOTE: Art Guidance Maintenance
+
+When adding new character portraits:
+1. Follow 1024x1024 size standard
+2. Use opaque painterly backgrounds
+3. Maintain painted art style consistency
+4. Match faction color schemes
+5. Update this guidance file with specifications
+6. Update character data files (captain_data.js, crew_data.js)
+7. Test portrait display in UI at various sizes
+

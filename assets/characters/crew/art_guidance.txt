@@ -1,0 +1,346 @@
+# Crew Portrait Art Guidance
+
+## Overview
+Individual crew member portraits for recruitment and roster display.
+Each crew member provides dice to the player's pool during encounters and combat.
+
+**Technical Specifications:**
+- **Size**: 1024x1024 pixels
+- **Format**: PNG with opaque painterly backgrounds
+- **Style**: Epic fantasy game character portrait, painted art style, DOTA-inspired
+- **Composition**: Close-up bust shot showing face and shoulders
+- **Background**: Painterly themed backgrounds matching character class/faction
+- **Art Direction**: Consistent with captain portraits but less heroic/legendary
+
+---
+
+## Current Crew Portraits
+
+### Generic Crew Portrait
+**File**: `generic_crew_portrait.png` ✓ Generated
+**Purpose**: Fallback portrait for any crew member when specific portrait not available
+**Description**: Neutral sailor/merchant appearance, generic fantasy aesthetic
+**Usage**: Placeholder until specific class/faction portraits are generated
+
+---
+
+## Crew Classes
+
+Each crew member belongs to a specific class that determines their specialization and dice pool.
+
+### Warrior
+**Dice Pool**: 2 dice with heavy Red (Strength) faces
+**Specialization**: Physical challenges, intimidation, combat
+**Visual Style**: 
+- Heavy armor (plate, chainmail, leather)
+- Visible weapons (sword, axe, mace, spear)
+- Muscular build, battle scars
+- Determined or aggressive expression
+- Faction-themed armor colors
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a warrior crew member, [FACTION] faction, [QUALITY] tier, wearing [ARMOR TYPE] with [FACTION COLORS], holding [WEAPON], [BUILD DESCRIPTION], battle scars visible, [EXPRESSION]. Epic fantasy game character portrait, painted art style, dramatic lighting, [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [THEME]." ../assets/characters/crew/crew_warrior_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Mage
+**Dice Pool**: 2 dice with heavy Blue (Magic) faces
+**Specialization**: Arcane challenges, persuasion, mysticism
+**Visual Style**:
+- Robes or mystical garments
+- Magical staff or wand visible
+- Arcane energy effects (glowing hands, floating runes)
+- Intelligent or mysterious expression
+- Faction-themed mystical colors
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a mage crew member, [FACTION] faction, [QUALITY] tier, wearing mystical robes in [FACTION COLORS], arcane energy glowing around hands, [STAFF/WAND DESCRIPTION], intelligent expression, magical aura. Epic fantasy game character portrait, painted art style, magical glow lighting, [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [MAGICAL THEME]." ../assets/characters/crew/crew_mage_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Rogue
+**Dice Pool**: 2 dice with heavy Green (Agility) faces
+**Specialization**: Stealth, navigation, trickery
+**Visual Style**:
+- Light leather armor or dark clothing
+- Daggers, lockpicks, or thieves' tools visible
+- Quick, agile appearance
+- Sly or cautious expression
+- Hooded or shadowy aesthetic
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a rogue crew member, [FACTION] faction, [QUALITY] tier, wearing dark leather armor, daggers visible, hooded appearance, sly cunning expression, agile build, thieves' aesthetic. Epic fantasy game character portrait, painted art style, shadowy dramatic lighting, [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [SHADOW THEME]." ../assets/characters/crew/crew_rogue_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Paladin
+**Dice Pool**: 3 dice with balanced Red/Blue faces
+**Specialization**: Versatile, leadership, holy magic
+**Visual Style**:
+- Holy plate armor with religious symbols
+- Mix of weapon and holy symbol
+- Divine light effects
+- Noble or righteous expression
+- Gold and white accent colors
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a paladin crew member, [FACTION] faction, [QUALITY] tier, wearing holy plate armor with divine symbols, golden accents, holy weapon and shield, divine light glowing, noble righteous expression. Epic fantasy game character portrait, painted art style, divine lighting effects, gold and [FACTION COLOR] scheme. Bust shot, face and shoulders visible. Painterly background with [HOLY THEME]." ../assets/characters/crew/crew_paladin_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Sailor
+**Dice Pool**: 2 dice with Green/Blue mix
+**Specialization**: Navigation, weather, water challenges
+**Visual Style**:
+- Practical sailing clothing
+- Nautical equipment (compass, spyglass, rope)
+- Weathered, experienced appearance
+- Determined expression
+- Maritime colors (navy, white, brown)
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a sailor crew member, [FACTION] faction, [QUALITY] tier, wearing practical sailing clothes, weathered appearance from sea travel, nautical equipment visible (compass, rope), experienced maritime worker, determined expression. Epic fantasy game character portrait, painted art style, natural lighting, maritime color scheme. Bust shot, face and shoulders visible. Painterly background with [OCEAN/SHIP THEME]." ../assets/characters/crew/crew_sailor_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Merchant
+**Dice Pool**: 2 dice with Blue/Green mix
+**Specialization**: Negotiation, trading, social challenges
+**Visual Style**:
+- Fine clothing (not armor)
+- Merchant goods or ledger visible
+- Well-groomed, professional appearance
+- Friendly or shrewd expression
+- Wealthy appearance
+
+**Example Generation**:
+```bash
+cd Imagine
+python imagine.py generate "Close-up portrait of a merchant crew member, [FACTION] faction, [QUALITY] tier, wearing fine merchant clothes in [FACTION COLORS], well-groomed professional appearance, ledger or coin purse visible, friendly shrewd expression, trader aesthetic. Epic fantasy game character portrait, painted art style, warm lighting, [COLOR SCHEME]. Bust shot, face and shoulders visible. Painterly background with [MARKETPLACE THEME]." ../assets/characters/crew/crew_merchant_[faction]_[number].png --size 1024x1024 --quality high --background opaque
+cd ..
+```
+
+---
+
+## Quality Tiers
+
+Each crew member has a quality tier that affects their appearance, cost, and dice effectiveness.
+
+### Novice (50-100g)
+**Visual Characteristics**:
+- Simple, basic equipment
+- Young or inexperienced appearance
+- Clean but plain clothing/armor
+- Minimal decorations or details
+- Hopeful or eager expression
+
+**Dice Quality**: 1-2 colored faces per die, mostly blanks
+
+---
+
+### Skilled (200-500g)
+**Visual Characteristics**:
+- Quality equipment, well-maintained
+- Professional appearance
+- Some decorative elements
+- Confident expression
+- Clear competence visible
+
+**Dice Quality**: 3-4 colored faces per die, some blanks
+
+---
+
+### Expert (800-1500g)
+**Visual Characteristics**:
+- Exceptional equipment, personalized gear
+- Veteran appearance with experience marks
+- Significant decorative elements
+- Battle scars or marks of experience
+- Commanding or seasoned expression
+
+**Dice Quality**: 4-5 colored faces per die, few blanks
+
+---
+
+### Legendary (2000g+)
+**Visual Characteristics**:
+- Unique or magical equipment
+- Heroic appearance
+- Elaborate decorations and details
+- Famous or renowned aesthetic
+- Powerful or legendary expression
+- Special effects (glows, auras, etc.)
+
+**Dice Quality**: 5-6 colored faces per die, all or mostly colored
+
+---
+
+## Faction-Specific Crew
+
+When generating crew for specific factions, use these color schemes and themes:
+
+### Claddish Navy Crew
+**Colors**: Navy blue, white, gold
+**Theme**: Military discipline, naval training
+**Equipment**: Naval uniforms, well-maintained military gear
+**Example**: Naval officer, marine, ship's mate
+
+### Artifact Traders Crew
+**Colors**: Purple, gold, arcane blue
+**Theme**: Mystical knowledge, arcane training
+**Equipment**: Magical items, arcane robes, enchanted gear
+**Example**: Arcane scholar, mystic trader, enchanted guard
+
+### Stonehall Merchants Crew
+**Colors**: Stone gray, bronze, copper
+**Theme**: Dwarven craftsmanship, industrial strength
+**Equipment**: Heavy armor, quality metalwork, forge tools
+**Example**: Dwarven warrior, merchant guard, master smith
+
+### Slithereen Guard Crew
+**Colors**: Deep blue, sea green, purple
+**Theme**: Aquatic warriors, underwater combat
+**Equipment**: Scaled armor, tridents, water-themed gear
+**Example**: Naga warrior, deep guard, tidesworn
+
+### Revtel Crew
+**Colors**: Coral pink, turquoise, pearl white
+**Theme**: Peaceful traders, tropical aesthetic
+**Equipment**: Shell decorations, coral weapons, vibrant gear
+**Example**: Coral merchant, reef guardian, wave dancer
+
+### Free Captains Crew
+**Colors**: Black, crimson red
+**Theme**: Pirate raiders, rough outlaws
+**Equipment**: Rough gear, stolen items, intimidating weapons
+**Example**: Pirate raider, smuggler, sea wolf
+
+### Roseleaf Traders Crew
+**Colors**: Forest green, gold, natural wood
+**Theme**: Elven harmony, nature magic
+**Equipment**: Living wood armor, vine decorations, natural weapons
+**Example**: Elven ranger, nature mage, leaf guard
+
+### Oglodi Raiders Crew
+**Colors**: Blood red, bone white
+**Theme**: Brutal warriors, aggressive combat
+**Equipment**: Savage weapons, skull decorations, war paint
+**Example**: Oglodi berserker, war chief, blood guard
+
+### Keen Folk Engineers Crew
+**Colors**: Brass, copper, industrial gray
+**Theme**: Mechanical innovation, steampunk technology
+**Equipment**: Mechanical gear, gadgets, steam-powered devices
+**Example**: Tinker engineer, mechanist, clockwork specialist
+
+---
+
+## Naming Convention
+
+**Crew portrait files**: `crew_[class]_[faction]_[number].png`
+
+Examples:
+- `crew_warrior_stonehall_01.png`
+- `crew_mage_artifact_01.png`
+- `crew_rogue_freecaptains_01.png`
+- `crew_sailor_claddish_01.png`
+- `crew_merchant_roseleaf_01.png`
+
+**Generic/neutral crew**: `crew_[class]_neutral_[number].png`
+
+---
+
+## Batch Generation Planning
+
+To generate a full crew roster:
+
+1. **Core crew (priority)**: 1 of each class for each faction (54 total)
+2. **Variety**: 2-3 of each class for popular factions
+3. **Quality tiers**: Mix of novice, skilled, expert for variety
+4. **Legendary**: 1-2 legendary crew per faction (unique heroes)
+
+---
+
+## Design Principles
+
+1. **Distinct from captains**: Less heroic/legendary than captain portraits
+2. **Class clarity**: Visual cues immediately indicate class/role
+3. **Faction identity**: Color schemes and aesthetics match faction
+4. **Quality visible**: Higher tiers look more impressive
+5. **Diverse appearances**: Variety in race, age, gender, appearance
+6. **Painterly style**: Matches captain and overall game aesthetic
+7. **Readable composition**: Face and key details clearly visible
+8. **DOTA inspiration**: Reference Dota 2 character designs for style
+
+---
+
+## Usage in Game
+
+Crew portraits appear in:
+- **Tavern recruitment screen**: Available crew for hire
+- **Crew roster screen**: Current crew members
+- **Character details panel**: Individual crew information
+- **Dice pool display**: Small icons showing which crew provide dice
+
+---
+
+## Data Integration
+
+Crew portraits are referenced in `src/crew_data.js`:
+
+```javascript
+{
+    crewId: "warrior_stonehall_01",
+    name: "Thorgrim Ironbeard",
+    class: "Warrior",
+    quality: "Expert",
+    faction: "StonehallMerchants",
+    portrait: "assets/characters/crew/crew_warrior_stonehall_01.png",
+    dice: [ /* dice pool */ ],
+    recruitmentCost: 800
+}
+```
+
+---
+
+## Future Expansion
+
+When game expands, consider:
+- Unique named crew members with backstories
+- Character progression (novice portraits upgrade to skilled/expert)
+- Special event crew (quest rewards, special recruits)
+- Seasonal or limited crew variants
+- Crew relationships (paired bonuses for matching portraits)
+
+---
+
+## AIDEV-NOTE: Priority Generation Order
+
+1. Generic portraits for each class (6 total - fallbacks)
+2. One crew of each class for starter factions (Warriors, Mages, Sailors for Claddish/Artifact/Stonehall)
+3. Expand variety within popular factions
+4. Add quality tier variants
+5. Create legendary unique crew members
+
+Focus on functionality first, variety second.
+

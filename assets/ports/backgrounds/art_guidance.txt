@@ -1,0 +1,289 @@
+# Port Background Art Guidance
+
+## Overview
+Full-screen background images for port visit screens. These appear when the player enters a port and interacts with port facilities.
+
+**Technical Specifications:**
+- **Size**: 1920x1080 pixels (widescreen HD)
+- **Format**: PNG
+- **Style**: Painterly fantasy art, DOTA-inspired
+- **Perspective**: Ground-level view (looking at the port from within)
+- **Background**: Opaque
+- **Purpose**: Immersive backdrop for UI overlays (trading, shipyard, tavern menus)
+
+---
+
+## Background Types
+
+### Faction Settlement Backgrounds (9 Total)
+
+These represent the overall aesthetic of a faction's port when no specific location is active.
+
+**Naming Convention**: `[faction]_settlement.png`
+
+#### 1. Artifact Traders Settlement
+**File**: `artifact_traders_settlement.png` ✓ Generated
+**Colors**: Purple, gold, arcane blue
+**Description**: Mystical trading hub with arcane architecture, magical lanterns, enchanted market stalls, glowing runes on buildings, elegant mystical atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy port settlement interior view, Artifact Traders faction, mystical purple and gold architecture with arcane blue glowing runes, magical lanterns illuminating market stalls, enchanted merchandise displays, elegant arcane aesthetic, people in mystical robes trading, painterly DOTA-inspired art style, atmospheric magical lighting, immersive ground-level perspective" ../assets/ports/backgrounds/artifact_traders_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 2. Claddish Navy Settlement
+**File**: `claddish_navy_settlement.png` ✓ Generated
+**Colors**: Navy blue, white, gold
+**Description**: Military naval port with organized docks, naval ships in background, military banners, disciplined architecture, fortress-like buildings, orderly atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy military naval port interior view, Claddish Navy faction, organized navy blue and white architecture with gold accents, fortress-like buildings with military banners, disciplined naval yard with ships in background, clean orderly atmosphere, sailors in uniform, painterly DOTA-inspired art style, dramatic authoritative lighting, immersive ground-level perspective" ../assets/ports/backgrounds/claddish_navy_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 3. Free Captains Settlement
+**File**: `free_captains_settlement.png` ✓ Generated
+**Colors**: Black, crimson red
+**Description**: Pirate haven with ramshackle buildings, skull decorations, rough taverns, chaotic atmosphere, smuggler's cove aesthetic, dangerous but lively
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy pirate port interior view, Free Captains faction, ramshackle black and red buildings with skull decorations, rough wooden structures, chaotic smuggler's cove atmosphere, pirate ships in background, taverns and rowdy activity, dangerous but lively aesthetic, painterly DOTA-inspired art style, dramatic moody lighting, immersive ground-level perspective" ../assets/ports/backgrounds/free_captains_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 4. Keen Folk Engineers Settlement
+**File**: `keen_folk_engineers_settlement.png` ✓ Generated
+**Colors**: Brass, copper, industrial gray
+**Description**: Steampunk engineering port with mechanical structures, visible gears and pipes, steam vents, workshop aesthetic, innovative technology visible
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy steampunk port interior view, Keen Folk Engineers faction, brass and copper mechanical architecture with industrial gray accents, visible gears pipes and steam vents, workshop aesthetic with innovative technology, gnomish inventors working, clockwork devices visible, painterly DOTA-inspired art style, bright technical lighting, immersive ground-level perspective" ../assets/ports/backgrounds/keen_folk_engineers_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 5. Oglodi Raiders Settlement
+**File**: `oglodi_raiders_settlement.png` ✓ Generated
+**Colors**: Blood red, bone white
+**Description**: Brutal warrior fortress with aggressive architecture, weapon racks, war banners, intimidating skull decorations, harsh martial atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy warrior fortress port interior view, Oglodi Raiders faction, brutal blood red and bone white architecture with skull decorations, aggressive design with weapon racks and war banners, intimidating martial atmosphere, warriors training in background, harsh fortress aesthetic, painterly DOTA-inspired art style, dramatic aggressive lighting, immersive ground-level perspective" ../assets/ports/backgrounds/oglodi_raiders_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 6. Revtel Settlement
+**File**: `revtel_settlement.png` ✓ Generated
+**Colors**: Coral pink, turquoise, pearl white
+**Description**: Tropical coral reef port with shell decorations, coral architecture, bright peaceful atmosphere, aquatic aesthetic, welcoming tropical harbor
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy tropical port interior view, Revtel faction, coral pink and turquoise architecture with pearl white accents, shell decorations and coral reef aesthetic, bright peaceful welcoming atmosphere, tropical harbor with colorful merchandise, aquatic theme with vibrant colors, painterly DOTA-inspired art style, warm sunny lighting, immersive ground-level perspective" ../assets/ports/backgrounds/revtel_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 7. Roseleaf Traders Settlement
+**File**: `roseleaf_traders_settlement.png` ✓ Generated
+**Colors**: Forest green, gold, natural wood
+**Description**: Elven nature port with living wood architecture, integrated plants and trees, harmonious natural aesthetic, peaceful forest harbor atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy elven nature port interior view, Roseleaf Traders faction, living forest green and gold architecture with natural wood, integrated plants trees and vine decorations, harmonious natural aesthetic, peaceful forest harbor atmosphere, elven traders among nature, painterly DOTA-inspired art style, soft natural lighting, immersive ground-level perspective" ../assets/ports/backgrounds/roseleaf_traders_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 8. Slithereen Guard Settlement
+**File**: `slithereen_guard_settlement.png` ✓ Generated
+**Colors**: Deep blue, sea green, purple
+**Description**: Underwater-themed military port with aquatic architecture, coral fortifications, defensive design, guardian aesthetic, deep ocean atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy underwater-themed military port interior view, Slithereen Guard faction, deep blue and sea green architecture with purple accents, coral fortifications and aquatic defensive design, guardian warrior aesthetic, underwater atmosphere with naga guards, mysterious deep ocean feel, painterly DOTA-inspired art style, dramatic underwater lighting, immersive ground-level perspective" ../assets/ports/backgrounds/slithereen_guard_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 9. Stonehall Merchants Settlement
+**File**: `stonehall_merchants_settlement.png` ✓ Generated
+**Colors**: Stone gray, bronze, copper
+**Description**: Dwarven industrial port with stone architecture, forge smoke, anvil sounds implied, sturdy construction, merchant warehouse district
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy dwarven industrial port interior view, Stonehall Merchants faction, stone gray architecture with bronze and copper accents, forge smoke and industrial chimneys, sturdy construction with merchant warehouses, anvils and metalwork visible, bustling trade atmosphere, painterly DOTA-inspired art style, warm forge lighting, immersive ground-level perspective" ../assets/ports/backgrounds/stonehall_merchants_settlement.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+---
+
+### Location-Specific Backgrounds (5 Total)
+
+These represent specific locations within a port that players can visit. They should be more neutral/generic to work with any faction.
+
+**Naming Convention**: `location_[type].png`
+
+#### 1. Marketplace
+**File**: `location_marketplace.png` ✓ Generated
+**Description**: Bustling market with merchant stalls, goods on display, trading happening, colorful awnings, busy commercial atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy maritime marketplace interior view, bustling merchant stalls with colorful awnings, various goods on display (barrels, crates, fabrics), traders and customers negotiating, busy commercial atmosphere, generic fantasy port market that fits any faction, painterly DOTA-inspired art style, bright welcoming lighting, immersive ground-level perspective" ../assets/ports/backgrounds/location_marketplace.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 2. Tavern
+**File**: `location_tavern.png` ✓ Generated
+**Description**: Cozy tavern interior with wooden tables, bar counter, barrels, warm lighting, social gathering place, maritime decorations
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy maritime tavern interior view, cozy wooden tables and bar counter, barrels and tankards, warm fireplace lighting, social gathering atmosphere with sailors and merchants, maritime decorations (nets, lanterns, ship wheels), welcoming public house aesthetic, generic fantasy tavern that fits any port, painterly DOTA-inspired art style, warm ambient lighting, immersive ground-level perspective" ../assets/ports/backgrounds/location_tavern.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 3. Shipyard
+**File**: `location_shipyard.png` ✓ Generated
+**Description**: Ship construction yard with dry docks, ships being built/repaired, nautical equipment, industrial maritime atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy maritime shipyard interior view, dry docks with ships being built or repaired, nautical construction equipment (ropes, pulleys, planks), workers and craftsmen, industrial maritime atmosphere, ship hulls visible in background, workshop aesthetic, generic fantasy shipyard that fits any port, painterly DOTA-inspired art style, bright working lighting, immersive ground-level perspective" ../assets/ports/backgrounds/location_shipyard.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 4. Town Square
+**File**: `location_town_square.png` ✓ Generated
+**Description**: Central plaza with fountain or monument, gathering place, people socializing, notice boards, public space atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy port town square interior view, central plaza with fountain or monument, people gathering and socializing, notice boards and public postings, cobblestone ground, surrounding buildings with balconies, welcoming public space atmosphere, generic fantasy town square that fits any port, painterly DOTA-inspired art style, natural daylight lighting, immersive ground-level perspective" ../assets/ports/backgrounds/location_town_square.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+#### 5. Construction Site (Future/Upgrade Location)
+**File**: `location_construction.png` ✓ Generated
+**Description**: Building site with scaffolding, construction materials, workers, development in progress, growth atmosphere
+
+**Generation Template**:
+```bash
+cd Imagine
+python imagine.py generate "Fantasy port construction site interior view, building site with wooden scaffolding, construction materials (lumber, stone blocks, tools), workers building structures, development in progress atmosphere, cranes and pulleys visible, growth and expansion aesthetic, generic fantasy construction that fits any port, painterly DOTA-inspired art style, bright working lighting, immersive ground-level perspective" ../assets/ports/backgrounds/location_construction.png --size 1920x1080 --quality high --background opaque
+cd ..
+```
+
+---
+
+## Design Principles
+
+1. **Immersive ground-level view**: Player is standing within the port looking at surroundings
+2. **UI overlay compatible**: Background should work with semi-transparent UI panels overlaid
+3. **Atmospheric depth**: Show background elements (ships, buildings) to create depth
+4. **Faction identity**: Settlement backgrounds strongly reflect faction aesthetic
+5. **Generic locations**: Location backgrounds are more neutral to work with any faction
+6. **Painterly style**: Matches overall DOTA-inspired game art style
+7. **Appropriate lighting**: Each background has lighting that matches its mood/theme
+8. **No text or UI**: Pure background art, all UI elements added programmatically
+9. **Widescreen format**: 1920x1080 for modern displays
+10. **Readable composition**: Important visual elements shouldn't be obscured by UI overlays
+
+---
+
+## UI Integration
+
+Backgrounds are used in:
+- **Port entry screen**: Show faction settlement background
+- **Trading screen**: Marketplace background or faction settlement
+- **Shipyard screen**: Shipyard background
+- **Tavern screen**: Tavern background (crew recruitment)
+- **Town square**: Quest board, rumors, general information
+
+**Implementation**: Loaded as Image objects and rendered in UI panels or as full-screen backgrounds with UI overlays on top.
+
+---
+
+## Color Palette by Faction
+
+**Artifact Traders**: Purple #9370DB, Gold #FFD700, Arcane Blue #00BFFF
+**Claddish Navy**: Navy Blue #000080, White #FFFFFF, Gold #FFD700
+**Free Captains**: Black #000000, Crimson Red #DC143C
+**Keen Folk Engineers**: Brass #B5A642, Copper #CD7F32, Industrial Gray #A9A9A9
+**Oglodi Raiders**: Blood Red #8B0000, Bone White #F5F5DC
+**Revtel**: Coral Pink #FF7F50, Turquoise #40E0D0, Pearl White #FFF5EE
+**Roseleaf Traders**: Forest Green #228B22, Gold #FFD700, Natural Wood #8B4513
+**Slithereen Guard**: Deep Blue #00008B, Sea Green #2E8B57, Purple #9370DB
+**Stonehall Merchants**: Stone Gray #708090, Bronze #CD7F32, Copper #B87333
+
+---
+
+## Technical Notes
+
+- All backgrounds should support UI overlays with text visibility
+- Avoid extremely busy areas in the center where UI panels appear
+- Keep horizon line in upper third for compositional balance
+- Ensure adequate contrast for text readability
+- File sizes should be optimized for web delivery (under 500KB if possible)
+- PNG format for quality, but optimize compression
+
+---
+
+## Test Files
+
+**test_artifact.png** - Test background for development purposes
+
+---
+
+## AIDEV-NOTE: Batch Generation
+
+To regenerate all backgrounds, create a PowerShell script:
+
+```powershell
+# generate_port_backgrounds.ps1
+cd Imagine
+
+# Faction settlements
+python imagine.py generate "..." ../assets/ports/backgrounds/artifact_traders_settlement.png --size 1920x1080 --quality high --background opaque
+python imagine.py generate "..." ../assets/ports/backgrounds/claddish_navy_settlement.png --size 1920x1080 --quality high --background opaque
+# ... (continue for all factions)
+
+# Locations
+python imagine.py generate "..." ../assets/ports/backgrounds/location_marketplace.png --size 1920x1080 --quality high --background opaque
+python imagine.py generate "..." ../assets/ports/backgrounds/location_tavern.png --size 1920x1080 --quality high --background opaque
+# ... (continue for all locations)
+
+cd ..
+```
+
+All detailed prompts are available in `generate_port_backgrounds.txt` in the root directory.
+
+---
+
+## Maintenance
+
+When adding new:
+- **Faction**: Create new settlement background matching faction colors and theme
+- **Location**: Create new generic location background that works with any faction
+- Update this guidance file with specifications
+- Update port data to reference new backgrounds
+- Test UI overlay visibility and text readability
+

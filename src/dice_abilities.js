@@ -1,5 +1,11 @@
 // BOTA - Dice Abilities
-// Metadata for all dice face abilities/icons
+// Responsibilities:
+// - Define metadata for all dice face abilities/icons (values, slots, effects)
+// - Provide helpers to lookup abilities and compute formatted values/descriptions
+// Not responsible for:
+// - Rendering icons (DiceIcons)
+// - Applying effects (Combat)
+// - Dice face layout (Die/CombatUI)
 
 // AIDEV-NOTE: Ability data structure
 // Each ability has:
@@ -41,8 +47,9 @@ const AbilityData = {
         baseDamage: 8,
         damagePerSlot: 4,
         color: "Red",
-        targeting: "enemies",
-        effectType: "damage",
+        targeting: "self",
+        effectType: "buff",
+        duration: 3,
         aoeType: "all",
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
@@ -98,7 +105,8 @@ const AbilityData = {
         evasionPerSlot: 3,
         color: "Green",
         targeting: "self",
-        effectType: "shield",
+        effectType: "buff",
+        duration: 2,
         powerUpSlots: 1,
         powerUpColors: ["Green"]
     },
@@ -173,6 +181,78 @@ const AbilityData = {
         duration: 3,
         powerUpSlots: 1,
         powerUpColors: ["Blue"]
+    },
+
+    // Blue offense for mage kits
+    arcane_burst: {
+        icon: "arcane_burst",
+        displayName: "Arcane Burst",
+        description: "Deal {base} + {perSlot}*{X} magic damage",
+        baseDamage: 7,
+        damagePerSlot: 5,
+        color: "Blue",
+        targeting: "enemy",
+        effectType: "damage",
+        powerUpSlots: 2,
+        powerUpColors: ["Blue", "Blue"]
+    },
+
+    arcane_chain: {
+        icon: "arcane_chain",
+        displayName: "Arcane Chain",
+        description: "Deal {base} + {perSlot}*{X} damage (chains)",
+        baseDamage: 5,
+        damagePerSlot: 4,
+        color: "Blue",
+        targeting: "enemies",
+        effectType: "damage",
+        aoeType: "chain",
+        powerUpSlots: 2,
+        powerUpColors: ["Blue", "Green"]
+    },
+
+    // Red ship impact ability
+    slam: {
+        icon: "slam",
+        displayName: "Slam",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 9,
+        damagePerSlot: 5,
+        color: "Red",
+        targeting: "enemy",
+        effectType: "damage",
+        powerUpSlots: 1,
+        powerUpColors: ["Red"]
+    },
+
+    // Small ranged zap
+    zap: {
+        icon: "zap",
+        displayName: "Zap",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 4,
+        damagePerSlot: 2,
+        color: "Blue",
+        targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "ranged",
+        powerUpSlots: 1,
+        powerUpColors: ["Blue"]
+    },
+
+    // Telekinesis: disable a random enemy die next roll (status effect)
+    telekenesis: {
+        icon: "telekenesis",
+        displayName: "Telekinesis",
+        description: "Disable 1 enemy die next roll",
+        color: "Blue",
+        targeting: "enemy",
+        effectType: "debuff",
+        debuffType: "disable_die",
+        disableCount: 1,
+        duration: 1,
+        powerUpSlots: 0,
+        powerUpColors: []
     },
 
     shield: {

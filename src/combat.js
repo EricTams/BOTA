@@ -11,19 +11,46 @@ const Combat = {
         active: false,
         playerUnit: null,
         enemyUnit: null,
+        playerCrew: null, // Crew member manning ship weapons
+        enemyCrew: null, // Crew member manning ship weapons
         currentTurn: 'player', // 'player' or 'enemy'
         turnNumber: 0,
         phase: 'roll', // 'roll', 'execute', 'end_turn'
         combatLog: [] // Array of combat events for display
     },
 
+    // Initialize by captain ids (no UI/bootstrap dependency)
+    initByIds(playerCaptainId, enemyCaptainId) {
+        const playerCaptain = getCaptainById(playerCaptainId);
+        const enemyCaptain = getCaptainById(enemyCaptainId);
+        const playerDice = getDiceForCaptain(playerCaptainId).map(d => d.id);
+        const enemyDice = getDiceForCaptain(enemyCaptainId).map(d => d.id);
+        const player = { id: playerCaptain.id, name: playerCaptain.name, hp: 100, maxHp: 100, portrait: `assets/characters/${playerCaptain.id}.png`, dice: playerDice };
+        const enemy = { id: enemyCaptain.id, name: enemyCaptain.name, hp: 100, maxHp: 100, portrait: `assets/characters/${enemyCaptain.id}.png`, dice: enemyDice };
+        this.init(player, enemy);
+        this.startTurn();
+    },
+
     // Initialize combat between two captains
-    init(playerCaptain, enemyCaptain) {
+    init(playerCaptain, enemyCaptain, playerCrewData = null, enemyCrewData = null) {
         console.log('Combat - Initializing 1v1 duel:', playerCaptain.name, 'vs', enemyCaptain.name);
+        console.log('Combat - Player crew data:', playerCrewData);
+        console.log('Combat - Enemy crew data:', enemyCrewData);
         
         this.state.active = true;
         this.state.playerUnit = this.createUnit(playerCaptain, 'player');
         this.state.enemyUnit = this.createUnit(enemyCaptain, 'enemy');
+        
+        // Create crew units if provided
+        if (playerCrewData) {
+            this.state.playerCrew = this.createCrewUnit(playerCrewData, 'player');
+            console.log('Combat - Created player crew:', this.state.playerCrew);
+        }
+        if (enemyCrewData) {
+            this.state.enemyCrew = this.createCrewUnit(enemyCrewData, 'enemy');
+            console.log('Combat - Created enemy crew:', this.state.enemyCrew);
+        }
+        
         this.state.currentTurn = 'player';
         this.state.turnNumber = 1;
         this.state.phase = 'roll';
@@ -42,7 +69,23 @@ const Combat = {
             maxHp: captain.maxHp || 100,
             armor: 0, // Temporary armor that absorbs damage
             statusEffects: [], // Array of active status effects
-            dice: captain.dice || [] // Array of die IDs this captain uses
+            dice: captain.dice || [], // Array of die IDs this captain uses
+            portrait: captain.portrait // Path to portrait image
+        };
+    },
+
+    // Create a crew combat unit
+    createCrewUnit(crewData, side) {
+        return {
+            id: crewData.id,
+            name: crewData.name,
+            side: side,
+            hp: crewData.health || 50,
+            maxHp: crewData.health || 50,
+            armor: 0,
+            statusEffects: [],
+            dice: crewData.dice || [], // Ship equipment dice
+            portrait: 'assets/characters/crew/generic_crew_portrait.png'
         };
     },
 
@@ -95,9 +138,17 @@ const Combat = {
         // Switch turns
         if (this.state.currentTurn === 'player') {
             this.state.currentTurn = 'enemy';
+            // Switch DiceSystem to enemy's dice
+            if (window.DiceSystem && window.DiceSystem.switchToEnemyTurn) {
+                window.DiceSystem.switchToEnemyTurn();
+            }
         } else {
             this.state.currentTurn = 'player';
             this.state.turnNumber++;
+            // Switch DiceSystem to player's dice
+            if (window.DiceSystem && window.DiceSystem.switchToPlayerTurn) {
+                window.DiceSystem.switchToPlayerTurn();
+            }
         }
         
         // Check for combat end
@@ -178,7 +229,7 @@ const Combat = {
     },
 
     // Apply a status effect to a unit
-    applyStatusEffect(unit, effectType, value, duration, stacks = 1) {
+    applyStatusEffect(unit, effectType, value, duration, stacks = 1, icon = null) {
         // Check if effect already exists (for stackable effects like poison)
         const existingEffect = unit.statusEffects.find(e => e.type === effectType);
         
@@ -198,7 +249,8 @@ const Combat = {
                 type: effectType,
                 value: value,
                 duration: duration,
-                stacks: stacks
+                stacks: stacks,
+                icon: icon // Store the ability icon name
             });
             this.addLog(`${unit.name} is afflicted with ${effectType}!`);
         }
@@ -251,6 +303,14 @@ const Combat = {
                 // Heal over time (regen)
                 const hotDuration = ability.duration || 3;
                 this.applyStatusEffect(caster, 'regen', calc.result, hotDuration);
+                break;
+
+            case 'buff':
+                // Apply buff status effect (like dodge or counter helix)
+                const buffDuration = ability.duration || 2;
+                const buffValue = calc.result;
+                const buffType = ability.icon || ability.displayName.toLowerCase().replace(/\s+/g, '_');
+                this.applyStatusEffect(caster, buffType, buffValue, buffDuration, false, ability.icon);
                 break;
 
             default:

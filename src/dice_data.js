@@ -1,5 +1,10 @@
 // BOTA - Dice Data
-// All dice definitions for captains and crew
+// Responsibilities:
+// - Define all dice and their six faces per die id
+// - Provide helpers to fetch dice by name/owner
+// Not responsible for:
+// - Rendering (Die/CombatUI)
+// - Combat logic/effects (Combat/CombatManager)
 
 // AIDEV-NOTE: Dice face structure
 // Each die has 6 faces
@@ -40,6 +45,78 @@ const DiceData = {
             { color: "Red", icon: "chop" },
             { color: "Green", icon: "dodge" },
             { color: "Green", icon: "dodge" }
+        ]
+    },
+
+    // Rubick (Artifact Traders) - Blue-focused
+    rubick_personal: {
+        id: "rubick_personal",
+        name: "Rubick's Personal Die",
+        owner: "captain_rubick",
+        faces: [
+            { color: "Blue", icon: "arcane_chain" },
+            { color: "Blue", icon: "arcane_chain" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: "Green", icon: "dodge" },
+            { color: "Green", icon: "dodge" }
+        ]
+    },
+    rubick_equipment: {
+        id: "rubick_equipment",
+        name: "Arcane Supremacy Die",
+        owner: "captain_rubick",
+        equipment: "Arcane Supremacy",
+        faces: [
+            { color: "Blue", icon: "arcane_burst" },
+            { color: "Blue", icon: "arcane_burst" },
+            { color: "Blue", icon: "telekenesis" },
+            { color: "Blue", icon: "telekenesis" },
+            { color: "Blue", icon: "heal" },
+            { color: "Blue", icon: "heal" }
+        ]
+    },
+
+    // Ship equipment dice (Artifact Traders - Mystic Skiff)
+    arcane_staff: {
+        id: "arcane_staff",
+        name: "Arcane Staff",
+        owner: null,
+        faces: [
+            { color: "Blue", icon: "arcane_burst" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: null, icon: null }
+        ]
+    },
+    crystal_array: {
+        id: "crystal_array",
+        name: "Crystal Array",
+        owner: null,
+        faces: [
+            { color: "Blue", icon: "heal" },
+            { color: "Blue", icon: "heal" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: null, icon: null },
+            { color: null, icon: null }
+        ]
+    },
+
+    // Ship equipment dice (Oglodi Raiders - Longboat)
+    oglodi_ram: {
+        id: "oglodi_ram",
+        name: "Ram",
+        owner: null,
+        faces: [
+            { color: "Red", icon: "slam" },
+            { color: "Red", icon: "slam" },
+            { color: "Red", icon: "slam" },
+            { color: "Red", icon: "slam" },
+            { color: null, icon: null },
+            { color: null, icon: null }
         ]
     }
 };

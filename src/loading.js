@@ -13,6 +13,24 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
+            version: 'October 25, 2025',
+            date: 'October 25, 2025',
+            changes: [
+                { category: 'Added', text: 'Complete combat system with turn-based dice mechanics' },
+                { category: 'Added', text: 'Combat UI with character panels showing HP, armor, and status effects' },
+                { category: 'Added', text: 'Character Panel component for reusable unit display' },
+                { category: 'Added', text: 'Crew units in combat (separate from captains)' },
+                { category: 'Added', text: 'Ship weapon dice operated by crew units' },
+                { category: 'Added', text: 'Status effect system (buffs, debuffs, DoTs, HoTs)' },
+                { category: 'Added', text: 'Status effect tooltips with hover detection' },
+                { category: 'Added', text: 'Slam ability for ship ram weapons' },
+                { category: 'Improved', text: 'Dice system redesigned with object-oriented architecture' },
+                { category: 'Changed', text: 'Combat now supports both captain and crew units' },
+                { category: 'Technical', text: 'Refactored dice into Die.js (state) and DiceSystem.js (rendering)' },
+                { category: 'Technical', text: 'Created CharacterPanel component for consistent UI rendering' }
+            ]
+        },
+        {
             version: 'October 22, 2025',
             date: 'October 22, 2025',
             changes: [
