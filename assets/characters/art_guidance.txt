@@ -304,3 +304,7 @@ When adding new character portraits:
 6. Update character data files (captain_data.js, crew_data.js)
 7. Test portrait display in UI at various sizes
 
+
+
+
+

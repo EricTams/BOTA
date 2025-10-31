@@ -281,46 +281,13 @@ const UI = {
         header.appendChild(title);
         optionsBox.appendChild(header);
 
-        // Tabs
-        const tabsContainer = document.createElement('div');
-        tabsContainer.className = 'options-tabs';
-
-        const tabs = [
-            { id: 'changelog', label: 'Changelog' },
-            { id: 'audio', label: 'Audio' },
-            { id: 'controls', label: 'Controls' }
-        ];
-
-        const tabButtons = {};
-        const tabContents = {};
-
-        tabs.forEach((tab, index) => {
-            const btn = document.createElement('button');
-            btn.className = 'options-tab';
-            if (index === 0) btn.classList.add('active');
-            btn.textContent = tab.label;
-            btn.onclick = () => this.switchOptionsTab(tab.id, tabButtons, tabContents);
-            tabButtons[tab.id] = btn;
-            tabsContainer.appendChild(btn);
-        });
-
-        optionsBox.appendChild(tabsContainer);
-
-        // Content area
-        const contentArea = document.createElement('div');
-        contentArea.className = 'options-content';
-
-        // Changelog tab
+        // Create tab content
         const changelogContent = document.createElement('div');
         changelogContent.className = 'options-tab-content';
         changelogContent.innerHTML = this.generateChangelogHTML();
-        tabContents.changelog = changelogContent;
-        contentArea.appendChild(changelogContent);
 
-        // Audio tab
         const audioContent = document.createElement('div');
         audioContent.className = 'options-tab-content';
-        audioContent.style.display = 'none';
         audioContent.innerHTML = `
             <div class="options-section">
                 <div class="options-section-title">Audio Settings</div>
@@ -332,13 +299,9 @@ const UI = {
                 <p style="color: #aaa; padding-left: 20px;">• Ambient Sounds Volume</p>
             </div>
         `;
-        tabContents.audio = audioContent;
-        contentArea.appendChild(audioContent);
 
-        // Controls tab
         const controlsContent = document.createElement('div');
         controlsContent.className = 'options-tab-content';
-        controlsContent.style.display = 'none';
         controlsContent.innerHTML = `
             <div class="options-section">
                 <div class="options-section-title">Controls</div>
@@ -352,10 +315,16 @@ const UI = {
                 <p style="color: #aaa;">Camera auto-follows your boat after 4 seconds of no input.</p>
             </div>
         `;
-        tabContents.controls = controlsContent;
-        contentArea.appendChild(controlsContent);
 
-        optionsBox.appendChild(contentArea);
+        // Create tabs using Tabs component
+        const tabs = [
+            { id: 'changelog', label: 'Changelog', content: changelogContent },
+            { id: 'audio', label: 'Audio', content: audioContent },
+            { id: 'controls', label: 'Controls', content: controlsContent }
+        ];
+
+        const tabsContainer = Tabs.createOptionsTabs(tabs, 'changelog');
+        optionsBox.appendChild(tabsContainer);
 
         // Footer
         const footer = document.createElement('div');
@@ -371,26 +340,6 @@ const UI = {
         this.overlay.appendChild(container);
     },
 
-    // Switch options tabs
-    switchOptionsTab(tabId, tabButtons, tabContents) {
-        // Update tab buttons
-        Object.keys(tabButtons).forEach(id => {
-            if (id === tabId) {
-                tabButtons[id].classList.add('active');
-            } else {
-                tabButtons[id].classList.remove('active');
-            }
-        });
-
-        // Update tab contents
-        Object.keys(tabContents).forEach(id => {
-            if (id === tabId) {
-                tabContents[id].style.display = 'block';
-            } else {
-                tabContents[id].style.display = 'none';
-            }
-        });
-    },
 
     // Generate changelog HTML from LoadingScreen changelog data
     generateChangelogHTML() {
@@ -423,28 +372,6 @@ const UI = {
 
     // AIDEV-NOTE: Show error modal on top of existing screen
     showErrorModal(title, message) {
-        // Remove any existing error modal
-        const existing = document.querySelector('.error-modal');
-        if (existing) {
-            existing.remove();
-        }
-
-        // Create modal backdrop
-        const modal = document.createElement('div');
-        modal.className = 'error-modal';
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-
         // Create modal content
         const content = document.createElement('div');
         content.style.cssText = `
@@ -476,28 +403,25 @@ const UI = {
         `;
         content.appendChild(messageEl);
 
-        const closeBtn = document.createElement('button');
-        closeBtn.className = 'menu-button';
-        closeBtn.textContent = 'OK';
+        const closeBtn = Modal.createCloseButton(() => {
+            Modal.hide(modal);
+        }, 'OK', 'menu-button');
         closeBtn.style.cssText = `
             padding: 12px 40px;
             font-size: 16px;
             cursor: pointer;
         `;
-        closeBtn.onclick = () => {
-            modal.remove();
-        };
         content.appendChild(closeBtn);
 
-        modal.appendChild(content);
-        document.body.appendChild(modal);
+        // Create and show modal
+        const modal = Modal.create({
+            className: 'error-modal',
+            content: content,
+            onClose: () => Modal.hide(modal),
+            closeOnBackdrop: true
+        });
 
-        // Click outside to close
-        modal.onclick = (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        };
+        document.body.appendChild(modal);
     },
 
     // AIDEV-NOTE: Show debug panel with toggle buttons
@@ -682,86 +606,41 @@ const UI = {
         // Remove existing window if any
         this.hideClickPositionWindow();
 
-        const window = document.createElement('div');
-        window.id = 'click-position-window';
-        window.className = 'click-position-window';
-
-        // Title
-        const title = document.createElement('div');
-        title.className = 'click-position-title';
-        title.textContent = 'Click Positions';
-        window.appendChild(title);
-
-        // Position list
-        const list = document.createElement('div');
-        list.id = 'click-position-list';
-        list.className = 'click-position-list';
-        list.textContent = 'Click on the map to record positions...';
-        window.appendChild(list);
-
-        // Button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'click-position-buttons';
-
-        // Clear button
-        const clearBtn = document.createElement('button');
-        clearBtn.textContent = 'Clear';
-        clearBtn.className = 'click-position-btn';
-        clearBtn.onclick = () => {
-            Game.clickPositions = [];
-            this.updateClickPositions();
-        };
-        buttonContainer.appendChild(clearBtn);
-
-        // Copy button
-        const copyBtn = document.createElement('button');
-        copyBtn.textContent = 'Copy';
-        copyBtn.className = 'click-position-btn';
-        copyBtn.onclick = () => {
-            const text = Game.clickPositions.join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy';
-                }, 1000);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                alert('Failed to copy to clipboard');
-            });
-        };
-        buttonContainer.appendChild(copyBtn);
-
-        window.appendChild(buttonContainer);
+        const window = DebugWindow.createClickPositionWindow(
+            () => {
+                Game.clickPositions = [];
+                this.updateClickPositions();
+            },
+            () => {
+                const text = Game.clickPositions.join('\n');
+                navigator.clipboard.writeText(text).then(() => {
+                    // Update button text temporarily
+                    const copyBtn = window.querySelector('.click-position-btn:last-child');
+                    if (copyBtn) {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                        }, 1000);
+                    }
+                }).catch(err => {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy to clipboard');
+                });
+            }
+        );
 
         this.overlay.appendChild(window);
     },
 
     // Hide click position window
     hideClickPositionWindow() {
-        const window = document.getElementById('click-position-window');
-        if (window) {
-            window.remove();
-        }
+        DebugWindow.hide('click-position-window');
     },
 
     // Update click position list
     updateClickPositions() {
-        const list = document.getElementById('click-position-list');
-        if (!list) return;
-
-        if (Game.clickPositions.length === 0) {
-            list.textContent = 'Click on the map to record positions...';
-            list.className = 'click-position-list';
-        } else {
-            list.innerHTML = '';
-            list.className = 'click-position-list with-content';
-            Game.clickPositions.forEach((pos, index) => {
-                const item = document.createElement('div');
-                item.className = 'click-position-item';
-                item.textContent = pos;
-                list.appendChild(item);
-            });
-        }
+        DebugWindow.updateClickPositions('click-position-window', Game.clickPositions);
     },
 
     // AIDEV-NOTE: Show port edit window
@@ -769,55 +648,30 @@ const UI = {
         // Remove existing window if any
         this.hidePortEditWindow();
 
-        const window = document.createElement('div');
-        window.id = 'port-edit-window';
-        window.className = 'port-edit-window';
-
-        // Title
-        const title = document.createElement('div');
-        title.className = 'port-edit-title';
-        title.textContent = 'Port Editor';
-        window.appendChild(title);
-
-        // Instructions
-        const instructions = document.createElement('div');
-        instructions.className = 'port-edit-instructions';
-        instructions.innerHTML = 'Drag ports to reposition them.<br>Shift+click to flip horizontally.<br>Click Copy to export updated data.';
-        window.appendChild(instructions);
-
-        // Button container
-        const buttonContainer = document.createElement('div');
-        buttonContainer.className = 'port-edit-buttons';
-
-        // Copy button
-        const copyBtn = document.createElement('button');
-        copyBtn.textContent = 'Copy Port Data';
-        copyBtn.className = 'port-edit-btn';
-        copyBtn.onclick = () => {
+        const window = DebugWindow.createPortEditWindow(() => {
             const code = Game.exportPortData();
             navigator.clipboard.writeText(code).then(() => {
-                copyBtn.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy Port Data';
-                }, 2000);
+                // Update button text temporarily
+                const copyBtn = window.querySelector('.port-edit-btn');
+                if (copyBtn) {
+                    const originalText = copyBtn.textContent;
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => {
+                        copyBtn.textContent = originalText;
+                    }, 2000);
+                }
             }).catch(err => {
                 console.error('Failed to copy:', err);
                 alert('Failed to copy to clipboard');
             });
-        };
-        buttonContainer.appendChild(copyBtn);
-
-        window.appendChild(buttonContainer);
+        });
 
         this.overlay.appendChild(window);
     },
 
     // Hide port edit window
     hidePortEditWindow() {
-        const window = document.getElementById('port-edit-window');
-        if (window) {
-            window.remove();
-        }
+        DebugWindow.hide('port-edit-window');
     },
     
     // AIDEV-NOTE: Show trade log window for debugging
@@ -1142,76 +996,31 @@ const UI = {
         // Store current transactions (goodId -> quantity, positive = buy, negative = sell)
         this.currentTransactions = {};
         
-        const modal = document.createElement('div');
-        modal.className = 'port-modal';
+        // Create a function to update the trading summary (must be defined before screen creation)
+        let screenElement = null;
+        const updateSummary = () => {
+            if (screenElement) {
+                const summary = screenElement.querySelector('#trading-summary');
+                const confirmBtn = screenElement.querySelector('.confirm-button');
+                if (summary) {
+                    ScreenLayout.updateTradingSummary(port, summary, confirmBtn);
+                }
+            }
+        };
         
-        const container = document.createElement('div');
-        container.className = 'sub-screen-container trading-screen';
-        
-        // Header
-        const header = document.createElement('div');
-        header.className = 'sub-screen-header';
-        const title = document.createElement('h2');
-        title.textContent = `${port.name} - Marketplace`;
-        header.appendChild(title);
-        container.appendChild(header);
-        
-        // Main trading content (scrollable)
-        const content = document.createElement('div');
-        content.className = 'trading-content';
-        
-        // Add mouse wheel support for scrolling
-        content.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            content.scrollTop += e.deltaY;
+        // Create trading screen using ScreenLayout component
+        screenElement = ScreenLayout.createTradingScreenWithSliders({
+            port: port,
+            onValueChange: (goodId, quantity, price, total) => {
+                this.currentTransactions[goodId] = quantity;
+                // Update the trading summary in the screen
+                updateSummary();
+            },
+            onConfirm: () => this.executeTradeTransaction(port),
+            onBack: () => this.showPortScreen(port)
         });
         
-        // Get all goods that are either at port or in player cargo
-        const availableGoods = this.getAvailableGoodsForTrading(port);
-        
-        // Create goods list
-        const goodsList = document.createElement('div');
-        goodsList.className = 'goods-list';
-        
-        for (const goodId of availableGoods) {
-            const goodRow = this.createGoodTradingRow(port, goodId);
-            goodsList.appendChild(goodRow);
-        }
-        
-        content.appendChild(goodsList);
-        container.appendChild(content);
-        
-        // Fixed footer section (doesn't scroll)
-        const fixedFooter = document.createElement('div');
-        fixedFooter.className = 'trading-fixed-footer';
-        
-        // Transaction summary
-        const summary = document.createElement('div');
-        summary.className = 'transaction-summary';
-        summary.id = 'transaction-summary';
-        this.updateTransactionSummary(port, summary);
-        fixedFooter.appendChild(summary);
-        
-        // Footer with buttons
-        const footer = document.createElement('div');
-        footer.className = 'sub-screen-footer';
-        
-        const confirmBtn = document.createElement('button');
-        confirmBtn.className = 'confirm-button';
-        confirmBtn.textContent = 'Confirm Trade';
-        confirmBtn.onclick = () => this.executeTradeTransaction(port);
-        footer.appendChild(confirmBtn);
-        
-        const backBtn = document.createElement('button');
-        backBtn.className = 'back-button';
-        backBtn.textContent = '← Back to Port';
-        backBtn.onclick = () => this.showPortScreen(port);
-        footer.appendChild(backBtn);
-        
-        fixedFooter.appendChild(footer);
-        container.appendChild(fixedFooter);
-        modal.appendChild(container);
-        this.overlay.appendChild(modal);
+        this.overlay.appendChild(screenElement);
     },
     
     // AIDEV-NOTE: Get list of goods available for trading
@@ -1728,41 +1537,6 @@ const UI = {
         this.clear();
         this.currentScreen = 'production';
 
-        const modal = document.createElement('div');
-        modal.className = 'port-modal';
-
-        const container = document.createElement('div');
-        container.className = 'sub-screen-container production-screen';
-        
-        // Set location-specific background image
-        const bgImage = Renderer.locationBackgrounds?.['location_construction'];
-        if (bgImage) {
-            container.style.backgroundImage = `url('${bgImage.src}')`;
-        } else {
-            container.style.backgroundColor = '#34495e';
-            console.warn('Location background not found: location_construction');
-        }
-
-        // Create header
-        const header = document.createElement('div');
-        header.className = 'sub-screen-header';
-        
-        const title = document.createElement('h1');
-        title.className = 'sub-screen-title';
-        title.textContent = 'Production';
-        header.appendChild(title);
-        
-        const subtitle = document.createElement('p');
-        subtitle.className = 'sub-screen-subtitle';
-        subtitle.textContent = `${port.name} - ${port.faction}`;
-        header.appendChild(subtitle);
-        
-        container.appendChild(header);
-
-        // Create content area
-        const content = document.createElement('div');
-        content.className = 'sub-screen-content';
-
         // Buildings list
         const buildingsContainer = document.createElement('div');
         buildingsContainer.className = 'buildings-list';
@@ -1857,21 +1631,28 @@ const UI = {
             }
         }
 
-        content.appendChild(buildingsContainer);
-        container.appendChild(content);
+        // Create screen using ScreenLayout component
+        const screen = ScreenLayout.createProductionScreen({
+            portName: port.name,
+            content: buildingsContainer,
+            onBack: () => this.showPortScreen(port)
+        });
 
-        // Create footer with back button
-        const footer = document.createElement('div');
-        footer.className = 'sub-screen-footer';
-        
-        const backBtn = document.createElement('button');
-        backBtn.className = 'back-button';
-        backBtn.textContent = '← Back to Port';
-        backBtn.onclick = () => this.showPortScreen(port);
-        footer.appendChild(backBtn);
-        
-        container.appendChild(footer);
-        modal.appendChild(container);
+        // Set location-specific background image
+        const bgImage = Renderer.locationBackgrounds?.['location_construction'];
+        if (bgImage) {
+            screen.style.backgroundImage = `url('${bgImage.src}')`;
+        } else {
+            screen.style.backgroundColor = '#34495e';
+            console.warn('Location background not found: location_construction');
+        }
+
+        // Create modal wrapper
+        const modal = Modal.createPortWindow({
+            content: screen,
+            onClose: () => this.showPortScreen(port)
+        });
+
         this.overlay.appendChild(modal);
     },
 
@@ -2196,149 +1977,62 @@ const UI = {
     // AIDEV-NOTE: Show cargo management window
     // Displays all cargo items with ability to discard them
     showCargoWindow() {
-        // Create modal backdrop
-        const modal = document.createElement('div');
-        modal.className = 'cargo-modal';
-        modal.id = 'cargo-modal';
-        
-        // Prevent clicks from propagating to map
-        modal.onclick = (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            // Close if clicking backdrop (outside the window)
-            if (e.target === modal) {
-                this.closeCargoWindow();
-            }
-        };
-        
-        // Create cargo window container
-        const window = document.createElement('div');
-        window.className = 'cargo-window';
-        
-        // Prevent clicks on window from propagating
-        window.onclick = (e) => {
-            e.stopPropagation();
-        };
-        
-        // Title
-        const title = document.createElement('h2');
-        title.textContent = 'Ship Cargo';
-        title.style.color = '#f0e6d2';
-        title.style.marginBottom = '20px';
-        title.style.textAlign = 'center';
-        window.appendChild(title);
-        
-        // Cargo list
-        const cargoList = document.createElement('div');
-        cargoList.className = 'cargo-list';
-        cargoList.style.maxHeight = '400px';
-        cargoList.style.overflowY = 'auto';
-        cargoList.style.marginBottom = '20px';
-        
+        // Create cargo items using ListContainer component
         const cargo = Game.playerBoat?.cargo || {};
         const cargoEntries = Object.entries(cargo);
         
-        if (cargoEntries.length === 0) {
-            // Empty cargo
-            const emptyMsg = document.createElement('p');
-            emptyMsg.textContent = 'Cargo hold is empty';
-            emptyMsg.style.color = '#888';
-            emptyMsg.style.textAlign = 'center';
-            emptyMsg.style.padding = '40px';
-            cargoList.appendChild(emptyMsg);
-        } else {
-            // Display cargo items
-            cargoEntries.forEach(([itemName, cargoData]) => {
-                // Handle both old format (number) and new format (object)
-                const quantity = typeof cargoData === 'number' ? cargoData : cargoData.quantity;
-                const avgPrice = typeof cargoData === 'object' ? cargoData.avgPrice : (GoodsData[itemName]?.basePrice || 0);
-                
-                const itemRow = document.createElement('div');
-                itemRow.className = 'cargo-item-row';
-                itemRow.style.display = 'flex';
-                itemRow.style.justifyContent = 'space-between';
-                itemRow.style.alignItems = 'center';
-                itemRow.style.padding = '10px';
-                itemRow.style.marginBottom = '8px';
-                itemRow.style.backgroundColor = 'rgba(0, 0, 0, 0.3)';
-                itemRow.style.borderRadius = '4px';
-                itemRow.style.gap = '15px';
-                
-                // Good image
-                const goodImage = document.createElement('img');
-                const goodImageName = itemName.toLowerCase().replace(/ /g, '_');
-                goodImage.src = `assets/goods/${goodImageName}.png`;
-                goodImage.alt = itemName;
-                goodImage.style.width = '40px';
-                goodImage.style.height = '40px';
-                goodImage.style.objectFit = 'contain';
-                goodImage.onerror = () => {
-                    // Hide image if it fails to load
-                    goodImage.style.display = 'none';
-                };
-                itemRow.appendChild(goodImage);
-                
-                // Item name, quantity, and average price
-                const itemInfo = document.createElement('div');
-                itemInfo.style.color = '#f0e6d2';
-                itemInfo.style.fontSize = '16px';
-                itemInfo.style.flex = '1';
-                itemInfo.innerHTML = `
-                    <div style="font-weight: bold;">${itemName}</div>
-                    <div style="font-size: 14px; color: #ccc; margin-top: 4px;">
-                        Quantity: ${quantity} | Avg Price: ${avgPrice}g
-                    </div>
-                `;
-                itemRow.appendChild(itemInfo);
-                
-                // Discard button
-                const discardBtn = document.createElement('button');
-                discardBtn.textContent = 'Discard';
-                discardBtn.className = 'discard-button';
-                discardBtn.style.padding = '5px 15px';
-                discardBtn.style.backgroundColor = '#c0392b';
-                discardBtn.style.color = '#fff';
-                discardBtn.style.border = 'none';
-                discardBtn.style.borderRadius = '4px';
-                discardBtn.style.cursor = 'pointer';
-                discardBtn.style.fontSize = '14px';
-                discardBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if (confirm(`Discard all ${itemName}?`)) {
-                        this.discardCargo(itemName);
-                        this.closeCargoWindow();
-                        this.showCargoWindow(); // Refresh window
-                    }
-                };
-                itemRow.appendChild(discardBtn);
-                
-                cargoList.appendChild(itemRow);
-            });
-        }
+        const cargoItems = cargoEntries.map(([itemName, cargoData]) => {
+            // Handle both old format (number) and new format (object)
+            const quantity = typeof cargoData === 'number' ? cargoData : cargoData.quantity;
+            const avgPrice = typeof cargoData === 'object' ? cargoData.avgPrice : (GoodsData[itemName]?.basePrice || 0);
+            
+            return ListContainer.createCargoItemRow(
+                itemName, 
+                quantity, 
+                avgPrice, 
+                (itemName) => {
+                    this.discardCargo(itemName);
+                    this.closeCargoWindow();
+                    this.showCargoWindow(); // Refresh window
+                }
+            );
+        });
         
-        window.appendChild(cargoList);
+        // Create cargo list using ListContainer component
+        const cargoList = ListContainer.createCargoList(cargoItems, 'Cargo hold is empty');
         
-        // Close button
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.className = 'menu-button';
-        closeBtn.style.width = '100%';
-        closeBtn.onclick = (e) => {
+        // Create footer with close button
+        const footer = document.createElement('div');
+        const closeBtn = Modal.createCloseButton((e) => {
             e.stopPropagation();
             this.closeCargoWindow();
-        };
-        window.appendChild(closeBtn);
+        }, 'Close', 'menu-button');
+        closeBtn.style.width = '100%';
+        footer.appendChild(closeBtn);
         
-        modal.appendChild(window);
+        // Create and show modal
+        const modal = Modal.createCargoWindow({
+            title: 'Ship Cargo',
+            content: cargoList,
+            footer: footer,
+            onClose: () => this.closeCargoWindow(),
+            id: 'cargo-modal'
+        });
+        
+        // Prevent clicks on window from propagating
+        const window = modal.querySelector('.cargo-window');
+        if (window) {
+            window.onclick = (e) => {
+                e.stopPropagation();
+            };
+        }
+        
         document.body.appendChild(modal);
     },
     
     // AIDEV-NOTE: Close cargo window
     closeCargoWindow() {
-        const modal = document.getElementById('cargo-modal');
-        if (modal) {
-            modal.remove();
-        }
+        Modal.hide('cargo-modal');
     },
     
     // AIDEV-NOTE: Discard cargo item
@@ -2352,149 +2046,55 @@ const UI = {
     // AIDEV-NOTE: Show reputation management window
     // Displays all faction reputations with status labels
     showReputationWindow() {
-        // Create modal backdrop
-        const modal = document.createElement('div');
-        modal.className = 'reputation-modal';
-        modal.id = 'reputation-modal';
-        
-        // Prevent clicks from propagating to map
-        modal.onclick = (e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            // Close if clicking backdrop (outside the window)
-            if (e.target === modal) {
-                this.closeReputationWindow();
-            }
-        };
-        
-        // Create reputation window container
-        const window = document.createElement('div');
-        window.className = 'reputation-window';
-        
-        // Prevent clicks on window from propagating
-        window.onclick = (e) => {
-            e.stopPropagation();
-        };
-        
-        // Title
-        const title = document.createElement('h2');
-        title.textContent = 'Faction Reputations';
-        title.style.color = '#f0e6d2';
-        title.style.marginBottom = '20px';
-        title.style.textAlign = 'center';
-        window.appendChild(title);
-        
-        // Reputation list
-        const repList = document.createElement('div');
-        repList.className = 'reputation-list';
-        repList.style.maxHeight = '500px';
-        repList.style.overflowY = 'auto';
-        repList.style.marginBottom = '20px';
-        
+        // Create reputation items using ListContainer component
         const reputations = Game.player?.reputations || {};
         const repEntries = Object.entries(reputations).sort((a, b) => b[1] - a[1]); // Sort by reputation value
         
-        if (repEntries.length === 0) {
-            // No reputations
-            const emptyMsg = document.createElement('p');
-            emptyMsg.textContent = 'No faction relationships established';
-            emptyMsg.style.color = '#888';
-            emptyMsg.style.textAlign = 'center';
-            emptyMsg.style.padding = '40px';
-            repList.appendChild(emptyMsg);
-        } else {
-            // Display reputation items
-            repEntries.forEach(([factionName, repValue]) => {
-                const itemRow = document.createElement('div');
-                itemRow.className = 'reputation-item-row';
-                itemRow.style.display = 'flex';
-                itemRow.style.justifyContent = 'space-between';
-                itemRow.style.alignItems = 'center';
-                itemRow.style.padding = '12px';
-                itemRow.style.marginBottom = '10px';
-                itemRow.style.backgroundColor = 'rgba(0, 0, 0, 0.4)';
-                itemRow.style.border = '2px solid rgba(139, 115, 85, 0.3)';
-                itemRow.style.borderRadius = '6px';
-                
-                // Faction name
-                const factionInfo = document.createElement('div');
-                factionInfo.style.color = '#f0e6d2';
-                factionInfo.style.fontSize = '16px';
-                factionInfo.style.fontWeight = 'bold';
-                factionInfo.textContent = factionName;
-                itemRow.appendChild(factionInfo);
-                
-                // Reputation bar and status
-                const repContainer = document.createElement('div');
-                repContainer.style.display = 'flex';
-                repContainer.style.alignItems = 'center';
-                repContainer.style.gap = '15px';
-                
-                // Status label
-                const status = this.getReputationStatus(repValue);
-                const statusLabel = document.createElement('span');
-                statusLabel.style.color = status.color;
-                statusLabel.style.fontSize = '14px';
-                statusLabel.style.fontWeight = 'bold';
-                statusLabel.style.minWidth = '80px';
-                statusLabel.style.textAlign = 'right';
-                statusLabel.textContent = status.label;
-                repContainer.appendChild(statusLabel);
-                
-                // Progress bar
-                const barContainer = document.createElement('div');
-                barContainer.style.width = '200px';
-                barContainer.style.height = '20px';
-                barContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-                barContainer.style.border = '2px solid #8b7355';
-                barContainer.style.borderRadius = '10px';
-                barContainer.style.overflow = 'hidden';
-                
-                const barFill = document.createElement('div');
-                barFill.style.width = repValue + '%';
-                barFill.style.height = '100%';
-                barFill.style.backgroundColor = status.color;
-                barFill.style.transition = 'width 0.3s ease';
-                barContainer.appendChild(barFill);
-                
-                repContainer.appendChild(barContainer);
-                
-                // Reputation value
-                const repValueLabel = document.createElement('span');
-                repValueLabel.style.color = '#f0e6d2';
-                repValueLabel.style.fontSize = '14px';
-                repValueLabel.style.minWidth = '40px';
-                repValueLabel.textContent = repValue;
-                repContainer.appendChild(repValueLabel);
-                
-                itemRow.appendChild(repContainer);
-                repList.appendChild(itemRow);
-            });
-        }
+        const repItems = repEntries.map(([factionName, repValue]) => {
+            const status = this.getReputationStatus(repValue);
+            return ListContainer.createReputationItemRow(
+                factionName, 
+                repValue, 
+                status.label, 
+                status.color
+            );
+        });
         
-        window.appendChild(repList);
+        // Create reputation list using ListContainer component
+        const repList = ListContainer.createReputationList(repItems, 'No faction relationships established');
         
-        // Close button
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.className = 'menu-button';
-        closeBtn.style.width = '100%';
-        closeBtn.onclick = (e) => {
+        // Create footer with close button
+        const footer = document.createElement('div');
+        const closeBtn = Modal.createCloseButton((e) => {
             e.stopPropagation();
             this.closeReputationWindow();
-        };
-        window.appendChild(closeBtn);
+        }, 'Close', 'menu-button');
+        closeBtn.style.width = '100%';
+        footer.appendChild(closeBtn);
         
-        modal.appendChild(window);
+        // Create and show modal
+        const modal = Modal.createCargoWindow({
+            title: 'Faction Reputations',
+            content: repList,
+            footer: footer,
+            onClose: () => this.closeReputationWindow(),
+            id: 'reputation-modal'
+        });
+        
+        // Prevent clicks on window from propagating
+        const window = modal.querySelector('.cargo-window');
+        if (window) {
+            window.onclick = (e) => {
+                e.stopPropagation();
+            };
+        }
+        
         document.body.appendChild(modal);
     },
     
     // AIDEV-NOTE: Close reputation window
     closeReputationWindow() {
-        const modal = document.getElementById('reputation-modal');
-        if (modal) {
-            modal.remove();
-        }
+        Modal.hide('reputation-modal');
     },
     
     // AIDEV-NOTE: Get reputation status label and color

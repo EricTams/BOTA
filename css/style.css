@@ -1064,7 +1064,7 @@ body {
 
 .good-trading-row {
     display: grid;
-    grid-template-columns: 150px 200px 1fr 80px;
+    grid-template-columns: 120px 160px minmax(400px, 2fr) 80px;
     align-items: center;
     gap: 15px;
     padding: 8px 12px;
@@ -1114,6 +1114,7 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 400px;
 }
 
 .slider-adjust-btn {
@@ -1242,6 +1243,13 @@ body {
     font-size: 14px;
     color: #fff;
     flex-shrink: 0;
+}
+
+.trading-goods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
 }
 
 .trading-fixed-footer {

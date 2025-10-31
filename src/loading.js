@@ -13,6 +13,28 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
+            version: 'October 31, 2025',
+            date: 'October 31, 2025',
+            changes: [
+                { category: 'Added', text: 'Game State Manager for centralized state management' },
+                { category: 'Added', text: 'Event System for event-driven architecture' },
+                { category: 'Added', text: 'Camera Controller separated from game logic' },
+                { category: 'Added', text: 'Game Loop Manager for independent frame timing' },
+                { category: 'Added', text: 'Asset Manager for centralized asset loading' },
+                { category: 'Added', text: 'Render Pipeline for modular rendering system' },
+                { category: 'Added', text: 'Render Layers for organized rendering stages' },
+                { category: 'Added', text: 'Debug Renderer separated from game rendering' },
+                { category: 'Added', text: 'Pricing Engine for centralized price calculations' },
+                { category: 'Added', text: 'Trade Validator for pure trade validation logic' },
+                { category: 'Added', text: 'Transaction Manager for trade execution' },
+                { category: 'Added', text: 'Goods Data Service for goods definitions' },
+                { category: 'Added', text: 'Port Simulation extracted from economy logic' },
+                { category: 'Technical', text: 'Major architectural refactoring: separated concerns into modular systems' },
+                { category: 'Technical', text: 'Improved code organization and maintainability' },
+                { category: 'Technical', text: 'Enhanced testability through pure function extraction' }
+            ]
+        },
+        {
             version: 'October 25, 2025',
             date: 'October 25, 2025',
             changes: [
