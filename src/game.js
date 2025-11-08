@@ -365,6 +365,13 @@ const Game = {
         Audio.sounds.anchor_raise = await LoadingScreen.loadAudio('assets/sounds/anchor_raise.mp3');
         Audio.sounds.money_click = await LoadingScreen.loadAudio('assets/sounds/money_click.mp3');
         
+        // Load combat sound effects
+        Audio.sounds.combat_thud = await LoadingScreen.loadAudio('assets/sounds/combat_thud.mp3');
+        Audio.sounds.combat_slice = await LoadingScreen.loadAudio('assets/sounds/combat_slice.mp3');
+        Audio.sounds.combat_heal = await LoadingScreen.loadAudio('assets/sounds/combat_heal.mp3');
+        Audio.sounds.combat_powerup = await LoadingScreen.loadAudio('assets/sounds/combat_powerup.mp3');
+        Audio.sounds.combat_twinkle = await LoadingScreen.loadAudio('assets/sounds/combat_twinkle.mp3');
+        
         // Load music tracks
         Audio.sounds.steel_drums = await LoadingScreen.loadAudio('assets/music/steel_drums.mp3');
         Audio.sounds.acoustic_guitar = await LoadingScreen.loadAudio('assets/music/acoustic_guitar.mp3');

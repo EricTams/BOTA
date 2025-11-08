@@ -13,11 +13,35 @@ const CharacterPanel = {
     // x, y: top-left position
     // isPlayer: true for player (blue theme), false for enemy (orange theme)
     // portraits: object mapping unit.id to Image objects
-    draw(ctx, unit, x, y, isPlayer, portraits) {
-        console.log('CharacterPanel.draw - Drawing unit:', unit.name, 'at', x, y);
-        
+    // highlightState: { isValidTarget: boolean, isHovered: boolean } (optional)
+    draw(ctx, unit, x, y, isPlayer, portraits, highlightState = null) {
         const width = 240;
         const portraitSize = 80;
+        
+        // Calculate panel height based on content
+        const statusHeight = (unit.statusEffects && unit.statusEffects.length > 0) ? 50 : 15;
+        const panelHeight = Math.max(portraitSize + 20, 30 + 30 + statusHeight + 40); // Portrait + padding, or HP bar + status + button space
+        
+        // Draw panel background
+        ctx.fillStyle = 'rgba(20, 20, 30, 0.9)';
+        ctx.fillRect(x, y, width, panelHeight);
+        
+        // Draw panel border with theme color or highlight
+        if (highlightState && highlightState.isValidTarget) {
+            // Highlight valid target with glow
+            ctx.save();
+            ctx.strokeStyle = highlightState.isHovered ? '#FFFF00' : '#00FF00';
+            ctx.lineWidth = highlightState.isHovered ? 4 : 3;
+            ctx.shadowColor = highlightState.isHovered ? '#FFFF00' : '#00FF00';
+            ctx.shadowBlur = highlightState.isHovered ? 20 : 15;
+            ctx.strokeRect(x, y, width, panelHeight);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        } else {
+            ctx.strokeStyle = isPlayer ? '#44CCFF' : '#FF8844';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, width, panelHeight);
+        }
         
         // Draw portrait
         this.drawPortrait(ctx, unit, x, y, portraitSize, isPlayer, portraits);
@@ -39,10 +63,7 @@ const CharacterPanel = {
         }
         
         // Return button position for external drawing
-        const statusHeight = (unit.statusEffects && unit.statusEffects.length > 0) ? 50 : 15;
         const buttonY = y + 30 + 30 + statusHeight;
-        
-        console.log('CharacterPanel.draw - Returning button bounds at', infoX, buttonY);
         
         return {
             buttonX: infoX,
@@ -54,7 +75,15 @@ const CharacterPanel = {
     
     // Draw character portrait
     drawPortrait(ctx, unit, x, y, size, isPlayer, portraits) {
-        if (unit.portrait && portraits && portraits[unit.id]) {
+        // All crew units use 'ship' ID in portrait cache; captains use their own ID
+        const isCrew = unit.shipId || unit.id.includes('crew');
+        const portraitId = isCrew ? 'ship' : unit.id;
+        
+        // Debug: log if portrait is missing
+        if (unit.portrait && portraits && !portraits[portraitId]) {
+            console.warn(`Portrait not found for unit ${unit.id} (portraitId: ${portraitId}), available portraits:`, Object.keys(portraits));
+        }
+        if (unit.portrait && portraits && portraits[portraitId]) {
             // Draw portrait image
             ctx.save();
             
@@ -62,9 +91,9 @@ const CharacterPanel = {
             if (!isPlayer) {
                 ctx.translate(x + size, y);
                 ctx.scale(-1, 1);
-                ctx.drawImage(portraits[unit.id], 0, 0, size, size);
+                ctx.drawImage(portraits[portraitId], 0, 0, size, size);
             } else {
-                ctx.drawImage(portraits[unit.id], x, y, size, size);
+                ctx.drawImage(portraits[portraitId], x, y, size, size);
             }
             
             ctx.restore();

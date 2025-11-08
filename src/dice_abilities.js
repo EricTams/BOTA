@@ -15,14 +15,16 @@
 // - baseDamage/baseHeal/baseArmor/baseEvasion: starting value
 // - damagePerSlot/healPerSlot/armorPerSlot/evasionPerSlot: value added per filled power-up slot
 // - color: primary color (Red/Green/Blue) - used for die face background
-// - targeting: Self, ally, allies, enemy, enemies
+// - targeting: 'self' (caster only), 'ally' (one ally), 'allies' (all allies including caster), 'enemy' (one enemy), 'enemies' (all enemies)
 // - powerUpSlots: number of additional dice that can enhance this ability
 // - powerUpColors: array of colors accepted in power-up slots
 // - effectType: 'instant', 'damage', 'heal', 'shield', 'dot', 'hot', 'buff', 'debuff'
 // - duration: turns for DoT/HoT/buffs/debuffs (optional)
 // - stackable: boolean for poison-like effects (optional)
 // - targetingRestriction: 'melee' (front row only), 'ranged' (any), null (default)
-// - aoeType: null, 'cleave' (adjacent), 'chain' (bounce), 'all' (everyone) (optional)
+// - aoeType: null, 'cleave' (adjacent), 'chain' (bounce), 'all' (everyone), 'melee' (all melee units) (optional)
+// - chainAmount: number of times chain bounces to nearby units (required if aoeType is 'chain')
+// - retributionType: 'attacker' (targets the attacker), 'aoe_melee' (targets all enemy melee units), null (no retribution) (optional)
 
 const AbilityData = {
     // Axe-specific abilities
@@ -30,7 +32,7 @@ const AbilityData = {
         icon: "culling_blade",
         displayName: "Culling Blade",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 15,
+        baseDamage: 8,
         damagePerSlot: 10,
         color: "Red",
         targeting: "enemy",
@@ -43,14 +45,14 @@ const AbilityData = {
     counter_helix: {
         icon: "counter_helix",
         displayName: "Counter Helix",
-        description: "Deal {base} + {perSlot}*{X} damage to all nearby enemies when hit",
-        baseDamage: 8,
+        description: "Deal {base} + {perSlot}*{X} retribution damage to all enemy melee units when hit by melee",
+        baseDamage: 4,
         damagePerSlot: 4,
         color: "Red",
         targeting: "self",
         effectType: "buff",
         duration: 3,
-        aoeType: "all",
+        retributionType: "aoe_melee", // Targets all enemy melee units
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
     },
@@ -59,11 +61,12 @@ const AbilityData = {
         icon: "berserkers_call",
         displayName: "Berserker's Call",
         description: "Taunt enemies, gain {base} + {perSlot}*{X} armor",
-        baseArmor: 10,
+        baseArmor: 5,
         armorPerSlot: 5,
         color: "Red",
         targeting: "self",
-        effectType: "shield",
+        effectType: "buff",
+        duration: 3,
         powerUpSlots: 2,
         powerUpColors: ["Red", "Red"]
     },
@@ -73,7 +76,7 @@ const AbilityData = {
         icon: "chop",
         displayName: "Chop",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 6,
+        baseDamage: 3,
         damagePerSlot: 3,
         color: "Red",
         targeting: "enemy",
@@ -87,7 +90,7 @@ const AbilityData = {
         icon: "jab",
         displayName: "Jab",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 4,
+        baseDamage: 2,
         damagePerSlot: 2,
         color: "Green",
         targeting: "enemy",
@@ -101,7 +104,7 @@ const AbilityData = {
         icon: "dodge",
         displayName: "Dodge",
         description: "Gain {base} + {perSlot}*{X} evasion",
-        baseEvasion: 5,
+        baseEvasion: 2,
         evasionPerSlot: 3,
         color: "Green",
         targeting: "self",
@@ -116,7 +119,7 @@ const AbilityData = {
         icon: "slash",
         displayName: "Slash",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 8,
+        baseDamage: 4,
         damagePerSlot: 4,
         color: "Red",
         targeting: "enemy",
@@ -129,11 +132,11 @@ const AbilityData = {
     heal: {
         icon: "heal",
         displayName: "Heal",
-        description: "Restore {base} + {perSlot}*{X} HP",
-        baseHeal: 10,
+        description: "Restore {base} + {perSlot}*{X} HP to one ally",
+        baseHeal: 5,
         healPerSlot: 5,
         color: "Blue",
-        targeting: "self",
+        targeting: "ally",
         effectType: "heal",
         powerUpSlots: 1,
         powerUpColors: ["Blue"]
@@ -143,7 +146,7 @@ const AbilityData = {
         icon: "bleed",
         displayName: "Bleed",
         description: "Inflict {base} + {perSlot}*{X} damage per turn for 3 turns",
-        baseDamage: 3,
+        baseDamage: 1,
         damagePerSlot: 2,
         color: "Green",
         targeting: "enemy",
@@ -158,7 +161,7 @@ const AbilityData = {
         icon: "poison",
         displayName: "Poison",
         description: "Inflict {base} stacking poison damage per turn for 4 turns",
-        baseDamage: 2,
+        baseDamage: 1,
         damagePerSlot: 1,
         color: "Green",
         targeting: "enemy",
@@ -173,7 +176,7 @@ const AbilityData = {
         icon: "regenerate",
         displayName: "Regenerate",
         description: "Restore {base} + {perSlot}*{X} HP per turn for 3 turns",
-        baseHeal: 4,
+        baseHeal: 2,
         healPerSlot: 2,
         color: "Blue",
         targeting: "self",
@@ -188,7 +191,7 @@ const AbilityData = {
         icon: "arcane_burst",
         displayName: "Arcane Burst",
         description: "Deal {base} + {perSlot}*{X} magic damage",
-        baseDamage: 7,
+        baseDamage: 3,
         damagePerSlot: 5,
         color: "Blue",
         targeting: "enemy",
@@ -200,13 +203,14 @@ const AbilityData = {
     arcane_chain: {
         icon: "arcane_chain",
         displayName: "Arcane Chain",
-        description: "Deal {base} + {perSlot}*{X} damage (chains)",
-        baseDamage: 5,
+        description: "Deal {base} + {perSlot}*{X} damage (chains {chainAmount} times)",
+        baseDamage: 2,
         damagePerSlot: 4,
         color: "Blue",
-        targeting: "enemies",
+        targeting: "enemy",
         effectType: "damage",
         aoeType: "chain",
+        chainAmount: 2,
         powerUpSlots: 2,
         powerUpColors: ["Blue", "Green"]
     },
@@ -216,7 +220,7 @@ const AbilityData = {
         icon: "slam",
         displayName: "Slam",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 9,
+        baseDamage: 4,
         damagePerSlot: 5,
         color: "Red",
         targeting: "enemy",
@@ -230,7 +234,7 @@ const AbilityData = {
         icon: "zap",
         displayName: "Zap",
         description: "Deal {base} + {perSlot}*{X} damage",
-        baseDamage: 4,
+        baseDamage: 2,
         damagePerSlot: 2,
         color: "Blue",
         targeting: "enemy",
@@ -259,13 +263,72 @@ const AbilityData = {
         icon: "shield",
         displayName: "Shield",
         description: "Gain {base} + {perSlot}*{X} armor",
-        baseArmor: 8,
+        baseArmor: 4,
         armorPerSlot: 4,
         color: "Red",
         targeting: "self",
         effectType: "shield",
         powerUpSlots: 1,
         powerUpColors: ["Red"]
+    },
+
+    // Marine abilities
+    pistol_shot: {
+        icon: "pistol_shot",
+        displayName: "Pistol Shot",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 2,
+        damagePerSlot: 2,
+        color: "Green",
+        targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "ranged",
+        powerUpSlots: 1,
+        powerUpColors: ["Green"]
+    },
+
+    // Sharpshooter abilities
+    weak_point: {
+        icon: "weak_point",
+        displayName: "Weak Point",
+        description: "Target takes {base}% + {perSlot}*{X}% more damage for 3 turns",
+        baseDamage: 10,
+        damagePerSlot: 10,
+        color: "Blue",
+        targeting: "enemy",
+        effectType: "debuff",
+        debuffType: "vulnerability",
+        duration: 3,
+        powerUpSlots: 1,
+        powerUpColors: ["Blue"]
+    },
+
+    snipe: {
+        icon: "snipe",
+        displayName: "Snipe",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 6,
+        damagePerSlot: 4,
+        color: "Green",
+        targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "ranged",
+        powerUpSlots: 1,
+        powerUpColors: ["Green"]
+    },
+
+    musket_blast: {
+        icon: "musket_blast",
+        displayName: "Musket Blast",
+        description: "Deal {base} + {perSlot}*{X} damage",
+        baseDamage: 3,
+        damagePerSlot: 3,
+        color: "Green",
+        targeting: "enemy",
+        effectType: "damage",
+        targetingRestriction: "ranged",
+        powerUpSlots: 1,
+        powerUpColors: ["Green"]
     }
 };
 
@@ -327,6 +390,11 @@ function formatAbilityDescription(ability, filledSlots = 0) {
     desc = desc.replace('{X}', calc.filledSlots);
     desc = desc.replace('{result}', calc.result);
     
+    // Replace chainAmount if present
+    if (ability.chainAmount !== undefined) {
+        desc = desc.replace('{chainAmount}', ability.chainAmount);
+    }
+    
     return {
         description: desc,
         calculation: calc
@@ -342,4 +410,7 @@ function getAllAbilities() {
 function hasAbility(iconName) {
     return iconName in AbilityData;
 }
+
+// Expose AbilityData globally for status effects system
+window.AbilityData = AbilityData;
 

@@ -13,6 +13,27 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
+            version: 'November 8, 2025',
+            date: 'November 8, 2025',
+            changes: [
+                { category: 'Added', text: 'Combat effects system for visual feedback (damage, heal, dodge, telekinesis)' },
+                { category: 'Added', text: 'Particle system with multiple particle types (dust, slice, sparkle, streak, star, chain)' },
+                { category: 'Added', text: 'Status effects system for defensive and reactive abilities' },
+                { category: 'Added', text: 'Combat sound effects (heal, powerup, slice, thud, twinkle)' },
+                { category: 'Added', text: 'Floating damage/heal text with fade-out animation' },
+                { category: 'Added', text: 'Visual particle effects for different ability types' },
+                { category: 'Added', text: 'Evasion system with dodge chance calculation' },
+                { category: 'Added', text: 'Retribution system for counter-attacks (counter helix)' },
+                { category: 'Improved', text: 'Combat now has rich visual and audio feedback' },
+                { category: 'Improved', text: 'Status effects properly trigger defensive abilities on damage' },
+                { category: 'Improved', text: 'Options menu changelog now supports mouse wheel scrolling' },
+                { category: 'Fixed', text: 'Scrollbar now visible in options menu changelog when content overflows' },
+                { category: 'Technical', text: 'Created combat_effects.js for effect orchestration' },
+                { category: 'Technical', text: 'Created particles.js for particle rendering and physics' },
+                { category: 'Technical', text: 'Created status_effects.js for ability trigger logic' }
+            ]
+        },
+        {
             version: 'October 31, 2025',
             date: 'October 31, 2025',
             changes: [

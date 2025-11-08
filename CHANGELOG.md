@@ -34,6 +34,38 @@ changelog: [
 
 ---
 
+## November 8, 2025
+
+### Added
+- Combat effects system for visual feedback (damage, heal, dodge, telekinesis, chain)
+- Particle system with multiple particle types (dust, slice, sparkle, streak, star, chain)
+- Status effects system for defensive and reactive abilities
+- Combat sound effects: heal, powerup, slice, thud, twinkle
+- Floating damage/heal text with fade-out animation
+- Visual particle effects for different ability types
+- Evasion system with dodge chance calculation
+- Retribution system for counter-attacks (counter helix)
+- Chain particle effects for telekinesis and similar abilities
+
+### Improved
+- Combat now has rich visual and audio feedback
+- Status effects properly trigger defensive abilities on damage
+- Better combat feedback with particles and floating text
+- Sound effects synchronized with visual effects
+- Options menu changelog now supports mouse wheel scrolling
+
+### Fixed
+- Scrollbar now visible in options menu changelog when content overflows
+
+### Technical
+- Created combat_effects.js for effect orchestration
+- Created particles.js for particle rendering and physics
+- Created status_effects.js for ability trigger logic
+- Separated visual effects from combat logic
+- Particle system supports multiple effect types with unique rendering
+
+---
+
 ## October 25, 2025
 
 ### Added

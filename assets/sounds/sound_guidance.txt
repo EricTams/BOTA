@@ -69,4 +69,93 @@ Date Generated: 2025-10-19
 
 ---
 
+combat_thud.mp3
+----------------
+Duration: 0.5 seconds
+Volume: 0.5 (50%)
+Prompt: "Loud heavy impact sound, powerful thud, deep slam, strong collision, forceful strike, booming physical hit, weighty impact, substantial thump, resonant impact"
 
+Description: Heavy impact sound for slam ability. Creates sense of powerful physical strike. Should be loud and impactful.
+
+Usage: Triggered when slam ability deals damage.
+
+Implementation:
+  - Loaded in Game.loadSoundAssets()
+  - Played in CombatEffects.triggerDamage() when ability icon is 'slam'
+
+Date Generated: 2025-01-XX
+Date Updated: 2025-01-XX (enhanced prompt for louder, more impactful sound)
+
+---
+
+combat_slice.mp3
+----------------
+Duration: 0.5 seconds
+Volume: 0.5 (50%)
+Prompt: "Sword slice, cutting sound, blade swipe, sharp weapon, slicing through air, metal cutting"
+
+Description: Slicing/sword sound for chop and culling_blade abilities. Creates sense of sharp weapon strike.
+
+Usage: Triggered when chop or culling_blade ability deals damage.
+
+Implementation:
+  - Loaded in Game.loadSoundAssets()
+  - Played in CombatEffects.triggerDamage() when ability icon is 'chop' or 'culling_blade'
+
+Date Generated: 2025-01-XX
+
+---
+
+combat_heal.mp3
+---------------
+Duration: 0.6 seconds
+Volume: 0.4 (40%)
+Prompt: "Magical tinkling sound, healing spell, gentle chimes, soft sparkles, restorative magic, pleasant tinkle"
+
+Description: Tinkling/magical sound for heal ability. Creates sense of restorative magic.
+
+Usage: Triggered when heal ability restores HP.
+
+Implementation:
+  - Loaded in Game.loadSoundAssets()
+  - Played in CombatEffects.triggerHeal()
+
+Date Generated: 2025-01-XX
+
+---
+
+combat_powerup.mp3
+------------------
+Duration: 0.5 seconds
+Volume: 0.4 (40%)
+Prompt: "Power-up sound, ability activation, positive energy, empowering effect, uplifting chime, boost sound"
+
+Description: Power-up sound for dodge ability. Creates sense of ability activation and empowerment.
+
+Usage: Triggered when dodge ability is activated.
+
+Implementation:
+  - Loaded in Game.loadSoundAssets()
+  - Played in CombatEffects.triggerDodge()
+
+Date Generated: 2025-01-XX
+
+---
+
+combat_twinkle.mp3
+------------------
+Duration: 0.6 seconds
+Volume: 0.4 (40%)
+Prompt: "Magical twinkle, star sparkle, mystical shimmer, enchanting sparkle, magical effect, ethereal twinkle"
+
+Description: Magical twinkle sound for telekinesis ability. Creates sense of mystical magic effect.
+
+Usage: Triggered when telekinesis ability is activated.
+
+Implementation:
+  - Loaded in Game.loadSoundAssets()
+  - Played in CombatEffects.triggerTelekinesis()
+
+Date Generated: 2025-01-XX
+
+---

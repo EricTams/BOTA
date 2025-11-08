@@ -51,7 +51,8 @@ const DiceTestSystem = {
         // Initialize combat UI
         CombatUI.init();
         CombatUI.loadPortrait('captain_axe', 'assets/characters/captain_axe.png');
-        CombatUI.loadPortrait('crew', 'assets/characters/crew/generic_crew_portrait.png');
+        // Pre-load ship crew portrait (all ship crews use 'ship' ID)
+        CombatUI.loadPortrait('ship', 'assets/characters/crew/generic_crew_portrait.png');
 
         // Initialize combat if in combat mode
         if (this.ui.combatMode) {

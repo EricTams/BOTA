@@ -24,7 +24,7 @@
         // Minimal Input module
         const Input = {
             keys: {},
-            mouse: { x: 0, y: 0, clicked: false, justClicked: false, button: 0 },
+            mouse: { x: 0, y: 0, clicked: false, justClicked: false, justReleased: false, button: 0, wheelDelta: 0 },
             drag: { active: false },
             init() {
                 window.addEventListener('mousemove', (e) => {
@@ -43,7 +43,12 @@
                 });
                 window.addEventListener('mouseup', (e) => {
                     this.mouse.clicked = false;
+                    this.mouse.justReleased = true;
                 });
+                window.addEventListener('wheel', (e) => {
+                    this.mouse.wheelDelta = e.deltaY;
+                    e.preventDefault();
+                }, { passive: false });
                 // Prevent context menu
                 window.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
@@ -55,6 +60,8 @@
             },
             reset() {
                 this.mouse.justClicked = false;
+                this.mouse.justReleased = false;
+                this.mouse.wheelDelta = 0;
             }
         };
 
@@ -82,6 +89,11 @@
     <script src="src/dice_abilities.js"></script>
     <script src="src/dice_icons.js"></script>
     <script src="src/die.js"></script>
+    <script src="assets/sounds/volume_config.js"></script>
+    <script src="src/audio.js"></script>
+    <script src="src/particles.js"></script>
+    <script src="src/status_effects.js"></script>
+    <script src="src/combat_effects.js"></script>
     <script src="src/combat.js"></script>
     <script src="src/combat_manager.js"></script>
     <script src="src/ui_combat.js"></script>
@@ -91,52 +103,144 @@
     <script>
         console.log('=== Starting Dice Test ===');
         
+        // Initialize Audio first (needed for combat effects)
+        Audio.init();
+        
+        // Load combat sounds
+        async function loadCombatSounds() {
+            const soundNames = ['combat_thud', 'combat_slice', 'combat_heal', 'combat_powerup', 'combat_twinkle'];
+            const AudioElement = window.Audio; // Use browser's Audio constructor
+            
+            for (const soundName of soundNames) {
+                Audio.sounds[soundName] = await new Promise((resolve, reject) => {
+                    const audio = new AudioElement(`assets/sounds/${soundName}.mp3`);
+                    audio.preload = 'auto';
+                    
+                    const onLoad = () => {
+                        console.log(`Loaded ${soundName}`);
+                        audio.removeEventListener('canplaythrough', onLoad);
+                        audio.removeEventListener('error', onError);
+                        resolve(audio);
+                    };
+                    
+                    const onError = (e) => {
+                        console.error(`Failed to load ${soundName}:`, e);
+                        audio.removeEventListener('canplaythrough', onLoad);
+                        audio.removeEventListener('error', onError);
+                        reject(e);
+                    };
+                    
+                    audio.addEventListener('canplaythrough', onLoad);
+                    audio.addEventListener('error', onError);
+                    
+                    // Trigger load
+                    audio.load();
+                });
+            }
+            
+            console.log('All combat sounds loaded:', Object.keys(Audio.sounds));
+        }
+        
         // Initialize
         Renderer.init('game-canvas');
         Input.init();
         
-        console.log('DiceSystem:', DiceSystem);
-        DiceSystem.init();
-        
-        console.log('Dice loaded:', DiceSystem.state.dice);
-        
-        // Game loop
-        let lastFrameTime = 0;
-        function gameLoop(currentTime) {
-            const deltaTime = lastFrameTime ? (currentTime - lastFrameTime) / 1000 : 0;
-            lastFrameTime = currentTime;
+        // Load sounds and then initialize dice system
+        loadCombatSounds().then(() => {
+            console.log('DiceSystem:', DiceSystem);
+            DiceSystem.init();
             
-            // Update
-            DiceSystem.update(deltaTime);
-            
-            // Handle input
-            const mousePos = Input.getMousePosition();
-            if (mousePos) {
-                // Mouse down
-                if (Input.mouse.justClicked) {
-                    DiceSystem.onMouseDown(mousePos, Renderer.canvas);
+            // Game loop
+            let lastFrameTime = 0;
+            function gameLoop(currentTime) {
+                const deltaTime = lastFrameTime ? (currentTime - lastFrameTime) / 1000 : 0;
+                lastFrameTime = currentTime;
+                
+                // Update
+                DiceSystem.update(deltaTime);
+                
+                // Handle input
+                const mousePos = Input.getMousePosition();
+                if (mousePos) {
+                    // Mouse down
+                    if (Input.mouse.justClicked) {
+                        DiceSystem.onMouseDown(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse up
+                    if (Input.mouse.justReleased) {
+                        DiceSystem.onMouseUp(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse wheel
+                    if (Input.mouse.wheelDelta !== 0) {
+                        DiceSystem.onMouseWheel(Input.mouse.wheelDelta, mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse move
+                    DiceSystem.onMouseMove(mousePos, Renderer.canvas);
                 }
                 
-                // Mouse up
-                if (!Input.mouse.clicked && DiceSystem.dragState && DiceSystem.dragState.active) {
-                    DiceSystem.onMouseUp(mousePos, Renderer.canvas);
-                }
+                // Render
+                DiceSystem.render(Renderer.ctx, Renderer.canvas);
                 
-                // Mouse move
-                DiceSystem.onMouseMove(mousePos, Renderer.canvas);
+                // Reset input
+                Input.reset();
+                
+                requestAnimationFrame(gameLoop);
             }
             
-            // Render
-            DiceSystem.render(Renderer.ctx, Renderer.canvas);
-            
-            // Reset input
-            Input.reset();
-            
+            console.log('Starting game loop...');
             requestAnimationFrame(gameLoop);
-        }
-        
-        console.log('Starting game loop...');
-        requestAnimationFrame(gameLoop);
+        }).catch(error => {
+            console.error('Failed to load combat sounds:', error);
+            // Continue anyway
+            console.log('DiceSystem:', DiceSystem);
+            DiceSystem.init();
+            
+            // Game loop
+            let lastFrameTime = 0;
+            function gameLoop(currentTime) {
+                const deltaTime = lastFrameTime ? (currentTime - lastFrameTime) / 1000 : 0;
+                lastFrameTime = currentTime;
+                
+                // Update
+                DiceSystem.update(deltaTime);
+                
+                // Handle input
+                const mousePos = Input.getMousePosition();
+                if (mousePos) {
+                    // Mouse down
+                    if (Input.mouse.justClicked) {
+                        DiceSystem.onMouseDown(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse up
+                    if (Input.mouse.justReleased) {
+                        DiceSystem.onMouseUp(mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse wheel
+                    if (Input.mouse.wheelDelta !== 0) {
+                        DiceSystem.onMouseWheel(Input.mouse.wheelDelta, mousePos, Renderer.canvas);
+                    }
+                    
+                    // Mouse move
+                    DiceSystem.onMouseMove(mousePos, Renderer.canvas);
+                }
+                
+                // Render
+                DiceSystem.render(Renderer.ctx, Renderer.canvas);
+                
+                // Reset input
+                Input.reset();
+                
+                requestAnimationFrame(gameLoop);
+            }
+            
+            console.log('Starting game loop...');
+            requestAnimationFrame(gameLoop);
+        });
     </script>
 </body>
 </html>

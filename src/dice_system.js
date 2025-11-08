@@ -33,7 +33,9 @@ const DiceSystem = {
         rollsAvailable: 1,
         draggedDieIndex: null,
         dragOffset: { x: 0, y: 0 },
-        combatMode: true
+        combatMode: true,
+        editMode: false, // Unit editor mode
+        unitSelectionDialog: null // { side: 'player'|'enemy', bounds: {...} }
     },
 
     // Pre-rendered textures for faces
@@ -93,47 +95,49 @@ const DiceSystem = {
         CombatUI.init();
         CombatUI.loadPortrait('captain_axe', 'assets/characters/captain_axe.png');
         CombatUI.loadPortrait('captain_rubick', 'assets/characters/captain_rubick.png');
-        CombatUI.loadPortrait('crew', 'assets/characters/crew/generic_crew_portrait.png');
+        // Pre-load ship crew portrait (all ship crews use 'ship' ID)
+        CombatUI.loadPortrait('ship', 'assets/characters/crew/generic_crew_portrait.png');
 
         // Start a duel: Player Axe vs Enemy Rubick with crew
         if (this.state.combatMode) {
-            // Get generic crew data
-            const genericCrew = getCrewById('crew');
+            // Get captain data
+            const playerCaptainData = getCaptainById('captain_axe');
+            const enemyCaptainData = getCaptainById('captain_rubick');
             
-            // Create crew data with ship weapon dice
-            const playerCrewData = {
-                id: 'crew',
-                name: 'Crew',
-                health: genericCrew.health,
-                dice: ['oglodi_ram'] // Oglodi Longboat Ram
-            };
-            const enemyCrewData = {
-                id: 'crew',
-                name: 'Crew',
-                health: genericCrew.health,
-                dice: ['arcane_staff', 'crystal_array'] // Mystic Skiff weapons
-            };
+            // Get ship data
+            const playerShipData = getShipById('ship_oglodi_longboat');
+            const enemyShipData = getShipById('ship_artifact_skiff');
             
-            // Create captain objects - only their personal dice
+            // Create captain objects - only their personal dice (will be fetched in addUnit)
             const playerCaptain = {
-                id: 'captain_axe',
-                name: 'Axe',
+                id: playerCaptainData.id,
+                name: playerCaptainData.name,
                 hp: 100,
                 maxHp: 100,
-                dice: ['axe_personal', 'axe_equipment'], // Only captain's dice
-                portrait: 'assets/characters/captain_axe.png'
+                image: playerCaptainData.image || `assets/characters/${playerCaptainData.id}.png`
             };
             const enemyCaptain = {
-                id: 'captain_rubick',
-                name: 'Rubick',
+                id: enemyCaptainData.id,
+                name: enemyCaptainData.name,
                 hp: 100,
                 maxHp: 100,
-                dice: ['rubick_personal', 'rubick_equipment'], // Only captain's dice
-                portrait: 'assets/characters/captain_rubick.png'
+                image: enemyCaptainData.image || `assets/characters/${enemyCaptainData.id}.png`
             };
             
-            Combat.init(playerCaptain, enemyCaptain, playerCrewData, enemyCrewData);
+            // Initialize combat with captains only
+            Combat.init(playerCaptain, enemyCaptain);
             Combat.startTurn();
+            
+            // Add crew units using the same method as edit mode
+            if (playerShipData) {
+                Combat.addUnit(playerShipData, 'player', 'ship');
+            }
+            if (enemyShipData) {
+                Combat.addUnit(enemyShipData, 'enemy', 'ship');
+            }
+            
+            // Rebuild dice pool from all units
+            this.rebuildDicePool();
         }
 
         console.log('DiceSystem - Initialized with', this.state.dice.length, 'player dice and', this.state.enemyDice.length, 'enemy dice');
@@ -145,6 +149,8 @@ const DiceSystem = {
         this.state.dice = this.state.playerDice;
         this.state.diceStates = this.state.playerDiceStates;
         this.faceTextures = this.playerFaceTextures;
+        // Clear die positions to prevent stale data
+        this.state.diePositions = [];
     },
     
     switchToEnemyTurn() {
@@ -152,6 +158,8 @@ const DiceSystem = {
         this.state.dice = this.state.enemyDice;
         this.state.diceStates = this.state.enemyDiceStates;
         this.faceTextures = this.enemyFaceTextures;
+        // Clear die positions to prevent stale data
+        this.state.diePositions = [];
     },
 
     // Advance dice animations; when all settle, populate logic rolled pool
@@ -209,6 +217,11 @@ const DiceSystem = {
                 CombatManager.state.rerollingDice || null
             );
             CombatManager.state.rerollingDice = null;
+        }
+        
+        // Update combat effects
+        if (window.CombatEffects && Combat.state.active) {
+            window.CombatEffects.update(deltaTime);
         }
     },
 
@@ -358,7 +371,75 @@ const DiceSystem = {
     },
 
     onMouseUp(mousePos, canvas) {
-        // no-op for now
+        // Stop scrollbar dragging
+        if (this.state.unitSelectionDialog && this.state.unitSelectionDialog.scrolling) {
+            this.state.unitSelectionDialog.scrolling = false;
+        }
+        
+        // Delegate to CombatUI for other mouse up handling
+        CombatUI.onMouseUp(mousePos, canvas);
+    },
+    
+    onMouseWheel(wheelDelta, mousePos, canvas) {
+        // Handle wheel scrolling for unit selection dialog
+        if (this.state.unitSelectionDialog) {
+            const dialog = this.state.unitSelectionDialog;
+            const contentHeight = dialog.totalHeight;
+            const visibleHeight = 380;
+            const maxScroll = Math.max(0, contentHeight - visibleHeight);
+            
+            // Check if mouse is over dialog
+            if (dialog.bounds &&
+                mousePos.x >= dialog.bounds.x && mousePos.x <= dialog.bounds.x + dialog.bounds.width &&
+                mousePos.y >= dialog.bounds.y && mousePos.y <= dialog.bounds.y + dialog.bounds.height) {
+                // Scroll the dialog
+                const scrollAmount = wheelDelta * 0.5; // Adjust scroll speed
+                dialog.scrollY = Math.max(0, Math.min(maxScroll, (dialog.scrollY || 0) + scrollAmount));
+            }
+        }
+    },
+
+    // Rebuild dice pool from all active units
+    rebuildDicePool() {
+        if (!Combat.state.active) return;
+        
+        const playerDiceNames = [];
+        const enemyDiceNames = [];
+        
+        // Collect all dice from player units
+        for (const unit of Combat.state.playerUnits) {
+            if (unit.dice) {
+                playerDiceNames.push(...unit.dice);
+            }
+        }
+        
+        // Collect all dice from enemy units
+        for (const unit of Combat.state.enemyUnits) {
+            if (unit.dice) {
+                enemyDiceNames.push(...unit.dice);
+            }
+        }
+        
+        // Load dice for both sides
+        this.state.playerDice = playerDiceNames.map(dieName => getDieByName(dieName));
+        this.state.enemyDice = enemyDiceNames.map(dieName => getDieByName(dieName));
+        
+        // Reinitialize animation states
+        this.state.playerDiceStates = this.state.playerDice.map(() => Die.createInitialDieState());
+        this.state.enemyDiceStates = this.state.enemyDice.map(() => Die.createInitialDieState());
+        
+        // Re-render textures
+        this.playerFaceTextures = this.state.playerDice.map(die => Die.createFaceTextures(die, this.colors));
+        this.enemyFaceTextures = this.state.enemyDice.map(die => Die.createFaceTextures(die, this.colors));
+        
+        // Update active dice based on current turn
+        if (this.state.combatMode && Combat.state.active) {
+            if (Combat.state.currentTurn === 'player') {
+                this.switchToPlayerTurn();
+            } else {
+                this.switchToEnemyTurn();
+            }
+        }
     }
 };
 

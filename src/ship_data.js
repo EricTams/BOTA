@@ -231,6 +231,11 @@ function getShipById(shipId) {
     return ShipData.find(ship => ship.id === shipId);
 }
 
+// AIDEV-NOTE: Helper function to get all ships
+function getAllShips() {
+    return ShipData;
+}
+
 // AIDEV-NOTE: Helper function to get all ships by faction
 function getShipsByFaction(faction) {
     if (faction === null) {

@@ -118,6 +118,94 @@ const DiceData = {
             { color: null, icon: null },
             { color: null, icon: null }
         ]
+    },
+
+    // Crew dice - Marines
+    marines_personal: {
+        id: "marines_personal",
+        name: "Marines Personal Die",
+        owner: "marines",
+        faces: [
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Green", icon: "pistol_shot" },
+            { color: "Green", icon: "pistol_shot" },
+            { color: "Green", icon: "pistol_shot" }
+        ]
+    },
+    marines_equipment: {
+        id: "marines_equipment",
+        name: "Marine Gear",
+        owner: "marines",
+        equipment: "Marine Gear",
+        faces: [
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Green", icon: "shield" },
+            { color: "Green", icon: "shield" },
+            { color: "Green", icon: "shield" }
+        ]
+    },
+
+    // Crew dice - Sharpshooters
+    sharpshooters_personal: {
+        id: "sharpshooters_personal",
+        name: "Sharpshooters Personal Die",
+        owner: "sharpshooters",
+        faces: [
+            { color: "Green", icon: "jab" },
+            { color: "Green", icon: "jab" },
+            { color: "Green", icon: "jab" },
+            { color: "Blue", icon: "weak_point" },
+            { color: "Blue", icon: "weak_point" },
+            { color: "Blue", icon: "weak_point" }
+        ]
+    },
+    sharpshooters_equipment: {
+        id: "sharpshooters_equipment",
+        name: "Precision Rifles",
+        owner: "sharpshooters",
+        equipment: "Precision Rifles",
+        faces: [
+            { color: "Green", icon: "snipe" },
+            { color: "Green", icon: "snipe" },
+            { color: "Green", icon: "musket_blast" },
+            { color: "Green", icon: "musket_blast" },
+            { color: "Green", icon: "musket_blast" },
+            { color: "Green", icon: "musket_blast" }
+        ]
+    },
+
+    // Crew dice - Grunts
+    grunts_personal: {
+        id: "grunts_personal",
+        name: "Grunts Personal Die",
+        owner: "grunts",
+        faces: [
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "chop" },
+            { color: "Red", icon: "slash" },
+            { color: "Red", icon: "slash" },
+            { color: "Red", icon: "slash" }
+        ]
+    },
+
+    // Crew dice - Apprentices
+    apprentices_personal: {
+        id: "apprentices_personal",
+        name: "Apprentices Personal Die",
+        owner: "apprentices",
+        faces: [
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "zap" },
+            { color: "Blue", icon: "arcane_burst" },
+            { color: "Blue", icon: "arcane_burst" },
+            { color: "Blue", icon: "arcane_burst" }
+        ]
     }
 };
 
@@ -138,5 +226,10 @@ function getAllDice() {
 // AIDEV-NOTE: Get all dice for a specific captain
 function getDiceForCaptain(captainId) {
     return Object.values(DiceData).filter(die => die.owner === captainId);
+}
+
+// AIDEV-NOTE: Get all dice for a specific crew type
+function getDiceForCrew(crewId) {
+    return Object.values(DiceData).filter(die => die.owner === crewId);
 }
 

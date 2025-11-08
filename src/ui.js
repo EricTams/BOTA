@@ -326,6 +326,18 @@ const UI = {
         const tabsContainer = Tabs.createOptionsTabs(tabs, 'changelog');
         optionsBox.appendChild(tabsContainer);
 
+        // AIDEV-NOTE: Add wheel event handling for scrollable tab content
+        // This ensures the changelog and other tab content can be scrolled with mouse wheel
+        // Stop propagation so the game's input handler doesn't interfere
+        const tabsContent = tabsContainer.querySelector('.tabs-content');
+        if (tabsContent) {
+            tabsContent.addEventListener('wheel', (e) => {
+                // Stop propagation to prevent game input handler from processing wheel events
+                // The browser's native scrolling (via overflow-y: auto) will handle the actual scrolling
+                e.stopPropagation();
+            }, { passive: false });
+        }
+
         // Footer
         const footer = document.createElement('div');
         footer.className = 'options-footer';

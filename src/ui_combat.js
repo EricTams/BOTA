@@ -26,7 +26,7 @@ const CombatUI = {
         buttonWidth: 160,
         buttonHeight: 50
     },
-    // Character portraits cache
+    // Character portraits cache (by unit ID)
     portraits: {},
     
     // Initialize combat UI
@@ -41,12 +41,17 @@ const CombatUI = {
             if (rolledIndex < 0) return;
             const rolledDie = CombatManager.state.rolledDice[rolledIndex];
             if (!rolledDie || rolledDie.assigned) return; // Can't expand assigned dice
+            
+            // Don't expand blank faces (no icon/ability)
+            if (!rolledDie.face || !rolledDie.face.icon || !rolledDie.ability) {
+                return;
+            }
+            
             CombatManager.openExpandedAbility(CombatManager.state, rolledIndex);
             // Mirror to DiceSystem UI state so renderer shows the panel
             if (window.DiceSystem && CombatManager.state.expandedAbility) {
                 window.DiceSystem.state.expandedAbility = CombatManager.state.expandedAbility;
             }
-            console.log(`Expanded ability: ${rolledDie.ability.displayName}`);
         },
         
         // Toggle a die as a power-up for the expanded ability
@@ -60,15 +65,16 @@ const CombatUI = {
             if (rolledIndex === expanded.dieIndex) return;
             const rolledDie = CombatManager.state.rolledDice[rolledIndex];
             if (!rolledDie || rolledDie.assigned) return;
+            
+            // Don't allow blank faces as power-ups
+            if (!rolledDie.face || !rolledDie.face.icon || !rolledDie.ability) {
+                return;
+            }
+            
             // Delegate to manager for pure state update
             const before = expanded.powerUpDice.slice();
             CombatManager.togglePowerUpDie(CombatManager.state, rolledIndex);
             const after = CombatManager.state.expandedAbility.powerUpDice;
-            if (after.length > before.length) {
-                console.log(`Added die ${rolledIndex} to power-ups`);
-            } else if (after.length < before.length) {
-                console.log(`Removed die ${rolledIndex} from power-ups`);
-            }
         },
         
         // Cancel the expanded ability
@@ -77,7 +83,6 @@ const CombatUI = {
             if (window.DiceSystem) {
                 window.DiceSystem.state.expandedAbility = null;
             }
-            console.log('Cancelled expanded ability');
         },
 
         // Execute expanded ability via manager and clear UI state
@@ -87,7 +92,6 @@ const CombatUI = {
                 window.DiceSystem.state.expandedAbility = null;
             }
             if (result && result.executed) {
-                console.log('Executed expanded ability');
             }
         },
         
@@ -122,7 +126,6 @@ const CombatUI = {
             const modal = this.ui.rerollModal;
             if (!modal || modal.selectedDice.length === 0) return;
             
-            console.log('Confirming reroll for dice:', modal.selectedDice);
             
             // Reroll selected dice
             for (const dieIndex of modal.selectedDice) {
@@ -131,7 +134,6 @@ const CombatUI = {
                 
                 // Choose random face
                 const targetFace = Math.floor(Math.random() * 6);
-                console.log(`Rerolling die ${dieIndex} to face ${targetFace}`);
                 
                 // Choose random rotation axis
                 const theta = Math.random() * Math.PI * 2;
@@ -158,11 +160,14 @@ const CombatUI = {
             CombatManager.state.rerollsRemaining--;
             this.ui.rerollModal = null;
             
-            console.log('Reroll animation started');
         },
 
         // Check if clicking on expanded ability panel buttons
     checkExpandedAbilityClick(mousePos, canvas) {
+        CombatManager.ensureState();
+        // Don't handle expanded ability clicks if in targeting mode (targeting takes priority)
+        if (CombatManager.state.targetingMode) return false;
+        
         const expanded = CombatManager.state.expandedAbility;
         if (!expanded) return false;
         
@@ -186,7 +191,6 @@ const CombatUI = {
                 mousePos.y >= slotsY && mousePos.y <= slotsY + slotSize) {
                 // Remove this power-up die
                 expanded.powerUpDice.splice(i, 1);
-                console.log(`Removed power-up die at slot ${i}`);
                 return true;
             }
         }
@@ -205,11 +209,24 @@ const CombatUI = {
                                  mousePos.y >= bounds.y && mousePos.y <= bounds.y + bounds.height;
         if (hit(btns?.cancel) || (mousePos.x >= cancelX && mousePos.x <= cancelX + buttonWidth &&
             mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight)) {
-            this.cancelExpandedAbility();
+            // Cancel targeting mode if active, otherwise cancel expanded ability
+            CombatManager.ensureState();
+            if (CombatManager.state.targetingMode) {
+                CombatManager.state.targetingMode = null;
+            } else {
+                this.cancelExpandedAbility();
+            }
             return true;
         }
         if (hit(btns?.execute) || (mousePos.x >= executeX && mousePos.x <= executeX + buttonWidth &&
             mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight)) {
+            CombatManager.ensureState();
+            // If in targeting mode, cancel targeting
+            if (CombatManager.state.targetingMode) {
+                CombatManager.state.targetingMode = null;
+                return true;
+            }
+            // Otherwise execute (which may enter targeting mode)
             this.executeExpandedAbility();
             return true;
         }
@@ -225,17 +242,37 @@ const CombatUI = {
     // Assign a die to an ability slot
     assignDieToAbility(poolIndex, abilityKey) {
         CombatManager.assignDieToAbility(CombatManager.state, poolIndex, abilityKey);
-        console.log(`Assigned die ${poolIndex} to ability ${abilityKey}`);
     },
 
     // Unassign a die from an ability
     unassignDieFromAbility(poolIndex, abilityKey) {
         CombatManager.unassignDieFromAbility(CombatManager.state, poolIndex, abilityKey);
-        console.log(`Unassigned die ${poolIndex} from ability ${abilityKey}`);
     },
 
     // Handle mouse move
     onMouseMove(mousePos, canvas) {
+        // Handle scrollbar dragging for unit selection dialog
+        if (window.DiceSystem && window.DiceSystem.state.unitSelectionDialog) {
+            const dialog = window.DiceSystem.state.unitSelectionDialog;
+            if (dialog.scrolling && dialog.scrollbarBounds) {
+                const scrollbar = dialog.scrollbarBounds;
+                const contentHeight = dialog.totalHeight;
+                const visibleHeight = 380;
+                const maxScroll = Math.max(0, contentHeight - visibleHeight);
+                
+                // Calculate scroll position from mouse Y
+                const relativeY = mousePos.y - scrollbar.y;
+                const scrollPercent = Math.max(0, Math.min(1, relativeY / scrollbar.height));
+                dialog.scrollY = scrollPercent * maxScroll;
+                return; // Don't process other mouse move events while dragging
+            }
+        }
+        
+        // Check for targeting mode hover first
+        if (CombatManager.state.targetingMode) {
+            this.updateTargetingHover(mousePos);
+        }
+        
         // Check for status effect hover (for tooltip) - check this FIRST
         this.checkStatusEffectHover(mousePos);
         
@@ -254,28 +291,18 @@ const CombatUI = {
             CombatUI.checkButtonHover(mousePos, canvas);
             
             // Update hover state for all unit "View Dice" buttons
-            const playerUnit = Combat.state.playerUnit;
-            if (playerUnit && playerUnit._viewDiceButton) {
-                const b = playerUnit._viewDiceButton;
-                b.hovered = Button.hitTest(mousePos, b);
+            // Check all player units
+            for (const unit of Combat.state.playerUnits) {
+                if (unit && unit._viewDiceButton) {
+                    unit._viewDiceButton.hovered = Button.hitTest(mousePos, unit._viewDiceButton);
+                }
             }
             
-            const playerCrew = Combat.state.playerCrew;
-            if (playerCrew && playerCrew._viewDiceButton) {
-                const b = playerCrew._viewDiceButton;
-                b.hovered = Button.hitTest(mousePos, b);
-            }
-            
-            const enemyUnit = Combat.state.enemyUnit;
-            if (enemyUnit && enemyUnit._viewDiceButton) {
-                const b = enemyUnit._viewDiceButton;
-                b.hovered = Button.hitTest(mousePos, b);
-            }
-            
-            const enemyCrew = Combat.state.enemyCrew;
-            if (enemyCrew && enemyCrew._viewDiceButton) {
-                const b = enemyCrew._viewDiceButton;
-                b.hovered = Button.hitTest(mousePos, b);
+            // Check all enemy units
+            for (const unit of Combat.state.enemyUnits) {
+                if (unit && unit._viewDiceButton) {
+                    unit._viewDiceButton.hovered = Button.hitTest(mousePos, unit._viewDiceButton);
+                }
             }
             
             return; // Skip normal button checks in combat mode
@@ -361,8 +388,180 @@ const CombatUI = {
         return null;
     },
 
+    // Update hover state for targeting mode
+    updateTargetingHover(mousePos) {
+        CombatManager.ensureState();
+        const targetingMode = CombatManager.state.targetingMode;
+        if (!targetingMode) return;
+        
+        // Check if hovering over any valid target panel
+        let hoveredTarget = null;
+        for (const targetInfo of targetingMode.validTargets) {
+            const unit = targetInfo.unit;
+            if (unit._panelBounds) {
+                const bounds = unit._panelBounds;
+                if (mousePos.x >= bounds.x && mousePos.x <= bounds.x + bounds.width &&
+                    mousePos.y >= bounds.y && mousePos.y <= bounds.y + bounds.height) {
+                    hoveredTarget = unit;
+                    break;
+                }
+            }
+        }
+        
+        targetingMode.hoveredTarget = hoveredTarget;
+    },
+
     // Check if a button was clicked
     checkButtonClick(mousePos, canvas) {
+        CombatManager.ensureState();
+        
+        // Check edit mode toggle button first (should work even when dialog is open)
+        const editCenterX = canvas.width / 2;
+        const editButtonYPos = canvas.height - 80;
+        const editButtonHeight = 40;
+        const editButtonY = editButtonYPos + editButtonHeight + 15;
+        const editButtonWidth = 140;
+        const editButtonHeight2 = 35;
+        const editButtonX = editCenterX - editButtonWidth / 2;
+        if (mousePos.x >= editButtonX && mousePos.x <= editButtonX + editButtonWidth &&
+            mousePos.y >= editButtonY && mousePos.y <= editButtonY + editButtonHeight2) {
+            if (window.DiceSystem) {
+                window.DiceSystem.state.editMode = !window.DiceSystem.state.editMode;
+                // Close unit selection dialog when toggling edit mode off
+                if (!window.DiceSystem.state.editMode) {
+                    window.DiceSystem.state.unitSelectionDialog = null;
+                }
+            }
+            return true;
+        }
+        
+        // Check for unit selection dialog clicks
+        if (window.DiceSystem && window.DiceSystem.state.unitSelectionDialog) {
+            const dialog = window.DiceSystem.state.unitSelectionDialog;
+            
+            // Check if clicking on scrollbar track or thumb
+            if (dialog.scrollbarBounds) {
+                const scrollbar = dialog.scrollbarBounds;
+                if (mousePos.x >= scrollbar.x && mousePos.x <= scrollbar.x + scrollbar.width &&
+                    mousePos.y >= scrollbar.y && mousePos.y <= scrollbar.y + scrollbar.height) {
+                    // Check if clicking on thumb (start drag) or track (jump)
+                    if (mousePos.y >= scrollbar.thumbY && mousePos.y <= scrollbar.thumbY + scrollbar.thumbHeight) {
+                        // Start dragging scrollbar
+                        dialog.scrolling = true;
+                        dialog.scrollStartY = mousePos.y;
+                        dialog.scrollStartScrollY = dialog.scrollY || 0;
+                    } else {
+                        // Jump to position
+                        const contentHeight = dialog.totalHeight;
+                        const visibleHeight = 380;
+                        const maxScroll = Math.max(0, contentHeight - visibleHeight);
+                        const relativeY = mousePos.y - scrollbar.y;
+                        const scrollPercent = Math.max(0, Math.min(1, relativeY / scrollbar.height));
+                        dialog.scrollY = scrollPercent * maxScroll;
+                    }
+                    return;
+                }
+            }
+            
+            // Check close button
+            if (dialog.closeButton &&
+                mousePos.x >= dialog.closeButton.x && mousePos.x <= dialog.closeButton.x + dialog.closeButton.width &&
+                mousePos.y >= dialog.closeButton.y && mousePos.y <= dialog.closeButton.y + dialog.closeButton.height) {
+                window.DiceSystem.state.unitSelectionDialog = null;
+                return;
+            }
+            
+            // Check item clicks (only if not clicking scrollbar)
+            if (dialog.itemBounds && (!dialog.scrollbarBounds || 
+                mousePos.x < dialog.scrollbarBounds.x || mousePos.x > dialog.scrollbarBounds.x + dialog.scrollbarBounds.width)) {
+                for (const itemBound of dialog.itemBounds) {
+                    if (mousePos.x >= itemBound.x && mousePos.x <= itemBound.x + itemBound.width &&
+                        mousePos.y >= itemBound.y && mousePos.y <= itemBound.y + itemBound.height) {
+                        // Add unit
+                        const side = dialog.side;
+                        const unit = Combat.addUnit(itemBound.item, side, itemBound.type);
+                        if (unit) {
+                            // Load portrait if needed
+                            if (itemBound.type === 'captain' && itemBound.item.image) {
+                                CombatUI.loadPortrait(unit.id, itemBound.item.image);
+                            }
+                            window.DiceSystem.state.unitSelectionDialog = null;
+                        }
+                        return;
+                    }
+                }
+            }
+            
+            // Clicked outside dialog - close it
+            if (dialog.bounds &&
+                (mousePos.x < dialog.bounds.x || mousePos.x > dialog.bounds.x + dialog.bounds.width ||
+                 mousePos.y < dialog.bounds.y || mousePos.y > dialog.bounds.y + dialog.bounds.height)) {
+                window.DiceSystem.state.unitSelectionDialog = null;
+                return;
+            }
+            
+            return; // Don't process other clicks while dialog is open
+        }
+        
+        // Check for edit mode clicks (X and + buttons)
+        if (window.DiceSystem && window.DiceSystem.state.editMode) {
+            // Check X buttons on units
+            for (const unit of [...Combat.state.playerUnits, ...Combat.state.enemyUnits]) {
+                if (unit._removeButton &&
+                    mousePos.x >= unit._removeButton.x && mousePos.x <= unit._removeButton.x + unit._removeButton.width &&
+                    mousePos.y >= unit._removeButton.y && mousePos.y <= unit._removeButton.y + unit._removeButton.height) {
+                    Combat.removeUnit(unit);
+                    return;
+                }
+            }
+            
+            // Check + buttons
+            if (window.DiceSystem.state._addButtonBounds) {
+                const playerBounds = window.DiceSystem.state._addButtonBounds.player;
+                if (playerBounds &&
+                    mousePos.x >= playerBounds.x && mousePos.x <= playerBounds.x + playerBounds.width &&
+                    mousePos.y >= playerBounds.y && mousePos.y <= playerBounds.y + playerBounds.height) {
+                    if (Combat.state.playerUnits.length < 5) {
+                        window.DiceSystem.state.unitSelectionDialog = { side: 'player', scrollY: 0 };
+                    }
+                    return;
+                }
+                
+                const enemyBounds = window.DiceSystem.state._addButtonBounds.enemy;
+                if (enemyBounds &&
+                    mousePos.x >= enemyBounds.x && mousePos.x <= enemyBounds.x + enemyBounds.width &&
+                    mousePos.y >= enemyBounds.y && mousePos.y <= enemyBounds.y + enemyBounds.height) {
+                    if (Combat.state.enemyUnits.length < 5) {
+                        window.DiceSystem.state.unitSelectionDialog = { side: 'enemy', scrollY: 0 };
+                    }
+                    return;
+                }
+            }
+        }
+        
+        // Check for target selection click if in targeting mode
+        if (CombatManager.state.targetingMode) {
+            const targetingMode = CombatManager.state.targetingMode;
+            for (const targetInfo of targetingMode.validTargets) {
+                const unit = targetInfo.unit;
+                if (unit._panelBounds) {
+                    const bounds = unit._panelBounds;
+                    if (mousePos.x >= bounds.x && mousePos.x <= bounds.x + bounds.width &&
+                        mousePos.y >= bounds.y && mousePos.y <= bounds.y + bounds.height) {
+                        // Select this target and execute
+                        CombatManager.executeExpandedAbilityWithTarget(
+                            CombatManager.state,
+                            targetingMode.expanded,
+                            unit
+                        );
+                        return true; // Handled
+                    }
+                }
+            }
+            // Clicked outside valid targets - cancel targeting
+            CombatManager.state.targetingMode = null;
+            return true; // Handled (canceled targeting)
+        }
         // Handle reroll modal clicks
         if (window.DiceSystem && window.DiceSystem.state && window.DiceSystem.state.rerollModal) {
             const modal = window.DiceSystem.state.rerollModal;
@@ -409,16 +608,32 @@ const CombatUI = {
                 return; // Click inside panel, don't close
             }
             
-            // Check if clicking on the other unit's "View Dice" button (switch panels)
-            const otherUnitId = expanded.unitId === 'player' ? 'enemy' : 'player';
-            const otherUnit = otherUnitId === 'player' ? Combat.state.playerUnit : Combat.state.enemyUnit;
-            if (otherUnit && otherUnit._viewDiceButton) {
-                const btn = otherUnit._viewDiceButton;
-                if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
-                    mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
-                    // Switch to other unit's panel
-                    window.DiceSystem.state.expandedUnitPanel = { unitId: otherUnitId, faceBounds: [] };
-                    return;
+            // Check if clicking on another unit's "View Dice" button (switch panels)
+            const currentUnitId = expanded.unitId;
+            
+            // Check all player units
+            for (const unit of Combat.state.playerUnits) {
+                if (unit && unit.id !== currentUnitId && unit._viewDiceButton) {
+                    const btn = unit._viewDiceButton;
+                    if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
+                        mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
+                        // Switch to this unit's panel
+                        window.DiceSystem.state.expandedUnitPanel = { unitId: unit.id, faceBounds: [] };
+                        return;
+                    }
+                }
+            }
+            
+            // Check all enemy units
+            for (const unit of Combat.state.enemyUnits) {
+                if (unit && unit.id !== currentUnitId && unit._viewDiceButton) {
+                    const btn = unit._viewDiceButton;
+                    if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
+                        mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
+                        // Switch to this unit's panel
+                        window.DiceSystem.state.expandedUnitPanel = { unitId: unit.id, faceBounds: [] };
+                        return;
+                    }
                 }
             }
             
@@ -429,53 +644,34 @@ const CombatUI = {
         
         // Check for "View Dice" button clicks on unit panels
         if ((window.DiceSystem?.state?.combatMode) && Combat.state.active) {
-            // Check player captain button
-            const playerUnit = Combat.state.playerUnit;
-            if (playerUnit && playerUnit._viewDiceButton) {
-                const btn = playerUnit._viewDiceButton;
-                if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
-                    mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
-                    window.DiceSystem.state.expandedUnitPanel = { unitId: 'player_captain', faceBounds: [] };
-                    return;
+            // Check all player units
+            for (const unit of Combat.state.playerUnits) {
+                if (unit && unit._viewDiceButton) {
+                    const btn = unit._viewDiceButton;
+                    if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
+                        mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
+                        window.DiceSystem.state.expandedUnitPanel = { unitId: unit.id, faceBounds: [] };
+                        return;
+                    }
                 }
             }
             
-            // Check player crew button
-            const playerCrew = Combat.state.playerCrew;
-            if (playerCrew && playerCrew._viewDiceButton) {
-                const btn = playerCrew._viewDiceButton;
-                if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
-                    mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
-                    window.DiceSystem.state.expandedUnitPanel = { unitId: 'player_crew', faceBounds: [] };
-                    return;
-                }
-            }
-            
-            // Check enemy captain button
-            const enemyUnit = Combat.state.enemyUnit;
-            if (enemyUnit && enemyUnit._viewDiceButton) {
-                const btn = enemyUnit._viewDiceButton;
-                if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
-                    mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
-                    window.DiceSystem.state.expandedUnitPanel = { unitId: 'enemy_captain', faceBounds: [] };
-                    return;
-                }
-            }
-            
-            // Check enemy crew button
-            const enemyCrew = Combat.state.enemyCrew;
-            if (enemyCrew && enemyCrew._viewDiceButton) {
-                const btn = enemyCrew._viewDiceButton;
-                if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
-                    mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
-                    window.DiceSystem.state.expandedUnitPanel = { unitId: 'enemy_crew', faceBounds: [] };
-                    return;
+            // Check all enemy units
+            for (const unit of Combat.state.enemyUnits) {
+                if (unit && unit._viewDiceButton) {
+                    const btn = unit._viewDiceButton;
+                    if (mousePos.x >= btn.x && mousePos.x <= btn.x + btn.width &&
+                        mousePos.y >= btn.y && mousePos.y <= btn.y + btn.height) {
+                        window.DiceSystem.state.expandedUnitPanel = { unitId: unit.id, faceBounds: [] };
+                        return;
+                    }
                 }
             }
         }
         
-        // Handle combat button clicks if in combat mode
-        if ((window.DiceSystem?.state?.combatMode) && Combat.state.active) {
+        // Handle combat button clicks if in combat mode (but not in edit mode)
+        const inEditMode = window.DiceSystem && window.DiceSystem.state.editMode;
+        if ((window.DiceSystem?.state?.combatMode) && Combat.state.active && !inEditMode) {
             // Check if clicking on expanded ability panel buttons
             if (CombatManager.state.expandedAbility) {
                 const panelClick = this.checkExpandedAbilityClick(mousePos, canvas);
@@ -503,22 +699,22 @@ const CombatUI = {
         }
 
         // Normal button clicks
-        const centerX = canvas.width / 2;
-        const buttonY = CombatUI.layout.buttonY;
+        const normalCenterX = canvas.width / 2;
+        const normalButtonY = CombatUI.layout.buttonY;
         
-        const rollButtonX = centerX + 50;
-        const rerollButtonX = centerX + 50 + CombatUI.layout.buttonWidth + 20;
+        const rollButtonX = normalCenterX + 50;
+        const rerollButtonX = normalCenterX + 50 + CombatUI.layout.buttonWidth + 20;
         
         // Roll button
         if (mousePos.x >= rollButtonX && mousePos.x <= rollButtonX + CombatUI.layout.buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + CombatUI.layout.buttonHeight) {
+            mousePos.y >= normalButtonY && mousePos.y <= normalButtonY + CombatUI.layout.buttonHeight) {
             this.rollAllDice();
             return;
         }
         
         // Reroll button
         if (mousePos.x >= rerollButtonX && mousePos.x <= rerollButtonX + CombatUI.layout.buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + CombatUI.layout.buttonHeight) {
+            mousePos.y >= normalButtonY && mousePos.y <= normalButtonY + CombatUI.layout.buttonHeight) {
             this.rerollSelected();
             return;
         }
@@ -550,43 +746,14 @@ const CombatUI = {
     checkStatusEffectHover(mousePos) {
         if (!Combat.state.active) return;
         
-        // Check player unit status effects using CharacterPanel component
-        const playerUnit = Combat.state.playerUnit;
-        if (playerUnit && playerUnit.statusEffects) {
-            const hoveredEffect = CharacterPanel.checkStatusEffectHover(playerUnit.statusEffects, mousePos);
-            if (hoveredEffect) {
-                this.showStatusEffectTooltip(hoveredEffect, mousePos.x, mousePos.y);
-                return;
-            }
-        }
-        
-        // Check player crew status effects
-        const playerCrew = Combat.state.playerCrew;
-        if (playerCrew && playerCrew.statusEffects) {
-            const hoveredEffect = CharacterPanel.checkStatusEffectHover(playerCrew.statusEffects, mousePos);
-            if (hoveredEffect) {
-                this.showStatusEffectTooltip(hoveredEffect, mousePos.x, mousePos.y);
-                return;
-            }
-        }
-        
-        // Check enemy unit status effects using CharacterPanel component
-        const enemyUnit = Combat.state.enemyUnit;
-        if (enemyUnit && enemyUnit.statusEffects) {
-            const hoveredEffect = CharacterPanel.checkStatusEffectHover(enemyUnit.statusEffects, mousePos);
-            if (hoveredEffect) {
-                this.showStatusEffectTooltip(hoveredEffect, mousePos.x, mousePos.y);
-                return;
-            }
-        }
-        
-        // Check enemy crew status effects
-        const enemyCrew = Combat.state.enemyCrew;
-        if (enemyCrew && enemyCrew.statusEffects) {
-            const hoveredEffect = CharacterPanel.checkStatusEffectHover(enemyCrew.statusEffects, mousePos);
-            if (hoveredEffect) {
-                this.showStatusEffectTooltip(hoveredEffect, mousePos.x, mousePos.y);
-                return;
+        // Check status effects for all units
+        for (const unit of [...Combat.state.playerUnits, ...Combat.state.enemyUnits]) {
+            if (unit && unit.statusEffects) {
+                const hoveredEffect = CharacterPanel.checkStatusEffectHover(unit.statusEffects, mousePos);
+                if (hoveredEffect) {
+                    this.showStatusEffectTooltip(hoveredEffect, mousePos.x, mousePos.y);
+                    return;
+                }
             }
         }
         
@@ -677,12 +844,15 @@ const CombatUI = {
         const posIdx = Die.isMouseOverAnyDie(mousePos, window.DiceSystem.state.diePositions);
         if (posIdx !== null) {
             const state = window.DiceSystem.state.diceStates[posIdx];
-            tooltip.visible = true;
-            tooltip.dieIndex = posIdx;
-            tooltip.faceIndex = state.targetFace;
-            tooltip.x = mousePos.x + 15;
-            tooltip.y = mousePos.y + 15;
-            tooltip.filledSlots = [];
+            // Safety check: ensure state exists and has targetFace
+            if (state && state.targetFace !== undefined) {
+                tooltip.visible = true;
+                tooltip.dieIndex = posIdx;
+                tooltip.faceIndex = state.targetFace;
+                tooltip.x = mousePos.x + 15;
+                tooltip.y = mousePos.y + 15;
+                tooltip.filledSlots = [];
+            }
         }
     },
 
@@ -900,7 +1070,6 @@ const CombatUI = {
                     state.yOffset = 0;
                     state.axisRotation = null; // Clear axis rotation
                     state.currentFace = state.targetFace;
-                    console.log(`Die landed on face ${state.targetFace}`);
                     anyJustFinished = true;
                 }
             }
@@ -1014,14 +1183,20 @@ const CombatUI = {
     },
     
     // Load a character portrait image
-    loadPortrait(captainId, imagePath) {
+    // Caches by unit ID only (hero portraits are cached by their unique captain ID)
+    loadPortrait(unitId, imagePath) {
+        // If already loaded for this unit ID, skip
+        if (this.portraits[unitId]) {
+            return;
+        }
+        
         const img = new Image();
         img.onload = () => {
-            this.portraits[captainId] = img;
-            console.log('CombatUI - Loaded portrait for', captainId);
+            this.portraits[unitId] = img;
+            console.log(`Portrait loaded successfully: ${unitId}`);
         };
         img.onerror = () => {
-            console.warn('CombatUI - Failed to load portrait:', imagePath);
+            console.warn('CombatUI - Failed to load portrait:', imagePath, 'for ID:', unitId);
         };
         img.src = imagePath;
     },
@@ -1029,18 +1204,6 @@ const CombatUI = {
     // Main render function for combat UI
     render(ctx, canvas) {
         if (!Combat.state.active) return;
-        
-        // DEBUG: Log crew state
-        if (Combat.state.playerCrew) {
-            console.log('CombatUI.render - Player crew exists:', Combat.state.playerCrew.name);
-        } else {
-            console.log('CombatUI.render - NO PLAYER CREW!');
-        }
-        if (Combat.state.enemyCrew) {
-            console.log('CombatUI.render - Enemy crew exists:', Combat.state.enemyCrew.name);
-        } else {
-            console.log('CombatUI.render - NO ENEMY CREW!');
-        }
         
         // Clear background to avoid ghosting from previous frame
         ctx.fillStyle = '#1a1a1a';
@@ -1053,24 +1216,276 @@ const CombatUI = {
             ctx.restore();
         }
         
-        // Render captain panels (top)
-        this.renderUnitInfo(ctx, Combat.state.playerUnit, 20, 20, true);
-        this.renderUnitInfo(ctx, Combat.state.enemyUnit, canvas.width - 260, 20, false);
-        
-        // Render crew panels (below captains)
-        if (Combat.state.playerCrew) {
-            console.log('CombatUI.render - Rendering player crew at 20, 180');
-            this.renderUnitInfo(ctx, Combat.state.playerCrew, 20, 180, true);
+        // Render all player units
+        const playerStartY = 20;
+        const unitSpacing = 160;
+        for (let i = 0; i < Combat.state.playerUnits.length; i++) {
+            const unit = Combat.state.playerUnits[i];
+            const unitY = playerStartY + i * unitSpacing;
+            this.renderUnitInfo(ctx, unit, 20, unitY, true);
         }
-        if (Combat.state.enemyCrew) {
-            console.log('CombatUI.render - Rendering enemy crew at', canvas.width - 260, ', 180');
-            this.renderUnitInfo(ctx, Combat.state.enemyCrew, canvas.width - 260, 180, false);
+        
+        // Render all enemy units
+        for (let i = 0; i < Combat.state.enemyUnits.length; i++) {
+            const unit = Combat.state.enemyUnits[i];
+            const unitY = playerStartY + i * unitSpacing;
+            this.renderUnitInfo(ctx, unit, canvas.width - 260, unitY, false);
+        }
+        
+        // Render + buttons in edit mode (below last unit on each side)
+        const editMode = window.DiceSystem && window.DiceSystem.state.editMode;
+        if (editMode) {
+            // Player side + button
+            const playerLastY = playerStartY + Combat.state.playerUnits.length * unitSpacing;
+            const canAddPlayer = Combat.state.playerUnits.length < 5;
+            this.renderAddUnitButton(ctx, 20, playerLastY, true, canAddPlayer);
+            
+            // Enemy side + button
+            const enemyLastY = playerStartY + Combat.state.enemyUnits.length * unitSpacing;
+            const canAddEnemy = Combat.state.enemyUnits.length < 5;
+            this.renderAddUnitButton(ctx, canvas.width - 260, enemyLastY, false, canAddEnemy);
+        }
+        
+        // Set combat effects positions for all units
+        if (window.CombatEffects) {
+            // Player units (left side)
+            for (let i = 0; i < Combat.state.playerUnits.length; i++) {
+                const unit = Combat.state.playerUnits[i];
+                const y = 20 + i * 160; // Same spacing as unit panels
+                window.CombatEffects.setUnitPosition(unit.id, 20, y);
+            }
+            
+            // Enemy units (right side)
+            for (let i = 0; i < Combat.state.enemyUnits.length; i++) {
+                const unit = Combat.state.enemyUnits[i];
+                const y = 20 + i * 160; // Same spacing as unit panels
+                window.CombatEffects.setUnitPosition(unit.id, canvas.width - 260, y);
+            }
+            
+            // Render combat effects (particles and text)
+            window.CombatEffects.render(ctx);
         }
         
         this.renderTurnInfo(ctx, canvas);
         this.renderRollingBox(ctx, canvas);
         this.renderCombatLog(ctx, canvas);
         this.renderCombatButtons(ctx, canvas);
+        
+        // Render unit selection dialog if open
+        const inEditMode = window.DiceSystem && window.DiceSystem.state.editMode;
+        if (inEditMode && window.DiceSystem && window.DiceSystem.state.unitSelectionDialog) {
+            this.renderUnitSelectionDialog(ctx, canvas);
+        }
+    },
+    
+    // Render unit selection dialog
+    renderUnitSelectionDialog(ctx, canvas) {
+        const dialog = window.DiceSystem.state.unitSelectionDialog;
+        if (!dialog) return;
+        
+        const side = dialog.side;
+        const panelWidth = 600;
+        const panelHeight = 500;
+        const panelX = (canvas.width - panelWidth) / 2;
+        const panelY = (canvas.height - panelHeight) / 2;
+        
+        dialog.bounds = { x: panelX, y: panelY, width: panelWidth, height: panelHeight };
+        
+        // Darken background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Panel background
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.95)';
+        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+        
+        // Panel border
+        ctx.strokeStyle = side === 'player' ? '#44CCFF' : '#FF8844';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = side === 'player' ? '#44CCFF' : '#FF8844';
+        ctx.shadowBlur = 15;
+        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
+        ctx.shadowBlur = 0;
+        
+        // Title
+        ctx.fillStyle = side === 'player' ? '#44CCFF' : '#FF8844';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Add Unit to ${side === 'player' ? 'Player' : 'Enemy'} Side`, panelX + panelWidth / 2, panelY + 35);
+        
+        // Categories
+        const categories = [
+            { name: 'Captains', items: getAllCaptains(), type: 'captain' },
+            { name: 'Crew Types', items: getAllCrew().filter(c => c.id !== 'crew'), type: 'crew' },
+            { name: 'Ships', items: getAllShips(), type: 'ship' }
+        ];
+        
+        let yOffset = 70;
+        const itemHeight = 50;
+        const scrollY = dialog.scrollY || 0;
+        const visibleHeight = panelHeight - 120;
+        
+        dialog.itemBounds = [];
+        
+        for (const category of categories) {
+            // Category header
+            ctx.fillStyle = '#CCCCCC';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(category.name, panelX + 20, panelY + yOffset - scrollY);
+            yOffset += 25;
+            
+            // Category items
+            for (const item of category.items) {
+                const itemY = panelY + yOffset - scrollY;
+                
+                // Skip if outside visible area
+                if (itemY < panelY + 60 || itemY > panelY + panelHeight - 60) {
+                    yOffset += itemHeight;
+                    continue;
+                }
+                
+                const itemBounds = {
+                    x: panelX + 20,
+                    y: itemY,
+                    width: panelWidth - 40,
+                    height: itemHeight - 5,
+                    item: item,
+                    type: category.type
+                };
+                dialog.itemBounds.push(itemBounds);
+                
+                // Item background
+                ctx.fillStyle = 'rgba(40, 40, 40, 0.8)';
+                ctx.fillRect(itemBounds.x, itemBounds.y, itemBounds.width, itemBounds.height);
+                
+                // Item border
+                ctx.strokeStyle = '#666666';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(itemBounds.x, itemBounds.y, itemBounds.width, itemBounds.height);
+                
+                // Item name
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(item.name, itemBounds.x + 10, itemBounds.y + 20);
+                
+                // Item description
+                if (item.description) {
+                    ctx.fillStyle = '#AAAAAA';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(item.description, itemBounds.x + 10, itemBounds.y + 38);
+                }
+                
+                yOffset += itemHeight;
+            }
+            
+            yOffset += 10; // Spacing between categories
+        }
+        
+        dialog.totalHeight = yOffset;
+        const contentHeight = dialog.totalHeight;
+        const maxScroll = Math.max(0, contentHeight - visibleHeight);
+        
+        // Clamp scroll position
+        if (scrollY < 0) dialog.scrollY = 0;
+        if (scrollY > maxScroll) dialog.scrollY = maxScroll;
+        
+        // Draw scrollbar if content exceeds visible area
+        if (contentHeight > visibleHeight) {
+            const scrollbarWidth = 20;
+            const scrollbarX = panelX + panelWidth - scrollbarWidth - 5;
+            const scrollbarTrackY = panelY + 60;
+            const scrollbarTrackHeight = visibleHeight;
+            
+            // Scrollbar track
+            ctx.fillStyle = 'rgba(40, 40, 40, 0.8)';
+            ctx.fillRect(scrollbarX, scrollbarTrackY, scrollbarWidth, scrollbarTrackHeight);
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(scrollbarX, scrollbarTrackY, scrollbarWidth, scrollbarTrackHeight);
+            
+            // Scrollbar thumb
+            const thumbHeight = Math.max(30, (visibleHeight / contentHeight) * scrollbarTrackHeight);
+            const thumbY = scrollbarTrackY + (scrollY / maxScroll) * (scrollbarTrackHeight - thumbHeight);
+            
+            dialog.scrollbarBounds = {
+                x: scrollbarX,
+                y: scrollbarTrackY,
+                width: scrollbarWidth,
+                height: scrollbarTrackHeight,
+                thumbY: thumbY,
+                thumbHeight: thumbHeight
+            };
+            
+            ctx.fillStyle = '#888888';
+            ctx.fillRect(scrollbarX + 2, thumbY, scrollbarWidth - 4, thumbHeight);
+            ctx.strokeStyle = '#AAAAAA';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(scrollbarX + 2, thumbY, scrollbarWidth - 4, thumbHeight);
+        } else {
+            dialog.scrollbarBounds = null;
+        }
+        
+        // Close button
+        const closeButtonWidth = 100;
+        const closeButtonHeight = 35;
+        const closeButtonX = panelX + panelWidth / 2 - closeButtonWidth / 2;
+        const closeButtonY = panelY + panelHeight - 50;
+        
+        dialog.closeButton = { x: closeButtonX, y: closeButtonY, width: closeButtonWidth, height: closeButtonHeight };
+        
+        ctx.fillStyle = '#663333';
+        ctx.fillRect(closeButtonX, closeButtonY, closeButtonWidth, closeButtonHeight);
+        ctx.strokeStyle = '#FF8888';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(closeButtonX, closeButtonY, closeButtonWidth, closeButtonHeight);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Close', closeButtonX + closeButtonWidth / 2, closeButtonY + 23);
+        
+        ctx.textAlign = 'left';
+    },
+    
+    // Render + button for adding units
+    renderAddUnitButton(ctx, x, y, isPlayer, enabled) {
+        const buttonSize = 50;
+        const buttonX = x + 95; // Center in panel width (240)
+        
+        // Store bounds for click detection
+        if (!window.DiceSystem.state._addButtonBounds) {
+            window.DiceSystem.state._addButtonBounds = {};
+        }
+        const key = isPlayer ? 'player' : 'enemy';
+        window.DiceSystem.state._addButtonBounds[key] = {
+            x: buttonX,
+            y: y,
+            width: buttonSize,
+            height: buttonSize,
+            side: isPlayer ? 'player' : 'enemy'
+        };
+        
+        // Draw + button
+        ctx.fillStyle = enabled ? '#44AA44' : '#333333';
+        ctx.fillRect(buttonX, y, buttonSize, buttonSize);
+        ctx.strokeStyle = enabled ? '#66FF66' : '#555555';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(buttonX, y, buttonSize, buttonSize);
+        
+        // Draw + symbol
+        if (enabled) {
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            // Horizontal line
+            ctx.moveTo(buttonX + 12, y + buttonSize / 2);
+            ctx.lineTo(buttonX + buttonSize - 12, y + buttonSize / 2);
+            // Vertical line
+            ctx.moveTo(buttonX + buttonSize / 2, y + 12);
+            ctx.lineTo(buttonX + buttonSize / 2, y + buttonSize - 12);
+            ctx.stroke();
+        }
     },
     
     // Render the rolling box with 3D dice (delegates actual dice rendering to DiceSystem)
@@ -1091,11 +1506,7 @@ const CombatUI = {
         ctx.lineWidth = 2;
         ctx.strokeRect(boxX, boxY, layout.rollingBoxWidth, layout.rollingBoxHeight);
 
-        // Draw label
-        ctx.fillStyle = '#999999';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Dice roll around a random axis through their center', centerX, boxY - 8);
+        // Draw label (removed help text)
         ctx.textAlign = 'left';
 
         // Draw dice in a grid (up to 2 rows) - delegate to DiceSystem for actual 3D rendering
@@ -1284,37 +1695,57 @@ const CombatUI = {
         if (!expanded) return;
         
         // Map unitId to the correct unit
-        let unit;
-        let isPlayer;
-        switch (expanded.unitId) {
-            case 'player_captain':
-                unit = Combat.state.playerUnit;
+        let unit = null;
+        let isPlayer = false;
+        
+        // First try to find by unit ID in arrays (for dynamically added units)
+        for (const u of Combat.state.playerUnits) {
+            if (u.id === expanded.unitId) {
+                unit = u;
                 isPlayer = true;
                 break;
-            case 'player_crew':
-                unit = Combat.state.playerCrew;
-                isPlayer = true;
-                break;
-            case 'enemy_captain':
-                unit = Combat.state.enemyUnit;
-                isPlayer = false;
-                break;
-            case 'enemy_crew':
-                unit = Combat.state.enemyCrew;
-                isPlayer = false;
-                break;
-            // Legacy support for old unitId format
-            case 'player':
-                unit = Combat.state.playerUnit;
-                isPlayer = true;
-                break;
-            case 'enemy':
-                unit = Combat.state.enemyUnit;
-                isPlayer = false;
-                break;
-            default:
-                console.warn('Unknown unitId:', expanded.unitId);
-                return;
+            }
+        }
+        
+        if (!unit) {
+            for (const u of Combat.state.enemyUnits) {
+                if (u.id === expanded.unitId) {
+                    unit = u;
+                    isPlayer = false;
+                    break;
+                }
+            }
+        }
+        
+        // Fallback to legacy hardcoded IDs for backward compatibility
+        if (!unit) {
+            switch (expanded.unitId) {
+                case 'player_captain':
+                case 'player':
+                    // First player unit is the captain
+                    unit = Combat.state.playerUnits.length > 0 ? Combat.state.playerUnits[0] : null;
+                    isPlayer = true;
+                    break;
+                case 'player_crew':
+                    // Find first crew unit on player side
+                    unit = Combat.state.playerUnits.find(u => u.id.includes('crew')) || null;
+                    isPlayer = true;
+                    break;
+                case 'enemy_captain':
+                case 'enemy':
+                    // First enemy unit is the captain
+                    unit = Combat.state.enemyUnits.length > 0 ? Combat.state.enemyUnits[0] : null;
+                    isPlayer = false;
+                    break;
+                case 'enemy_crew':
+                    // Find first crew unit on enemy side
+                    unit = Combat.state.enemyUnits.find(u => u.id.includes('crew')) || null;
+                    isPlayer = false;
+                    break;
+                default:
+                    console.warn('Unknown unitId:', expanded.unitId);
+                    return;
+            }
         }
         
         if (!unit) return;
@@ -1635,7 +2066,8 @@ const CombatUI = {
     renderExpandedAbility(ctx, canvas) {
         if (!window.DiceSystem) return;
         const DS = window.DiceSystem;
-        const expanded = DS.state.expandedAbility;
+        // Use CombatManager state for expanded ability (source of truth)
+        const expanded = CombatManager.state.expandedAbility;
         if (!expanded) return;
         
         const layout = DS.layout;
@@ -1741,11 +2173,18 @@ const CombatUI = {
             }
         }
         
-        // Instructions
+        // Instructions - show targeting message if in targeting mode
         ctx.font = '14px Arial';
         ctx.fillStyle = '#CCCCCC';
         ctx.textAlign = 'center';
-        ctx.fillText('Click other dice to add power-ups', centerX, panelY + 185);
+        CombatManager.ensureState();
+        if (CombatManager.state.targetingMode) {
+            ctx.fillStyle = '#FFFF00';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Select a target (click outside to cancel)', centerX, panelY + 185);
+        } else {
+            ctx.fillText('Click other dice to add power-ups', centerX, panelY + 185);
+        }
         
         // Buttons
         const buttonY = panelY + 210;
@@ -1754,6 +2193,8 @@ const CombatUI = {
         const buttonSpacing = 15;
         const cancelX = centerX - buttonWidth * 1.5 - buttonSpacing;
         const executeX = centerX - buttonWidth / 2;
+        
+        // Cancel button (always visible)
         ctx.fillStyle = '#AA4444';
         ctx.fillRect(cancelX, buttonY, buttonWidth, buttonHeight);
         ctx.strokeStyle = '#FF6666';
@@ -1762,13 +2203,31 @@ const CombatUI = {
         ctx.fillStyle = '#FFFFFF';
         ctx.font = 'bold 16px Arial';
         ctx.fillText('Cancel', cancelX + buttonWidth / 2, buttonY + 23);
-        ctx.fillStyle = '#44AA44';
-        ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = '#66FF66';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText('Execute', executeX + buttonWidth / 2, buttonY + 23);
+        
+        // Execute button (disabled/hidden in targeting mode)
+        CombatManager.ensureState();
+        const inTargetingMode = CombatManager.state.targetingMode !== null;
+        if (inTargetingMode) {
+            // Show "Cancel Targeting" instead
+            ctx.fillStyle = '#664422';
+            ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
+            ctx.strokeStyle = '#AA8844';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
+            ctx.fillStyle = '#CCCCCC';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('Cancel', executeX + buttonWidth / 2, buttonY + 23);
+        } else {
+            // Normal execute button
+            ctx.fillStyle = '#44AA44';
+            ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
+            ctx.strokeStyle = '#66FF66';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Execute', executeX + buttonWidth / 2, buttonY + 23);
+        }
         
         ctx.restore();
         ctx.textAlign = 'left';
@@ -1776,8 +2235,29 @@ const CombatUI = {
     
     // Render unit info panel (HP, armor, status effects, portrait)
     renderUnitInfo(ctx, unit, x, y, isPlayer) {
+        // Determine highlight state if in targeting mode
+        let highlightState = null;
+        CombatManager.ensureState();
+        const targetingMode = CombatManager.state.targetingMode;
+        if (targetingMode && targetingMode.validTargets) {
+            const targetInfo = targetingMode.validTargets.find(t => t.unit === unit);
+            if (targetInfo) {
+                highlightState = {
+                    isValidTarget: true,
+                    isHovered: targetingMode.hoveredTarget === unit
+                };
+            }
+        }
+        
         // Use CharacterPanel component to draw the unit info
-        const buttonBounds = CharacterPanel.draw(ctx, unit, x, y, isPlayer, this.portraits);
+        const buttonBounds = CharacterPanel.draw(ctx, unit, x, y, isPlayer, this.portraits, highlightState);
+        
+        // Store panel bounds for click detection (for targeting)
+        const width = 240;
+        const portraitSize = 80;
+        const statusHeight = (unit.statusEffects && unit.statusEffects.length > 0) ? 50 : 15;
+        const panelHeight = Math.max(portraitSize + 20, 30 + 30 + statusHeight + 40);
+        unit._panelBounds = { x, y, width, height: panelHeight };
         
         // Store button bounds for click detection (in DiceSystem for now)
         unit._viewDiceButton = {
@@ -1793,13 +2273,7 @@ const CombatUI = {
         let isExpanded = false;
         if (expandedPanel) {
             // Check if this specific unit's panel is expanded
-            if (isPlayer) {
-                isExpanded = (expandedPanel.unitId === 'player_captain' && unit.id === Combat.state.playerUnit?.id) ||
-                            (expandedPanel.unitId === 'player_crew' && unit.id === Combat.state.playerCrew?.id);
-            } else {
-                isExpanded = (expandedPanel.unitId === 'enemy_captain' && unit.id === Combat.state.enemyUnit?.id) ||
-                            (expandedPanel.unitId === 'enemy_crew' && unit.id === Combat.state.enemyCrew?.id);
-            }
+            isExpanded = expandedPanel.unitId === unit.id;
         }
         
         const isHovered = !!unit._viewDiceButton.hovered;
@@ -1820,6 +2294,36 @@ const CombatUI = {
                 fontSize: '12px'
             }
         );
+        
+        // Draw X button in edit mode (top-right corner)
+        const editMode = window.DiceSystem && window.DiceSystem.state.editMode;
+        if (editMode) {
+            const xButtonSize = 35;
+            const xButtonX = x + width - xButtonSize - 5;
+            const xButtonY = y + 5;
+            
+            // Store bounds for click detection
+            unit._removeButton = { x: xButtonX, y: xButtonY, width: xButtonSize, height: xButtonSize };
+            
+            // Draw X button
+            ctx.fillStyle = '#AA4444';
+            ctx.fillRect(xButtonX, xButtonY, xButtonSize, xButtonSize);
+            ctx.strokeStyle = '#FF6666';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(xButtonX, xButtonY, xButtonSize, xButtonSize);
+            
+            // Draw X symbol
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(xButtonX + 8, xButtonY + 8);
+            ctx.lineTo(xButtonX + xButtonSize - 8, xButtonY + xButtonSize - 8);
+            ctx.moveTo(xButtonX + xButtonSize - 8, xButtonY + 8);
+            ctx.lineTo(xButtonX + 8, xButtonY + xButtonSize - 8);
+            ctx.stroke();
+        } else {
+            unit._removeButton = null;
+        }
     },
     
     
@@ -1960,6 +2464,32 @@ const CombatUI = {
             }
         );
         
+        // Edit units toggle button (below combat buttons)
+        const editButtonY = buttonY + buttonHeight + 15;
+        const editButtonWidth = 140;
+        const editButtonHeight = 35;
+        const editButtonX = centerX - editButtonWidth / 2;
+        const editMode = window.DiceSystem && window.DiceSystem.state.editMode;
+        const editHovered = window.DiceSystem && window.DiceSystem.state.hoveredButton === 'edit_units';
+        
+        Button.draw(
+            ctx,
+            editButtonX,
+            editButtonY,
+            editButtonWidth,
+            editButtonHeight,
+            editMode ? 'Done editing' : 'Edit units',
+            true,
+            editHovered,
+            {
+                bgEnabled: editMode ? '#664422' : '#336633',
+                bgHovered: editMode ? '#AA6644' : '#44AA44',
+                borderEnabled: editMode ? '#FFAA66' : '#66FF66',
+                textEnabled: '#FFFFFF',
+                fontSize: '14px'
+            }
+        );
+        
         ctx.textAlign = 'left';
     },
     
@@ -1989,6 +2519,16 @@ const CombatUI = {
             } else if (mousePos.x >= endTurnX && mousePos.x <= endTurnX + buttonWidth) {
                 window.DiceSystem.state.hoveredButton = 'end_turn';
             }
+        }
+        
+        // Check edit button hover
+        const editButtonY = buttonY + buttonHeight + 15;
+        const editButtonWidth = 140;
+        const editButtonHeight = 35;
+        const editButtonX = centerX - editButtonWidth / 2;
+        if (mousePos.x >= editButtonX && mousePos.x <= editButtonX + editButtonWidth &&
+            mousePos.y >= editButtonY && mousePos.y <= editButtonY + editButtonHeight) {
+            window.DiceSystem.state.hoveredButton = 'edit_units';
         }
     },
     
@@ -2039,7 +2579,35 @@ const CombatUI = {
             return true;
         }
         
+        // Edit units toggle button
+        const editButtonY = buttonY + buttonHeight + 15;
+        const editButtonWidth = 140;
+        const editButtonHeight = 35;
+        const editButtonX = centerX - editButtonWidth / 2;
+        if (mousePos.x >= editButtonX && mousePos.x <= editButtonX + editButtonWidth &&
+            mousePos.y >= editButtonY && mousePos.y <= editButtonY + editButtonHeight) {
+            if (window.DiceSystem) {
+                window.DiceSystem.state.editMode = !window.DiceSystem.state.editMode;
+                // Close unit selection dialog when toggling edit mode off
+                if (!window.DiceSystem.state.editMode) {
+                    window.DiceSystem.state.unitSelectionDialog = null;
+                }
+            }
+            return true;
+        }
+        
         return false;
+    },
+    
+    // Handle mouse up
+    onMouseUp(mousePos, canvas) {
+        // Stop scrollbar dragging (handled in DiceSystem.onMouseUp, but keep for consistency)
+        if (window.DiceSystem && window.DiceSystem.state.unitSelectionDialog) {
+            const dialog = window.DiceSystem.state.unitSelectionDialog;
+            if (dialog.scrolling) {
+                dialog.scrolling = false;
+            }
+        }
     }
 };
 

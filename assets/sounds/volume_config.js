@@ -41,7 +41,14 @@ const SoundVolumeConfig = {
         
         // Port action sounds
         anchor_raise: 0.3,
-        money_click: 0.4
+        money_click: 0.4,
+        
+        // Combat sound effects
+        combat_thud: 0.5,
+        combat_slice: 0.5,
+        combat_heal: 0.4,
+        combat_powerup: 0.4,
+        combat_twinkle: 0.4
     }
 };
 

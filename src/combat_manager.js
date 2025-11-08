@@ -40,7 +40,6 @@ const CombatManager = {
     rollAllDice() {
         if (this.isAnyRolling()) return;
         
-        console.log('Rolling all dice...');
         
         // Clear previous roll data (logic state)
         CombatManager.ensureState();
@@ -58,11 +57,9 @@ const CombatManager = {
             
             // Generate a unique random axis for THIS die
             state.rollAxis = Die.getRandomAxis();
-            console.log(`Die ${i} roll axis:`, state.rollAxis);
             
             // Step 1: Choose the final face randomly for THIS die
             state.targetFace = Math.floor(Math.random() * 6);
-            console.log(`Die ${i} will land on face ${state.targetFace}`);
             
             // Step 2: Set target rotation for that face (where we'll be at t=0.0)
             Die.setTargetRotationForFace(state, state.targetFace);
@@ -84,7 +81,6 @@ const CombatManager = {
     executeExpandedAbility() {
         const result = CombatManager.executeExpandedAbility(CombatManager.state, CombatManager.state.expandedAbility);
         if (result.executed && CombatManager.state.expandedAbility?.ability) {
-            console.log(`Executed ${CombatManager.state.expandedAbility.ability.displayName} via CombatManager`);
         }
     },
 
@@ -121,7 +117,6 @@ const CombatManager = {
         if (this.ui.rollsAvailable <= 0) return;
         if (this.isAnyRolling()) return;
         
-        console.log('Rerolling selected dice:', this.ui.rerollTray);
         for (const dieIdx of this.ui.rerollTray) {
             const state = this.ui.diceStates[dieIdx];
             
@@ -166,7 +161,6 @@ const CombatManager = {
         const selectedDie = (CombatManager.state.rolledDice || []).find(d => d.selected && !d.assigned);
         
         if (!selectedDie) {
-            console.log('No selected dice to execute');
             return;
         }
 
@@ -213,6 +207,7 @@ const CombatManager = {
         if (state.rerollsRemaining === undefined) state.rerollsRemaining = 0;
         if (state.rerollingDice === undefined) state.rerollingDice = null;
         if (state.expandedAbility === undefined) state.expandedAbility = null; // { dieIndex, faceIndex, ability, powerUpDice: [] }
+        if (state.targetingMode === undefined) state.targetingMode = null; // { ability, caster, validTargets, hoveredTarget: null }
         return state;
     },
 
@@ -253,12 +248,26 @@ const CombatManager = {
     playAutoTurn() {
         if (!Combat.state.active) return { executed: false };
         const caster = Combat.getCurrentUnit();
-        const target = Combat.getOpponentUnit();
         const rolled = this.rollDiceFaces(caster.dice || [], getDieByName);
         if (rolled.length === 0) return { executed: false };
         const choice = this.chooseBestRolledDie(rolled);
         if (!choice) return { executed: false };
         const main = rolled[choice.index];
+        
+        // AIDEV-NOTE: Use getValidTargets to respect taunt mechanic
+        // For melee attacks, this will filter to only taunted units if any exist
+        const validTargets = this.getValidTargets(main.ability, caster);
+        if (validTargets.length === 0) {
+            // No valid targets (shouldn't happen, but handle gracefully)
+            return { executed: false };
+        }
+        
+        // Pick first valid target (or random if multiple)
+        const targetInfo = validTargets.length === 1 
+            ? validTargets[0] 
+            : validTargets[Math.floor(Math.random() * validTargets.length)];
+        const target = targetInfo.unit;
+        
         Combat.executeAbility(main.ability, caster, target, choice.filledSlots);
         return { executed: true, main, filledSlots: choice.filledSlots };
     },
@@ -384,8 +393,112 @@ const CombatManager = {
         return state;
     },
 
-    // Execute currently expanded ability (main + power-ups)
-    executeExpandedAbility(state, expanded) {
+    // Get all combat units (for targeting)
+    getAllUnits() {
+        const units = [];
+        // Add all player units
+        for (const unit of Combat.state.playerUnits) {
+            units.push({
+                unit: unit,
+                id: unit.id,
+                isPlayer: true,
+                isCrew: !!unit.shipId || unit.id.includes('crew')
+            });
+        }
+        // Add all enemy units
+        for (const unit of Combat.state.enemyUnits) {
+            units.push({
+                unit: unit,
+                id: unit.id,
+                isPlayer: false,
+                isCrew: !!unit.shipId || unit.id.includes('crew')
+            });
+        }
+        return units;
+    },
+
+    // Determine valid targets for an ability
+    getValidTargets(ability, caster) {
+        const allUnits = this.getAllUnits();
+        const casterInfo = allUnits.find(u => u.unit === caster);
+        if (!casterInfo) return [];
+
+        const targeting = ability.targeting || 'enemy';
+        const validTargets = [];
+
+        for (const unitInfo of allUnits) {
+            let isValid = false;
+
+            switch (targeting) {
+                case 'self':
+                    isValid = unitInfo.unit === caster;
+                    break;
+                case 'enemy':
+                    isValid = unitInfo.isPlayer !== casterInfo.isPlayer;
+                    break;
+                case 'enemies':
+                    isValid = unitInfo.isPlayer !== casterInfo.isPlayer;
+                    break;
+                case 'ally':
+                    isValid = unitInfo.isPlayer === casterInfo.isPlayer && unitInfo.unit !== caster;
+                    break;
+                case 'allies':
+                    isValid = unitInfo.isPlayer === casterInfo.isPlayer;
+                    break;
+            }
+
+            // AIDEV-NOTE: Targeting restrictions (melee/ranged) not yet implemented
+            // When back row units are implemented, melee will only target front row (captains)
+            // For now, everyone is in melee range, so no filtering needed
+
+            if (isValid) {
+                validTargets.push(unitInfo);
+            }
+        }
+
+        // AIDEV-NOTE: Taunt mechanic - melee attacks must target taunted units if any exist
+        if (ability.targetingRestriction === 'melee' && targeting === 'enemy') {
+            const tauntedUnits = window.StatusEffects && window.StatusEffects.getTauntedUnits 
+                ? window.StatusEffects.getTauntedUnits(validTargets)
+                : [];
+            
+            if (tauntedUnits.length > 0) {
+                // Must attack taunted units only
+                return tauntedUnits;
+            }
+        }
+
+        return validTargets;
+    },
+
+    // Enter targeting mode for an ability
+    enterTargetingMode(state, expanded) {
+        if (!expanded) return state;
+        const mainDie = state.rolledDice[expanded.dieIndex];
+        if (!mainDie) return state;
+
+        const caster = Combat.getCurrentUnit();
+        const validTargets = this.getValidTargets(expanded.ability, caster);
+        
+        // If only one valid target, auto-execute (no targeting needed)
+        if (validTargets.length === 1) {
+            return this.executeExpandedAbilityWithTarget(state, expanded, validTargets[0].unit);
+        }
+
+        // Enter targeting mode
+        state.targetingMode = {
+            ability: expanded.ability,
+            caster: caster,
+            expanded: expanded,
+            validTargets: validTargets,
+            hoveredTarget: null
+        };
+
+        return state;
+    },
+
+    // Execute ability with selected target
+    executeExpandedAbilityWithTarget(state, expanded, target) {
         if (!expanded) return { state, executed: false };
         const mainDie = state.rolledDice[expanded.dieIndex];
         if (!mainDie) return { state, executed: false };
@@ -398,13 +511,23 @@ const CombatManager = {
         }
 
         const caster = Combat.getCurrentUnit();
-        const target = Combat.getOpponentUnit();
         const filledSlots = expanded.powerUpDice.length;
         Combat.executeAbility(expanded.ability, caster, target, filledSlots);
 
-        // Clear expanded selection after execution
+        // Clear expanded selection and targeting mode after execution
         state.expandedAbility = null;
+        state.targetingMode = null;
         return { state, executed: true };
+    },
+
+    // Execute currently expanded ability (main + power-ups)
+    // Now enters targeting mode if multiple valid targets exist
+    executeExpandedAbility(state, expanded) {
+        if (!expanded) return { state, executed: false };
+        
+        // Enter targeting mode (will auto-execute if only one target)
+        const updatedState = this.enterTargetingMode(state, expanded);
+        return { state: updatedState, executed: updatedState.targetingMode === null }; // executed if auto-executed
     }
 };
 
