@@ -31,7 +31,6 @@ const DiceSystem = {
         rerollModal: null,
         rerollTray: [],
         rollsAvailable: 1,
-        draggedDieIndex: null,
         dragOffset: { x: 0, y: 0 },
         combatMode: true,
         editMode: false, // Unit editor mode
@@ -234,11 +233,6 @@ const DiceSystem = {
             CombatUI.renderTestScreen(ctx, canvas);
         }
 
-        // Dragged die overlay
-        if (this.state.draggedDieIndex !== null && this.state.draggedDieIndex !== undefined) {
-            CombatUI.renderDraggedDie(ctx);
-        }
-
         // Non-combat extras
         if (!(this.state.combatMode && Combat.state.active)) {
             CombatUI.renderRerollTray(ctx, canvas);
@@ -281,11 +275,7 @@ const DiceSystem = {
         // Animate
         for (let i = 0; i < this.state.diceStates.length; i++) {
             const state = this.state.diceStates[i];
-            state.rollAxis = Die.getRandomAxis();
-            state.targetFace = Math.floor(Math.random() * 6);
-            Die.setTargetRotationForFace(state, state.targetFace);
-            state.rolling = true;
-            state.animationTime = 0;
+            Die.setupReroll(state);
         }
 
         // Clear UI-only trays
@@ -326,11 +316,7 @@ const DiceSystem = {
 
         for (const dieIndex of modal.selectedDice) {
             const state = this.state.diceStates[dieIndex];
-            state.rollAxis = Die.getRandomAxis();
-            state.targetFace = Math.floor(Math.random() * 6);
-            Die.setTargetRotationForFace(state, state.targetFace);
-            state.rolling = true;
-            state.animationTime = 0;
+            Die.setupReroll(state);
         }
 
         CombatManager.state.rerollingDice = modal.selectedDice.slice();

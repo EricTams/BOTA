@@ -13,7 +13,6 @@ const CombatManager = {
         dice: [], // Array of die objects from dice_data.js
         diceStates: [], // Animation states for each die (UI only)
         rerollTray: [], // Indices of dice in reroll tray (test mode UI only)
-        draggedDieIndex: null, // Currently dragged die (UI only)
         dragOffset: { x: 0, y: 0 }, // Offset for drag rendering (UI only)
         rollsAvailable: 1, // Number of rerolls remaining (test mode UI only)
         hoveredButton: null, // Which button is hovered (UI only)
@@ -54,19 +53,7 @@ const CombatManager = {
         
         for (let i = 0; i < this.ui.diceStates.length; i++) {
             const state = this.ui.diceStates[i];
-            
-            // Generate a unique random axis for THIS die
-            state.rollAxis = Die.getRandomAxis();
-            
-            // Step 1: Choose the final face randomly for THIS die
-            state.targetFace = Math.floor(Math.random() * 6);
-            
-            // Step 2: Set target rotation for that face (where we'll be at t=0.0)
-            Die.setTargetRotationForFace(state, state.targetFace);
-            
-            // Step 3: Start the backwards animation
-            state.rolling = true;
-            state.animationTime = 0;
+            Die.setupReroll(state);
         }
         
         // Populate rolled dice pool after animation completes

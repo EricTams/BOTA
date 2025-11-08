@@ -13,7 +13,26 @@ const LoadingScreen = {
     // IMPORTANT: Use the date from the user's local system timezone, not UTC or server time
     changelog: [
         {
-            version: 'November 8, 2025',
+            version: 'November 8, 2025 (Part 2)',
+            date: 'November 8, 2025',
+            changes: [
+                { category: 'Added', text: 'Reusable UI element components for combat screens (elements/ folder)' },
+                { category: 'Added', text: 'Panel component for consistent canvas-based UI rendering' },
+                { category: 'Added', text: 'Combat UI elements: buttons, log, ability panel, unit panel, tooltips' },
+                { category: 'Added', text: 'Dice reroll UI: modal, tray, rolling box components' },
+                { category: 'Added', text: 'Unit selection dialog for choosing combat participants' },
+                { category: 'Improved', text: 'Combat UI now uses modular, reusable components' },
+                { category: 'Improved', text: 'Panel rendering is now consistent across all UI elements' },
+                { category: 'Improved', text: 'Better separation of concerns between UI rendering and game logic' },
+                { category: 'Changed', text: 'Refactored combat UI into separate element modules' },
+                { category: 'Changed', text: 'Button component now supports text-only buttons' },
+                { category: 'Technical', text: 'Created src/elements/ directory for reusable UI elements' },
+                { category: 'Technical', text: 'Created src/components/panel.js for consistent panel rendering' },
+                { category: 'Technical', text: 'All UI elements follow consistent API: init(), render(), handleClick()' }
+            ]
+        },
+        {
+            version: 'November 8, 2025 (Part 1)',
             date: 'November 8, 2025',
             changes: [
                 { category: 'Added', text: 'Combat effects system for visual feedback (damage, heal, dodge, telekinesis)' },

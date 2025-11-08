@@ -102,6 +102,29 @@ const Die = {
         state.targetRotationY = rotation.y;
         state.targetRotationZ = rotation.z + randomZRotation;
     },
+    
+    /**
+     * Set up a die for reroll animation
+     * @param {Object} state - Die state object
+     * @returns {number} The target face that will be shown
+     */
+    setupReroll(state) {
+        // Choose random target face
+        const targetFace = Math.floor(Math.random() * 6);
+        
+        // Generate random rotation axis (must be object with x, y, z for rendering)
+        state.rollAxis = this.getRandomAxis();
+        
+        // Set target rotation for the chosen face
+        this.setTargetRotationForFace(state, targetFace);
+        
+        // Set up animation state
+        state.rolling = true;
+        state.targetFace = targetFace;
+        state.animationTime = 0.0;
+        
+        return targetFace;
+    },
     // Draw a single die face (background + border + icon)
     drawDieFace(ctx, face, x, y, size, isSmall, colors) {
         // Background

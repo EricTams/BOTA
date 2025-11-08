@@ -129,28 +129,8 @@ const CombatUI = {
             
             // Reroll selected dice
             for (const dieIndex of modal.selectedDice) {
-                const die = this.ui.dice[dieIndex];
                 const state = this.ui.diceStates[dieIndex];
-                
-                // Choose random face
-                const targetFace = Math.floor(Math.random() * 6);
-                
-                // Choose random rotation axis
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.random() * Math.PI;
-                state.rollAxis = [
-                    Math.sin(phi) * Math.cos(theta),
-                    Math.sin(phi) * Math.sin(theta),
-                    Math.cos(phi)
-                ];
-                
-                // Calculate target rotation to show the chosen face
-                Die.setTargetRotationForFace(state, targetFace);
-                
-                // Set up animation state
-                state.rolling = true;
-                state.targetFace = targetFace;
-                state.animationTime = 0.0; // Start at 0.0 (will increment to 0.7s)
+                Die.setupReroll(state);
             }
             
             // Wait for animation to complete, then update rolled dice pool
@@ -164,74 +144,13 @@ const CombatUI = {
 
         // Check if clicking on expanded ability panel buttons
     checkExpandedAbilityClick(mousePos, canvas) {
-        CombatManager.ensureState();
-        // Don't handle expanded ability clicks if in targeting mode (targeting takes priority)
-        if (CombatManager.state.targetingMode) return false;
-        
-        const expanded = CombatManager.state.expandedAbility;
-        if (!expanded) return false;
-        
-        const panelWidth = 500;
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = 480;
-        const centerX = panelX + panelWidth / 2;
-        
-        // Check if clicking on power-up slots to remove them
-        const maxSlots = expanded.ability.powerUpSlots || 0;
-        const slotSize = 40;
-        const slotSpacing = 10;
-        const totalSlotsWidth = maxSlots * (slotSize + slotSpacing) - slotSpacing;
-        const slotsX = centerX - totalSlotsWidth / 2;
-        const slotsY = panelY + 120;
-        
-        for (let i = 0; i < expanded.powerUpDice.length; i++) {
-            const x = slotsX + i * (slotSize + slotSpacing);
-            
-            if (mousePos.x >= x && mousePos.x <= x + slotSize &&
-                mousePos.y >= slotsY && mousePos.y <= slotsY + slotSize) {
-                // Remove this power-up die
-                expanded.powerUpDice.splice(i, 1);
-                return true;
-            }
-        }
-        
-        // Check buttons using stored bounds (more robust after refactors)
-        const ds = window.DiceSystem;
-        const btns = ds && ds.state ? ds.state._expandedButtons : null;
-        const buttonY = panelY + 210;
-        const buttonWidth = 100;
-        const buttonHeight = 35;
-        const buttonSpacing = 15;
-        const cancelX = centerX - buttonWidth * 1.5 - buttonSpacing;
-        const executeX = centerX - buttonWidth / 2;
-
-        const hit = (bounds) => bounds && mousePos.x >= bounds.x && mousePos.x <= bounds.x + bounds.width &&
-                                 mousePos.y >= bounds.y && mousePos.y <= bounds.y + bounds.height;
-        if (hit(btns?.cancel) || (mousePos.x >= cancelX && mousePos.x <= cancelX + buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight)) {
-            // Cancel targeting mode if active, otherwise cancel expanded ability
-            CombatManager.ensureState();
-            if (CombatManager.state.targetingMode) {
-                CombatManager.state.targetingMode = null;
-            } else {
-                this.cancelExpandedAbility();
-            }
-            return true;
-        }
-        if (hit(btns?.execute) || (mousePos.x >= executeX && mousePos.x <= executeX + buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight)) {
-            CombatManager.ensureState();
-            // If in targeting mode, cancel targeting
-            if (CombatManager.state.targetingMode) {
-                CombatManager.state.targetingMode = null;
-                return true;
-            }
-            // Otherwise execute (which may enter targeting mode)
-            this.executeExpandedAbility();
-            return true;
-        }
-        
-        return false;
+        // Delegate to ExpandedAbilityPanel component
+        return ExpandedAbilityPanel.handleClick(
+            mousePos, 
+            canvas,
+            () => this.cancelExpandedAbility(),
+            () => this.executeExpandedAbility()
+        );
     },
 
     // Toggle die selection (old system - keeping for compatibility) in the pool
@@ -857,171 +776,18 @@ const CombatUI = {
     },
 
     renderExpandedAbility(ctx, canvas) {
-        const expanded = CombatManager.state.expandedAbility;
-        if (!expanded) return;
+        // Delegate to ExpandedAbilityPanel component
+        const DS = window.DiceSystem;
+        if (!DS) return;
         
-        const panelWidth = 500;
-        const panelHeight = 260; // Increased height to fit everything
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = 480; // Position below rolling box, above reroll tray
-        
-        // Draw semi-transparent backdrop over everything except the rolling box
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        
-        // Darken top area (above rolling box)
-        ctx.fillRect(0, 0, canvas.width, CombatUI.layout.rollingBoxY);
-        
-        // Darken bottom area (below rolling box)
-        const rollingBoxBottom = CombatUI.layout.rollingBoxY + CombatUI.layout.rollingBoxHeight;
-        ctx.fillRect(0, rollingBoxBottom, canvas.width, canvas.height - rollingBoxBottom);
-        
-        // Draw panel background
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-        
-        // Draw panel border with glow
-        ctx.strokeStyle = '#00FFFF';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#00FFFF';
-        ctx.shadowBlur = 20;
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.shadowBlur = 0;
-        
-        const centerX = panelX + panelWidth / 2;
-        
-        // Draw the main die's face icon - larger and not darkened
-        const mainDie = CombatManager.state.rolledDice[expanded.dieIndex];
-        if (mainDie && mainDie.face && mainDie.face.icon) {
-            const iconSize = 70; // Slightly smaller to fit better
-            const iconX = panelX + 15;
-            const iconY = panelY + 15;
-            
-            // Draw the die face at full brightness
-            const texture = this.faceTextures[expanded.dieIndex][mainDie.faceIndex];
-            if (texture) {
-                ctx.save();
-                ctx.drawImage(texture, iconX, iconY, iconSize, iconSize);
-                ctx.restore();
-                
-                // Draw border around it
-                ctx.strokeStyle = '#00FFFF';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(iconX, iconY, iconSize, iconSize);
-            }
-        }
-        
-        // Draw ability name (shifted right to make room for icon)
-        ctx.fillStyle = '#00FFFF';
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'left';
-        const textX = panelX + 100;
-        ctx.fillText(expanded.ability.displayName, textX, panelY + 40);
-        
-        // Draw calculated result with formula below ability name
-        const filledSlots = expanded.powerUpDice.length;
-        const formattedAbility = formatAbilityDescription(expanded.ability, filledSlots);
-        
-        ctx.fillStyle = '#FFFF88';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText(formattedAbility.description, textX, panelY + 65);
-        
-        // Draw power-up slots
-        const maxSlots = expanded.ability.powerUpSlots || 0;
-        const slotSize = 40;
-        const slotSpacing = 10;
-        const totalSlotsWidth = maxSlots * (slotSize + slotSpacing) - slotSpacing;
-        const slotsX = centerX - totalSlotsWidth / 2;
-        const slotsY = panelY + 120;
-        
-        if (maxSlots > 0) {
-            ctx.font = '12px Arial';
-            ctx.fillStyle = '#AAAAAA';
-            ctx.textAlign = 'center';
-            ctx.fillText('Power-Up Slots:', centerX, slotsY - 5);
-        }
-        
-        for (let i = 0; i < maxSlots; i++) {
-            const x = slotsX + i * (slotSize + slotSpacing);
-            const filled = i < filledSlots;
-            const color = expanded.ability.powerUpColors && expanded.ability.powerUpColors[i];
-            
-            // Draw slot background
-            if (filled) {
-                ctx.fillStyle = this.colors[color + 'Light'] || this.colors[color] || '#666666';
-            } else {
-                ctx.fillStyle = '#2a2a2a';
-            }
-            ctx.fillRect(x, slotsY, slotSize, slotSize);
-            
-            // Draw slot border
-            ctx.strokeStyle = filled ? '#FFD700' : '#444444';
-            ctx.lineWidth = filled ? 3 : 2;
-            ctx.strokeRect(x, slotsY, slotSize, slotSize);
-            
-            // Draw die face icon if filled
-            if (filled && expanded.powerUpDice[i] !== undefined) {
-                const powerUpDieIdx = expanded.powerUpDice[i];
-                const powerUpDie = CombatManager.state.rolledDice[powerUpDieIdx];
-                
-                if (powerUpDie && powerUpDie.face && powerUpDie.face.icon) {
-                    // Draw the icon from the face texture
-                    const texture = this.faceTextures[powerUpDieIdx][powerUpDie.faceIndex];
-                    if (texture) {
-                        ctx.save();
-                        // Scale down the texture to fit in the slot
-                        ctx.drawImage(texture, x, slotsY, slotSize, slotSize);
-                        ctx.restore();
-                    }
-                }
-            }
-        }
-        
-        // Draw instructions
-        ctx.font = '14px Arial';
-        ctx.fillStyle = '#CCCCCC';
-        ctx.textAlign = 'center';
-        ctx.fillText('Click other dice to add power-ups', centerX, panelY + 185);
-        
-        // Draw buttons
-        const buttonY = panelY + 210;
-        const buttonWidth = 100;
-        const buttonHeight = 35;
-        const buttonSpacing = 15;
-        
-        const cancelX = centerX - buttonWidth * 1.5 - buttonSpacing;
-        const executeX = centerX - buttonWidth / 2;
-        
-        // Cancel button
-        ctx.fillStyle = '#AA4444';
-        ctx.fillRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = '#FF6666';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText('Cancel', cancelX + buttonWidth / 2, buttonY + 23);
-        
-        // Execute button
-        ctx.fillStyle = '#44AA44';
-        ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = '#66FF66';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText('Execute', executeX + buttonWidth / 2, buttonY + 23);
-
-        // Store clickable bounds for panel buttons to ensure clicks are detected
-        const ds = window.DiceSystem;
-        if (ds && ds.state) {
-            if (!ds.state._expandedButtons) ds.state._expandedButtons = {};
-            ds.state._expandedButtons.cancel = { x: cancelX, y: buttonY, width: buttonWidth, height: buttonHeight };
-            ds.state._expandedButtons.execute = { x: executeX, y: buttonY, width: buttonWidth, height: buttonHeight };
-        }
-        
-        ctx.restore();
-        ctx.textAlign = 'left'; // Reset
+        ExpandedAbilityPanel.render(
+            ctx, 
+            canvas, 
+            CombatManager.state.expandedAbility, 
+            this.faceTextures,
+            CombatUI.layout,
+            DS.colors
+        );
     },
 
     // Update animations
@@ -1095,11 +861,6 @@ const CombatUI = {
             CombatUI.render(ctx, canvas);
         }
 
-        // Draw dragged die if any
-        if (this.ui.draggedDieIndex !== null) {
-            CombatUI.renderDraggedDie(ctx);
-        }
-
         // Draw combat UI if in combat mode
         if (this.ui.combatMode && Combat.state.active) {
             CombatUI.render(ctx, canvas);
@@ -1158,24 +919,6 @@ const CombatUI = {
     // drawTexturedQuad now handled in Die module
 
     // drawTexturedTriangle now handled in Die module
-
-    // Draw dragged die
-    renderDraggedDie(ctx) {
-        const dieIdx = this.ui.draggedDieIndex;
-        const die = this.ui.dice[dieIdx];
-        const state = this.ui.diceStates[dieIdx];
-        const mousePos = Input.getMousePosition();
-        
-        if (mousePos) {
-            const x = mousePos.x + this.ui.dragOffset.x;
-            const y = mousePos.y + this.ui.dragOffset.y;
-            
-            ctx.save();
-            ctx.globalAlpha = 0.7;
-            this.drawPerspectiveDie(ctx, die, x, y, CombatUI.layout.dieSize, state, dieIdx);
-            ctx.restore();
-        }
-    },
 
     // Draw an icon (vector art) - delegates to DiceIcons module
     drawIcon(ctx, iconName, x, y, size) {
@@ -1280,172 +1023,10 @@ const CombatUI = {
     
     // Render unit selection dialog
     renderUnitSelectionDialog(ctx, canvas) {
-        const dialog = window.DiceSystem.state.unitSelectionDialog;
-        if (!dialog) return;
+        // Delegate to UnitSelectionDialog component
+        if (!window.DiceSystem || !window.DiceSystem.state.unitSelectionDialog) return;
         
-        const side = dialog.side;
-        const panelWidth = 600;
-        const panelHeight = 500;
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = (canvas.height - panelHeight) / 2;
-        
-        dialog.bounds = { x: panelX, y: panelY, width: panelWidth, height: panelHeight };
-        
-        // Darken background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        // Panel background
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.95)';
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-        
-        // Panel border
-        ctx.strokeStyle = side === 'player' ? '#44CCFF' : '#FF8844';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = side === 'player' ? '#44CCFF' : '#FF8844';
-        ctx.shadowBlur = 15;
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.shadowBlur = 0;
-        
-        // Title
-        ctx.fillStyle = side === 'player' ? '#44CCFF' : '#FF8844';
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Add Unit to ${side === 'player' ? 'Player' : 'Enemy'} Side`, panelX + panelWidth / 2, panelY + 35);
-        
-        // Categories
-        const categories = [
-            { name: 'Captains', items: getAllCaptains(), type: 'captain' },
-            { name: 'Crew Types', items: getAllCrew().filter(c => c.id !== 'crew'), type: 'crew' },
-            { name: 'Ships', items: getAllShips(), type: 'ship' }
-        ];
-        
-        let yOffset = 70;
-        const itemHeight = 50;
-        const scrollY = dialog.scrollY || 0;
-        const visibleHeight = panelHeight - 120;
-        
-        dialog.itemBounds = [];
-        
-        for (const category of categories) {
-            // Category header
-            ctx.fillStyle = '#CCCCCC';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(category.name, panelX + 20, panelY + yOffset - scrollY);
-            yOffset += 25;
-            
-            // Category items
-            for (const item of category.items) {
-                const itemY = panelY + yOffset - scrollY;
-                
-                // Skip if outside visible area
-                if (itemY < panelY + 60 || itemY > panelY + panelHeight - 60) {
-                    yOffset += itemHeight;
-                    continue;
-                }
-                
-                const itemBounds = {
-                    x: panelX + 20,
-                    y: itemY,
-                    width: panelWidth - 40,
-                    height: itemHeight - 5,
-                    item: item,
-                    type: category.type
-                };
-                dialog.itemBounds.push(itemBounds);
-                
-                // Item background
-                ctx.fillStyle = 'rgba(40, 40, 40, 0.8)';
-                ctx.fillRect(itemBounds.x, itemBounds.y, itemBounds.width, itemBounds.height);
-                
-                // Item border
-                ctx.strokeStyle = '#666666';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(itemBounds.x, itemBounds.y, itemBounds.width, itemBounds.height);
-                
-                // Item name
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 14px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText(item.name, itemBounds.x + 10, itemBounds.y + 20);
-                
-                // Item description
-                if (item.description) {
-                    ctx.fillStyle = '#AAAAAA';
-                    ctx.font = '12px Arial';
-                    ctx.fillText(item.description, itemBounds.x + 10, itemBounds.y + 38);
-                }
-                
-                yOffset += itemHeight;
-            }
-            
-            yOffset += 10; // Spacing between categories
-        }
-        
-        dialog.totalHeight = yOffset;
-        const contentHeight = dialog.totalHeight;
-        const maxScroll = Math.max(0, contentHeight - visibleHeight);
-        
-        // Clamp scroll position
-        if (scrollY < 0) dialog.scrollY = 0;
-        if (scrollY > maxScroll) dialog.scrollY = maxScroll;
-        
-        // Draw scrollbar if content exceeds visible area
-        if (contentHeight > visibleHeight) {
-            const scrollbarWidth = 20;
-            const scrollbarX = panelX + panelWidth - scrollbarWidth - 5;
-            const scrollbarTrackY = panelY + 60;
-            const scrollbarTrackHeight = visibleHeight;
-            
-            // Scrollbar track
-            ctx.fillStyle = 'rgba(40, 40, 40, 0.8)';
-            ctx.fillRect(scrollbarX, scrollbarTrackY, scrollbarWidth, scrollbarTrackHeight);
-            ctx.strokeStyle = '#666666';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(scrollbarX, scrollbarTrackY, scrollbarWidth, scrollbarTrackHeight);
-            
-            // Scrollbar thumb
-            const thumbHeight = Math.max(30, (visibleHeight / contentHeight) * scrollbarTrackHeight);
-            const thumbY = scrollbarTrackY + (scrollY / maxScroll) * (scrollbarTrackHeight - thumbHeight);
-            
-            dialog.scrollbarBounds = {
-                x: scrollbarX,
-                y: scrollbarTrackY,
-                width: scrollbarWidth,
-                height: scrollbarTrackHeight,
-                thumbY: thumbY,
-                thumbHeight: thumbHeight
-            };
-            
-            ctx.fillStyle = '#888888';
-            ctx.fillRect(scrollbarX + 2, thumbY, scrollbarWidth - 4, thumbHeight);
-            ctx.strokeStyle = '#AAAAAA';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(scrollbarX + 2, thumbY, scrollbarWidth - 4, thumbHeight);
-        } else {
-            dialog.scrollbarBounds = null;
-        }
-        
-        // Close button
-        const closeButtonWidth = 100;
-        const closeButtonHeight = 35;
-        const closeButtonX = panelX + panelWidth / 2 - closeButtonWidth / 2;
-        const closeButtonY = panelY + panelHeight - 50;
-        
-        dialog.closeButton = { x: closeButtonX, y: closeButtonY, width: closeButtonWidth, height: closeButtonHeight };
-        
-        ctx.fillStyle = '#663333';
-        ctx.fillRect(closeButtonX, closeButtonY, closeButtonWidth, closeButtonHeight);
-        ctx.strokeStyle = '#FF8888';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(closeButtonX, closeButtonY, closeButtonWidth, closeButtonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Close', closeButtonX + closeButtonWidth / 2, closeButtonY + 23);
-        
-        ctx.textAlign = 'left';
+        UnitSelectionDialog.render(ctx, canvas, window.DiceSystem.state.unitSelectionDialog);
     },
     
     // Render + button for adding units
@@ -1453,208 +1034,30 @@ const CombatUI = {
         const buttonSize = 50;
         const buttonX = x + 95; // Center in panel width (240)
         
+        // Use Button component to draw + button
+        const bounds = Button.drawAddButton(ctx, buttonX, y, buttonSize, enabled);
+        
         // Store bounds for click detection
         if (!window.DiceSystem.state._addButtonBounds) {
             window.DiceSystem.state._addButtonBounds = {};
         }
         const key = isPlayer ? 'player' : 'enemy';
         window.DiceSystem.state._addButtonBounds[key] = {
-            x: buttonX,
-            y: y,
-            width: buttonSize,
-            height: buttonSize,
+            ...bounds,
             side: isPlayer ? 'player' : 'enemy'
         };
-        
-        // Draw + button
-        ctx.fillStyle = enabled ? '#44AA44' : '#333333';
-        ctx.fillRect(buttonX, y, buttonSize, buttonSize);
-        ctx.strokeStyle = enabled ? '#66FF66' : '#555555';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(buttonX, y, buttonSize, buttonSize);
-        
-        // Draw + symbol
-        if (enabled) {
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            // Horizontal line
-            ctx.moveTo(buttonX + 12, y + buttonSize / 2);
-            ctx.lineTo(buttonX + buttonSize - 12, y + buttonSize / 2);
-            // Vertical line
-            ctx.moveTo(buttonX + buttonSize / 2, y + 12);
-            ctx.lineTo(buttonX + buttonSize / 2, y + buttonSize - 12);
-            ctx.stroke();
-        }
     },
     
-    // Render the rolling box with 3D dice (delegates actual dice rendering to DiceSystem)
+    // Render the rolling box with 3D dice
     renderRollingBox(ctx, canvas) {
-        if (!window.DiceSystem) return;
-        
-        const layout = CombatUI.layout;
-        const centerX = canvas.width / 2;
-        const boxX = centerX - layout.rollingBoxWidth / 2;
-        const boxY = layout.rollingBoxY;
-
-        // Draw box background
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(boxX, boxY, layout.rollingBoxWidth, layout.rollingBoxHeight);
-        
-        // Draw box border
-        ctx.strokeStyle = '#555555';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(boxX, boxY, layout.rollingBoxWidth, layout.rollingBoxHeight);
-
-        // Draw label (removed help text)
-        ctx.textAlign = 'left';
-
-        // Draw dice in a grid (up to 2 rows) - delegate to DiceSystem for actual 3D rendering
-        const testState = window.DiceSystem.state;
-        const numDice = testState.dice.length;
-        const dicePerRow = layout.dicePerRow;
-        const rows = Math.ceil(numDice / dicePerRow);
-        
-        // Calculate grid dimensions
-        const diceInFirstRow = Math.min(numDice, dicePerRow);
-        const diceInSecondRow = Math.max(0, numDice - dicePerRow);
-        
-        for (let i = 0; i < numDice; i++) {
-            const die = testState.dice[i];
-            const state = testState.diceStates[i];
-            
-            // Determine which row and column
-            const row = Math.floor(i / dicePerRow);
-            const col = i % dicePerRow;
-            const diceInThisRow = (row === 0) ? diceInFirstRow : diceInSecondRow;
-            
-            // Center each row independently
-            const rowWidth = diceInThisRow * layout.dieSize + (diceInThisRow - 1) * layout.dieSpacing;
-            const rowStartX = centerX - rowWidth / 2 + layout.dieSize / 2;
-            
-            // Calculate position
-            const dieX = rowStartX + col * (layout.dieSize + layout.dieSpacing);
-            const rowSpacing = 120; // Space between rows
-            const firstRowY = (rows === 1) ? boxY + layout.rollingBoxHeight / 2 : boxY + 90;
-            const diceY = firstRowY + row * rowSpacing;
-            
-            // Check if this die is part of the expanded ability
-            const rolledDie = (window.CombatManager?.state?.rolledDice || []).find(rd => rd.dieIndex === i);
-            const expanded = testState.expandedAbility;
-            const isMainDie = expanded && i === expanded.dieIndex;
-            const isPowerUpDie = expanded && expanded.powerUpDice.includes(i);
-            const isAssigned = rolledDie && rolledDie.assigned;
-            const notRolledYet = (window.CombatManager?.state?.rolledDice || []).length === 0; // No dice rolled this turn
-            
-            // Main die or power-up dice should have borders
-            if (isMainDie) {
-                ctx.save();
-                const borderSize = layout.dieSize * 1.4;
-                
-                // Main die: bright cyan border with strong glow - VERY distinct
-                ctx.strokeStyle = '#00FFFF';
-                ctx.lineWidth = 6;
-                ctx.shadowColor = '#00FFFF';
-                ctx.shadowBlur = 20;
-                
-                ctx.strokeRect(dieX - borderSize / 2, diceY - borderSize / 2, borderSize, borderSize);
-                
-                // Add second inner border for extra emphasis
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 2;
-                ctx.shadowBlur = 0;
-                const innerBorder = layout.dieSize * 1.2;
-                ctx.strokeRect(dieX - innerBorder / 2, diceY - innerBorder / 2, innerBorder, innerBorder);
-                
-                ctx.restore();
-            } else if (isPowerUpDie) {
-                ctx.save();
-                const borderSize = layout.dieSize * 1.4;
-                
-                // Power-up die: gold border with strong glow (matching main die emphasis)
-                ctx.strokeStyle = '#FFD700';
-                ctx.lineWidth = 6;
-                ctx.shadowColor = '#FFD700';
-                ctx.shadowBlur = 20;
-                
-                ctx.strokeRect(dieX - borderSize / 2, diceY - borderSize / 2, borderSize, borderSize);
-                
-                // Add second inner border for extra emphasis
-                ctx.strokeStyle = '#FFFF00'; // Bright yellow inner
-                ctx.lineWidth = 2;
-                ctx.shadowBlur = 0;
-                const innerBorder = layout.dieSize * 1.2;
-                ctx.strokeRect(dieX - innerBorder / 2, diceY - innerBorder / 2, innerBorder, innerBorder);
-                
-                ctx.restore();
-            } else if (isAssigned) {
-                ctx.save();
-                const borderSize = layout.dieSize * 1.3;
-                
-                // Assigned die: dark gray border
-                ctx.strokeStyle = '#444444';
-                ctx.lineWidth = 3;
-                
-                ctx.strokeRect(dieX - borderSize / 2, diceY - borderSize / 2, borderSize, borderSize);
-                ctx.restore();
-            }
-            
-            // Darken main die (currently being used), assigned dice, OR not rolled yet
-            if ((isMainDie || isAssigned || notRolledYet) && !isPowerUpDie) {
-                ctx.save();
-                ctx.filter = 'brightness(0.4) saturate(0.3)';
-            }
-            
-            // Delegate to DiceSystem for actual 3D die rendering
-            window.DiceSystem.drawPerspectiveDie(ctx, die, dieX, diceY + state.yOffset, 
-                                    layout.dieSize, state, i);
-            
-            if ((isMainDie || isAssigned || notRolledYet) && !isPowerUpDie) {
-                ctx.restore();
-            }
-        }
+        // Delegate to RollingBox element
+        RollingBox.render(ctx, canvas, CombatUI.layout);
     },
     
     // Render reroll tray (for non-combat dice test mode)
     renderRerollTray(ctx, canvas) {
-        if (!window.DiceSystem) return;
-        
-        const layout = CombatUI.layout;
-        const testState = window.DiceSystem.state;
-        const centerX = canvas.width / 2;
-        const trayX = centerX - layout.rollingBoxWidth / 2;
-        const trayY = layout.rerollTrayY;
-
-        // Draw tray background
-        ctx.fillStyle = '#3a3a2a';
-        ctx.fillRect(trayX, trayY, layout.rerollTrayWidth, layout.rerollTrayHeight);
-        
-        // Draw tray border
-        ctx.strokeStyle = '#777755';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([5, 5]);
-        ctx.strokeRect(trayX, trayY, layout.rerollTrayWidth, layout.rerollTrayHeight);
-        ctx.setLineDash([]);
-
-        // Draw label
-        ctx.fillStyle = '#999977';
-        ctx.font = '16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Reroll Tray', trayX + layout.rerollTrayWidth / 2, trayY - 8);
-        ctx.textAlign = 'left';
-
-        // Draw dice in tray (small) - delegate to DiceSystem for 3D rendering
-        const trayDiceSize = 50;
-        const trayDiceSpacing = 60;
-        for (let i = 0; i < testState.rerollTray.length; i++) {
-            const dieIdx = testState.rerollTray[i];
-            const die = testState.dice[dieIdx];
-            const state = testState.diceStates[dieIdx];
-            const x = trayX + 30 + i * trayDiceSpacing;
-            const y = trayY + layout.rerollTrayHeight / 2;
-            
-            window.DiceSystem.drawPerspectiveDie(ctx, die, x, y, trayDiceSize, state, dieIdx);
-        }
+        // Delegate to RerollTray element
+        RerollTray.render(ctx, canvas, CombatUI.layout);
     },
     
     // Render test mode buttons (non-combat)
@@ -1687,163 +1090,10 @@ const CombatUI = {
     
     // Render darkening overlay and expanded unit panel with unwrapped dice
     renderExpandedUnitOverlay(ctx, canvas) {
+        // Delegate to ExpandedUnitPanel component
         if (!window.DiceSystem) return;
         
-        const testState = window.DiceSystem.state;
-        const layout = CombatUI.layout;
-        const expanded = testState.expandedUnitPanel;
-        if (!expanded) return;
-        
-        // Map unitId to the correct unit
-        let unit = null;
-        let isPlayer = false;
-        
-        // First try to find by unit ID in arrays (for dynamically added units)
-        for (const u of Combat.state.playerUnits) {
-            if (u.id === expanded.unitId) {
-                unit = u;
-                isPlayer = true;
-                break;
-            }
-        }
-        
-        if (!unit) {
-            for (const u of Combat.state.enemyUnits) {
-                if (u.id === expanded.unitId) {
-                    unit = u;
-                    isPlayer = false;
-                    break;
-                }
-            }
-        }
-        
-        // Fallback to legacy hardcoded IDs for backward compatibility
-        if (!unit) {
-            switch (expanded.unitId) {
-                case 'player_captain':
-                case 'player':
-                    // First player unit is the captain
-                    unit = Combat.state.playerUnits.length > 0 ? Combat.state.playerUnits[0] : null;
-                    isPlayer = true;
-                    break;
-                case 'player_crew':
-                    // Find first crew unit on player side
-                    unit = Combat.state.playerUnits.find(u => u.id.includes('crew')) || null;
-                    isPlayer = true;
-                    break;
-                case 'enemy_captain':
-                case 'enemy':
-                    // First enemy unit is the captain
-                    unit = Combat.state.enemyUnits.length > 0 ? Combat.state.enemyUnits[0] : null;
-                    isPlayer = false;
-                    break;
-                case 'enemy_crew':
-                    // Find first crew unit on enemy side
-                    unit = Combat.state.enemyUnits.find(u => u.id.includes('crew')) || null;
-                    isPlayer = false;
-                    break;
-                default:
-                    console.warn('Unknown unitId:', expanded.unitId);
-                    return;
-            }
-        }
-        
-        if (!unit) return;
-        
-        // Use dice stored in the unit (from Combat.createUnit)
-        const diceNames = unit.dice;
-        if (!diceNames || diceNames.length === 0) {
-            console.warn('No dice found for unit:', unit.id);
-            return;
-        }
-        
-        // Full screen darkening overlay for modal effect
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.restore();
-        
-        // Draw the expanded panel background
-        const panelWidth = 700;
-        const panelHeight = 400;
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = (canvas.height - panelHeight) / 2;
-        
-        // Store panel bounds for click detection
-        expanded.bounds = { x: panelX, y: panelY, width: panelWidth, height: panelHeight };
-        
-        // Panel background
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.95)';
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-        
-        // Panel border with glow
-        ctx.save();
-        ctx.strokeStyle = isPlayer ? '#44CCFF' : '#FF8844';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = isPlayer ? '#44CCFF' : '#FF8844';
-        ctx.shadowBlur = 15;
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-        
-        // Panel title
-        ctx.fillStyle = isPlayer ? '#44CCFF' : '#FF8844';
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${unit.name}'s Dice`, panelX + panelWidth / 2, panelY + 35);
-        ctx.textAlign = 'left';
-        
-        // Draw unwrapped dice
-        const diceStartY = panelY + 60;
-        const faceSize = 60;
-        const faceSpacing = 10;
-        
-        diceNames.forEach((diceName, dieIdx) => {
-            const die = DiceData[diceName];
-            if (!die) {
-                console.warn('Die not found in DiceData:', diceName);
-                return;
-            }
-            
-            const dieY = diceStartY + dieIdx * (faceSize + 50);
-            
-            // Die name
-            ctx.fillStyle = '#CCCCCC';
-            ctx.font = 'bold 14px Arial';
-            ctx.textAlign = 'left';
-            ctx.fillText(die.name, panelX + 20, dieY - 5);
-            
-            // Draw all 6 faces in a row
-            const totalWidth = 6 * faceSize + 5 * faceSpacing;
-            const facesStartX = panelX + (panelWidth - totalWidth) / 2;
-            
-            for (let faceIdx = 0; faceIdx < die.faces.length; faceIdx++) {
-                const face = die.faces[faceIdx];
-                const faceX = facesStartX + faceIdx * (faceSize + faceSpacing);
-                
-                // Store face bounds for hover detection
-                if (!expanded.faceBounds) expanded.faceBounds = [];
-                expanded.faceBounds.push({
-                    x: faceX,
-                    y: dieY,
-                    width: faceSize,
-                    height: faceSize,
-                    dieIndex: dieIdx,
-                    faceIndex: faceIdx,
-                    diceName: diceName
-                });
-                
-                // Delegate to DiceSystem for drawing the die face
-                window.DiceSystem.drawDieFace(ctx, face, faceX, dieY, faceSize, false);
-            }
-        });
-        
-        // "Close" instruction
-        ctx.fillStyle = '#999999';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Click outside to close', panelX + panelWidth / 2, panelY + panelHeight - 15);
-        ctx.textAlign = 'left';
+        ExpandedUnitPanel.render(ctx, canvas, window.DiceSystem.state.expandedUnitPanel);
     },
 
     // Render the entire test screen (non-combat): background, title, unwrapped, tray, buttons
@@ -1866,464 +1116,29 @@ const CombatUI = {
         this.renderTestButtons(ctx, canvas);
     },
 
-    // Draw dragged die overlay (if any)
-    renderDraggedDie(ctx) {
-        if (!window.DiceSystem) return;
-        const DS = window.DiceSystem;
-        const dieIdx = DS.state.draggedDieIndex;
-        if (dieIdx === null || dieIdx === undefined) return;
-        const die = DS.state.dice[dieIdx];
-        const state = DS.state.diceStates[dieIdx];
-        const mousePos = Input.getMousePosition();
-        if (!mousePos) return;
-        const x = mousePos.x + DS.state.dragOffset.x;
-        const y = mousePos.y + DS.state.dragOffset.y;
-        ctx.save();
-        ctx.globalAlpha = 0.7;
-        DS.drawPerspectiveDie(ctx, die, x, y, DS.layout.dieSize, state, dieIdx);
-        ctx.restore();
-    },
-
     // Tooltip renderer (topmost)
     renderTooltip(ctx, canvas) {
+        // Delegate to Tooltip component
         if (!window.DiceSystem) return;
-        const DS = window.DiceSystem;
-        const tooltip = DS.state.tooltip;
-        if (!tooltip || !tooltip.visible) return;
-        let ability;
-        let face;
-        if (tooltip.source === 'status_effect') {
-            ability = getAbilityData(tooltip.abilityIcon);
-            if (!ability) return;
-        } else if (tooltip.source === 'expanded_unit_panel') {
-            if (DS.state.expandedUnitPanel && DS.state.expandedUnitPanel.faceBounds) {
-                const fb = DS.state.expandedUnitPanel.faceBounds.find(b => b.dieIndex === tooltip.dieIndex && b.faceIndex === tooltip.faceIndex);
-                if (fb) {
-                    const die = DiceData[fb.diceName];
-                    if (die) {
-                        face = die.faces[tooltip.faceIndex];
-                        if (face && face.icon) ability = getAbilityData(face.icon);
-                    }
-                }
-            }
-            if (!ability) return;
-        } else {
-            if (tooltip.dieIndex === null || tooltip.dieIndex < 0) return;
-            const die = DS.state.dice[tooltip.dieIndex];
-            face = die.faces[tooltip.faceIndex];
-            if (!face.icon) return;
-            ability = getAbilityData(face.icon);
-            if (!ability) return;
-        }
-        const filledCount = tooltip.filledSlots.filter(f => f).length;
-        const formatted = formatAbilityDescription(ability, filledCount);
-        const calc = formatted.calculation;
-        ctx.font = 'bold 16px Arial';
-        const titleWidth = ctx.measureText(ability.displayName).width;
-        ctx.font = '14px Arial';
-        const descWidth = ctx.measureText(formatted.description).width;
-        const formulaText = calc.hasSlots ? `${calc.formula} = ${calc.result} ${calc.valueType}` : `${calc.result} ${calc.valueType}`;
-        const formulaWidth = ctx.measureText(formulaText).width;
-        const tooltipWidth = Math.max(titleWidth, descWidth, formulaWidth, 200) + 40;
-        const slotRowHeight = ability.powerUpSlots > 0 ? 30 : 0;
-        const tooltipHeight = 100 + slotRowHeight;
-        let x = tooltip.x, y = tooltip.y;
-        if (x + tooltipWidth > canvas.width) x = canvas.width - tooltipWidth - 10;
-        if (y + tooltipHeight > canvas.height) y = canvas.height - tooltipHeight - 10;
-        ctx.fillStyle = 'rgba(0,0,0,0.9)';
-        ctx.strokeStyle = '#FFD700';
-        ctx.lineWidth = 2;
-        ctx.fillRect(x, y, tooltipWidth, tooltipHeight);
-        ctx.strokeRect(x, y, tooltipWidth, tooltipHeight);
-        ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(ability.displayName, x + 20, y + 25);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '14px Arial';
-        ctx.fillText(formatted.description, x + 20, y + 50);
-        ctx.fillStyle = '#AAFFAA';
-        ctx.fillText(formulaText, x + 20, y + 70);
-        if (ability.powerUpSlots > 0) {
-            ctx.fillStyle = '#CCCCCC';
-            ctx.font = '12px Arial';
-            ctx.fillText(`Power-up slots (X = ${filledCount}):`, x + 20, y + 90);
-            const slotSize = 20, slotSpacing = 5;
-            for (let i = 0; i < ability.powerUpSlots; i++) {
-                const sx = x + 20 + i * (slotSize + slotSpacing);
-                const sy = y + 95;
-                const slotColor = ability.powerUpColors[i];
-                const isFilled = tooltip.filledSlots[i] === true;
-                ctx.strokeStyle = DS.colors[slotColor] || '#888888';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(sx, sy, slotSize, slotSize);
-                if (isFilled) {
-                    ctx.fillStyle = DS.colors[slotColor] || '#888888';
-                    ctx.fillRect(sx + 2, sy + 2, slotSize - 4, slotSize - 4);
-                } else {
-                    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-                    ctx.fillRect(sx + 2, sy + 2, slotSize - 4, slotSize - 4);
-                }
-            }
-        }
+        
+        Tooltip.render(ctx, canvas, window.DiceSystem.state.tooltip);
     },
 
     // Reroll modal
     renderRerollModal(ctx, canvas) {
+        // Delegate to RerollModal component
         if (!window.DiceSystem) return;
-        const DS = window.DiceSystem;
-        const modal = DS.state.rerollModal;
-        if (!modal) return;
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        const panelWidth = 600, panelHeight = 450;
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = (canvas.height - panelHeight) / 2;
-        modal.bounds = { x: panelX, y: panelY, width: panelWidth, height: panelHeight };
-        ctx.fillStyle = 'rgba(20,20,20,0.95)';
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.save();
-        ctx.strokeStyle = '#FFAA66';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#FFAA66';
-        ctx.shadowBlur = 15;
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-        ctx.fillStyle = '#FFAA66';
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Select Dice to Reroll', panelX + panelWidth / 2, panelY + 40);
-        ctx.fillStyle = '#CCCCCC';
-        ctx.font = '14px Arial';
-        ctx.fillText('Click dice to select/deselect', panelX + panelWidth / 2, panelY + 70);
-        ctx.textAlign = 'left';
-        const availableDice = (window.CombatManager?.state?.rolledDice || []).filter(d => !d.assigned);
-        const diceStartY = panelY + 100, diceSize = 80, diceSpacing = 20, dicePerRow = 4;
-        modal.checkboxBounds = [];
-        availableDice.forEach((rolledDie, idx) => {
-            const row = Math.floor(idx / dicePerRow);
-            const col = idx % dicePerRow;
-            const dieX = panelX + 50 + col * (diceSize + diceSpacing);
-            const dieY = diceStartY + row * (diceSize + diceSpacing + 30);
-            const isSelected = modal.selectedDice.includes(rolledDie.dieIndex);
-            modal.checkboxBounds.push({ x: dieX, y: dieY, width: diceSize, height: diceSize, dieIndex: rolledDie.dieIndex });
-            const die = DS.state.dice[rolledDie.dieIndex];
-            const face = die.faces[rolledDie.faceIndex];
-            DS.drawDieFace(ctx, face, dieX, dieY, diceSize, false);
-            if (isSelected) {
-                ctx.save();
-                ctx.strokeStyle = '#FFD700';
-                ctx.lineWidth = 4;
-                ctx.shadowColor = '#FFD700';
-                ctx.shadowBlur = 10;
-                ctx.strokeRect(dieX, dieY, diceSize, diceSize);
-                ctx.restore();
-            }
-            const checkboxSize = 24;
-            const checkboxX = dieX + diceSize / 2 - checkboxSize / 2;
-            const checkboxY = dieY + diceSize + 5;
-            ctx.fillStyle = isSelected ? '#FFD700' : '#333333';
-            ctx.fillRect(checkboxX, checkboxY, checkboxSize, checkboxSize);
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(checkboxX, checkboxY, checkboxSize, checkboxSize);
-            if (isSelected) {
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(checkboxX + 5, checkboxY + 12);
-                ctx.lineTo(checkboxX + 10, checkboxY + 18);
-                ctx.lineTo(checkboxX + 19, checkboxY + 6);
-                ctx.stroke();
-            }
-        });
-        const buttonY = panelY + panelHeight - 60, buttonWidth = 120, buttonHeight = 40, buttonSpacing = 20;
-        const cancelX = panelX + panelWidth / 2 - buttonWidth - buttonSpacing / 2;
-        modal.cancelButton = { x: cancelX, y: buttonY, width: buttonWidth, height: buttonHeight };
-        ctx.fillStyle = '#663333';
-        ctx.fillRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = '#FF8888';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Cancel', cancelX + buttonWidth / 2, buttonY + 25);
-        const confirmX = panelX + panelWidth / 2 + buttonSpacing / 2;
-        const canConfirm = modal.selectedDice.length > 0;
-        modal.confirmButton = { x: confirmX, y: buttonY, width: buttonWidth, height: buttonHeight };
-        ctx.fillStyle = canConfirm ? '#336633' : '#333333';
-        ctx.fillRect(confirmX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = canConfirm ? '#88FF88' : '#555555';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(confirmX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = canConfirm ? '#FFFFFF' : '#666666';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText('Confirm', confirmX + buttonWidth / 2, buttonY + 25);
-        ctx.textAlign = 'left';
-    },
-    // Render expanded ability panel (main die + power-up slots, UI only)
-    renderExpandedAbility(ctx, canvas) {
-        if (!window.DiceSystem) return;
-        const DS = window.DiceSystem;
-        // Use CombatManager state for expanded ability (source of truth)
-        const expanded = CombatManager.state.expandedAbility;
-        if (!expanded) return;
         
-        const layout = DS.layout;
-        const colors = DS.colors;
-        const panelWidth = 500;
-        const panelHeight = 260;
-        const panelX = (canvas.width - panelWidth) / 2;
-        const panelY = 480;
-        
-        // Dim areas outside rolling box
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, 0, canvas.width, layout.rollingBoxY);
-        const rollingBoxBottom = layout.rollingBoxY + layout.rollingBoxHeight;
-        ctx.fillRect(0, rollingBoxBottom, canvas.width, canvas.height - rollingBoxBottom);
-        
-        // Panel background
-        ctx.fillStyle = '#1a1a2e';
-        ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
-
-        // Ensure no inherited filters/alpha affect content
-        ctx.globalAlpha = 1.0;
-        if (typeof ctx.filter === 'string') ctx.filter = 'none';
-        
-        // Panel border with glow
-        ctx.strokeStyle = '#00FFFF';
-        ctx.lineWidth = 3;
-        ctx.shadowColor = '#00FFFF';
-        ctx.shadowBlur = 20;
-        ctx.strokeRect(panelX, panelY, panelWidth, panelHeight);
-        ctx.shadowBlur = 0;
-        
-        const centerX = panelX + panelWidth / 2;
-        
-        // Main die face (full brightness) - use CombatManager's rolled dice state
-        const mainDie = (window.CombatManager && window.CombatManager.state && window.CombatManager.state.rolledDice)
-            ? window.CombatManager.state.rolledDice[expanded.dieIndex]
-            : null;
-        if (mainDie && mainDie.face && mainDie.face.icon) {
-            const iconSize = 70;
-            const iconX = panelX + 15;
-            const iconY = panelY + 15;
-            const texturesForDie = DS.faceTextures && DS.faceTextures[expanded.dieIndex];
-            const texture = texturesForDie ? texturesForDie[mainDie.faceIndex] : null;
-            if (texture) {
-                ctx.save();
-                ctx.drawImage(texture, iconX, iconY, iconSize, iconSize);
-                ctx.restore();
-                ctx.strokeStyle = '#00FFFF';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(iconX, iconY, iconSize, iconSize);
-            }
-        }
-        
-        // Ability name and computed description
-        ctx.fillStyle = '#00FFFF';
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'left';
-        const textX = panelX + 100;
-        ctx.fillText(expanded.ability.displayName, textX, panelY + 40);
-        const filledSlots = expanded.powerUpDice.length;
-        const formattedAbility = expanded.ability ? formatAbilityDescription(expanded.ability, filledSlots) : { description: '' };
-        ctx.fillStyle = '#FFFF88';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(formattedAbility.description, textX, panelY + 65);
-        
-        // Power-up slots row
-        const maxSlots = expanded.ability.powerUpSlots || 0;
-        const slotSize = 40;
-        const slotSpacing = 10;
-        const totalSlotsWidth = maxSlots * (slotSize + slotSpacing) - slotSpacing;
-        const slotsX = centerX - totalSlotsWidth / 2;
-        const slotsY = panelY + 120;
-        if (maxSlots > 0) {
-            ctx.font = '12px Arial';
-            ctx.fillStyle = '#AAAAAA';
-            ctx.textAlign = 'center';
-            ctx.fillText('Power-Up Slots:', centerX, slotsY - 5);
-        }
-        for (let i = 0; i < maxSlots; i++) {
-            const x = slotsX + i * (slotSize + slotSpacing);
-            const filled = i < filledSlots;
-            const color = expanded.ability.powerUpColors && expanded.ability.powerUpColors[i];
-            ctx.fillStyle = filled ? (colors[color + 'Light'] || colors[color] || '#666666') : '#2a2a2a';
-            ctx.fillRect(x, slotsY, slotSize, slotSize);
-            ctx.strokeStyle = filled ? '#FFD700' : '#444444';
-            ctx.lineWidth = filled ? 3 : 2;
-            ctx.strokeRect(x, slotsY, slotSize, slotSize);
-            if (filled && expanded.powerUpDice[i] !== undefined) {
-                const powerUpDieIdx = expanded.powerUpDice[i];
-                const powerUpDie = (window.CombatManager && window.CombatManager.state && window.CombatManager.state.rolledDice)
-                    ? window.CombatManager.state.rolledDice[powerUpDieIdx]
-                    : null;
-                if (powerUpDie && powerUpDie.face && powerUpDie.face.icon) {
-                    const pudTextures = DS.faceTextures && DS.faceTextures[powerUpDieIdx];
-                    const texture = pudTextures ? pudTextures[powerUpDie.faceIndex] : null;
-                    if (texture) {
-                        ctx.save();
-                        ctx.drawImage(texture, x, slotsY, slotSize, slotSize);
-                        ctx.restore();
-                    }
-                }
-            }
-        }
-        
-        // Instructions - show targeting message if in targeting mode
-        ctx.font = '14px Arial';
-        ctx.fillStyle = '#CCCCCC';
-        ctx.textAlign = 'center';
-        CombatManager.ensureState();
-        if (CombatManager.state.targetingMode) {
-            ctx.fillStyle = '#FFFF00';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('Select a target (click outside to cancel)', centerX, panelY + 185);
-        } else {
-            ctx.fillText('Click other dice to add power-ups', centerX, panelY + 185);
-        }
-        
-        // Buttons
-        const buttonY = panelY + 210;
-        const buttonWidth = 100;
-        const buttonHeight = 35;
-        const buttonSpacing = 15;
-        const cancelX = centerX - buttonWidth * 1.5 - buttonSpacing;
-        const executeX = centerX - buttonWidth / 2;
-        
-        // Cancel button (always visible)
-        ctx.fillStyle = '#AA4444';
-        ctx.fillRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.strokeStyle = '#FF6666';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(cancelX, buttonY, buttonWidth, buttonHeight);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText('Cancel', cancelX + buttonWidth / 2, buttonY + 23);
-        
-        // Execute button (disabled/hidden in targeting mode)
-        CombatManager.ensureState();
-        const inTargetingMode = CombatManager.state.targetingMode !== null;
-        if (inTargetingMode) {
-            // Show "Cancel Targeting" instead
-            ctx.fillStyle = '#664422';
-            ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
-            ctx.strokeStyle = '#AA8844';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
-            ctx.fillStyle = '#CCCCCC';
-            ctx.font = 'bold 14px Arial';
-            ctx.fillText('Cancel', executeX + buttonWidth / 2, buttonY + 23);
-        } else {
-            // Normal execute button
-            ctx.fillStyle = '#44AA44';
-            ctx.fillRect(executeX, buttonY, buttonWidth, buttonHeight);
-            ctx.strokeStyle = '#66FF66';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(executeX, buttonY, buttonWidth, buttonHeight);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('Execute', executeX + buttonWidth / 2, buttonY + 23);
-        }
-        
-        ctx.restore();
-        ctx.textAlign = 'left';
+        RerollModal.render(ctx, canvas, window.DiceSystem.state.rerollModal);
     },
     
     // Render unit info panel (HP, armor, status effects, portrait)
     renderUnitInfo(ctx, unit, x, y, isPlayer) {
-        // Determine highlight state if in targeting mode
-        let highlightState = null;
-        CombatManager.ensureState();
-        const targetingMode = CombatManager.state.targetingMode;
-        if (targetingMode && targetingMode.validTargets) {
-            const targetInfo = targetingMode.validTargets.find(t => t.unit === unit);
-            if (targetInfo) {
-                highlightState = {
-                    isValidTarget: true,
-                    isHovered: targetingMode.hoveredTarget === unit
-                };
-            }
-        }
-        
-        // Use CharacterPanel component to draw the unit info
-        const buttonBounds = CharacterPanel.draw(ctx, unit, x, y, isPlayer, this.portraits, highlightState);
-        
-        // Store panel bounds for click detection (for targeting)
-        const width = 240;
-        const portraitSize = 80;
-        const statusHeight = (unit.statusEffects && unit.statusEffects.length > 0) ? 50 : 15;
-        const panelHeight = Math.max(portraitSize + 20, 30 + 30 + statusHeight + 40);
-        unit._panelBounds = { x, y, width, height: panelHeight };
-        
-        // Store button bounds for click detection (in DiceSystem for now)
-        unit._viewDiceButton = {
-            x: buttonBounds.buttonX,
-            y: buttonBounds.buttonY,
-            width: buttonBounds.buttonWidth,
-            height: buttonBounds.buttonHeight,
-            unitId: isPlayer ? 'player' : 'enemy'
+        const state = {
+            expandedUnitPanel: window.DiceSystem && window.DiceSystem.state.expandedUnitPanel,
+            editMode: window.DiceSystem && window.DiceSystem.state.editMode
         };
-        
-        // Draw "View Dice" button (always shows "View Dice", never changes)
-        const expandedPanel = window.DiceSystem && window.DiceSystem.state.expandedUnitPanel;
-        let isExpanded = false;
-        if (expandedPanel) {
-            // Check if this specific unit's panel is expanded
-            isExpanded = expandedPanel.unitId === unit.id;
-        }
-        
-        const isHovered = !!unit._viewDiceButton.hovered;
-        Button.draw(
-            ctx,
-            buttonBounds.buttonX,
-            buttonBounds.buttonY,
-            buttonBounds.buttonWidth,
-            buttonBounds.buttonHeight,
-            'View Dice', // Always shows "View Dice"
-            true,
-            isHovered,
-            {
-                bgEnabled: isExpanded ? '#666666' : '#333333',
-                bgHovered: '#444444',
-                borderEnabled: isPlayer ? '#44CCFF' : '#FF8844',
-                textEnabled: isHovered ? '#FFFFEE' : '#FFFFFF',
-                fontSize: '12px'
-            }
-        );
-        
-        // Draw X button in edit mode (top-right corner)
-        const editMode = window.DiceSystem && window.DiceSystem.state.editMode;
-        if (editMode) {
-            const xButtonSize = 35;
-            const xButtonX = x + width - xButtonSize - 5;
-            const xButtonY = y + 5;
-            
-            // Store bounds for click detection
-            unit._removeButton = { x: xButtonX, y: xButtonY, width: xButtonSize, height: xButtonSize };
-            
-            // Draw X button
-            ctx.fillStyle = '#AA4444';
-            ctx.fillRect(xButtonX, xButtonY, xButtonSize, xButtonSize);
-            ctx.strokeStyle = '#FF6666';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(xButtonX, xButtonY, xButtonSize, xButtonSize);
-            
-            // Draw X symbol
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(xButtonX + 8, xButtonY + 8);
-            ctx.lineTo(xButtonX + xButtonSize - 8, xButtonY + xButtonSize - 8);
-            ctx.moveTo(xButtonX + xButtonSize - 8, xButtonY + 8);
-            ctx.lineTo(xButtonX + 8, xButtonY + xButtonSize - 8);
-            ctx.stroke();
-        } else {
-            unit._removeButton = null;
-        }
+        return UnitInfoCard.draw(ctx, unit, x, y, isPlayer, this.portraits, state);
     },
     
     
@@ -2342,261 +1157,26 @@ const CombatUI = {
     
     // Render combat log
     renderCombatLog(ctx, canvas) {
-        const logX = 20;
-        const logY = canvas.height - 180;
-        const logWidth = 400;
-        const logHeight = 90;
-        
-        // Background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(logX, logY, logWidth, logHeight);
-        
-        // Border
-        ctx.strokeStyle = '#888888';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(logX, logY, logWidth, logHeight);
-        
-        // Title
-        ctx.fillStyle = '#CCCCCC';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText('Combat Log:', logX + 10, logY + 15);
-        
-        // Log entries (last 5)
-        const recentLogs = Combat.state.combatLog.slice(-5);
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '11px Arial';
-        
-        for (let i = 0; i < recentLogs.length; i++) {
-            const entry = recentLogs[i];
-            const text = typeof entry === 'string' ? entry : (entry && entry.message ? entry.message : String(entry));
-            ctx.fillText(text, logX + 10, logY + 35 + i * 14);
-        }
-        
-        ctx.textAlign = 'left';
+        // Delegate to CombatLog element
+        CombatLog.render(ctx, canvas);
     },
     
     // Render combat action buttons
     renderCombatButtons(ctx, canvas) {
-        const centerX = canvas.width / 2;
-        const buttonY = canvas.height - 80;
-        const buttonWidth = 120;
-        const buttonHeight = 40;
-        const buttonSpacing = 14;
-        const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
-        const startX = centerX - totalWidth / 2;
-
-        // Roll Dice button (left)
-        const rollX = startX;
-        const rollHovered = window.DiceSystem && window.DiceSystem.state.hoveredButton === 'roll';
-        Button.draw(
-            ctx,
-            rollX,
-            buttonY,
-            buttonWidth,
-            buttonHeight,
-            'Roll Dice',
-            true,
-            rollHovered,
-            {
-                bgEnabled: '#333366',
-                bgHovered: '#4444AA',
-                borderEnabled: '#8888FF',
-                textEnabled: '#FFFFFF',
-                fontSize: '14px'
-            }
-        );
-
-        // Reroll button (middle) - disabled if no rerolls or no rolled dice or all dice assigned
-        const rerollX = startX + buttonWidth + buttonSpacing;
-        const rerollHovered = window.DiceSystem && window.DiceSystem.state.hoveredButton === 'reroll';
-        const canReroll = (window.CombatManager && window.CombatManager.state &&
-                         window.CombatManager.state.rerollsRemaining > 0 &&
-                         (window.CombatManager.state.rolledDice || []).length > 0 &&
-                         window.CombatManager.state.rolledDice.some(d => !d.assigned));
-        
-        Button.draw(
-            ctx,
-            rerollX,
-            buttonY,
-            buttonWidth,
-            buttonHeight,
-            'Reroll',
-            canReroll,
-            rerollHovered,
-            {
-                bgEnabled: '#664422',
-                bgHovered: '#AA6644',
-                bgDisabled: '#333333',
-                borderEnabled: '#FFAA66',
-                borderDisabled: '#555555',
-                textEnabled: '#FFFFFF',
-                textDisabled: '#666666',
-                fontSize: '14px'
-            }
-        );
-        
-        // Show rerolls remaining
-        if (window.CombatManager && window.CombatManager.state && window.CombatManager.state.rerollsRemaining > 0) {
-            Button.drawBadge(ctx, rerollX, buttonY, buttonWidth, buttonHeight, `(${window.CombatManager.state.rerollsRemaining})`, { color: '#FFAA66', fontSize: '10px', offsetX: 0, offsetY: -5 });
-        }
-
-        // (Execute Ability button removed; execution happens in expanded panel)
-
-        // End Turn button (right)
-        const endTurnX = startX + (buttonWidth + buttonSpacing) * 2;
-        const endTurnHovered = window.DiceSystem && window.DiceSystem.state.hoveredButton === 'end_turn';
-        
-        Button.draw(
-            ctx,
-            endTurnX,
-            buttonY,
-            buttonWidth,
-            buttonHeight,
-            'End Turn',
-            true,
-            endTurnHovered,
-            {
-                bgEnabled: '#663333',
-                bgHovered: '#AA4444',
-                borderEnabled: '#FF8888',
-                textEnabled: '#FFFFFF',
-                fontSize: '14px'
-            }
-        );
-        
-        // Edit units toggle button (below combat buttons)
-        const editButtonY = buttonY + buttonHeight + 15;
-        const editButtonWidth = 140;
-        const editButtonHeight = 35;
-        const editButtonX = centerX - editButtonWidth / 2;
-        const editMode = window.DiceSystem && window.DiceSystem.state.editMode;
-        const editHovered = window.DiceSystem && window.DiceSystem.state.hoveredButton === 'edit_units';
-        
-        Button.draw(
-            ctx,
-            editButtonX,
-            editButtonY,
-            editButtonWidth,
-            editButtonHeight,
-            editMode ? 'Done editing' : 'Edit units',
-            true,
-            editHovered,
-            {
-                bgEnabled: editMode ? '#664422' : '#336633',
-                bgHovered: editMode ? '#AA6644' : '#44AA44',
-                borderEnabled: editMode ? '#FFAA66' : '#66FF66',
-                textEnabled: '#FFFFFF',
-                fontSize: '14px'
-            }
-        );
-        
-        ctx.textAlign = 'left';
+        // Delegate to CombatButtons element
+        CombatButtons.render(ctx, canvas);
     },
     
     // Check if mouse is hovering over combat buttons
     checkButtonHover(mousePos, canvas) {
-        if (!window.DiceSystem) return;
-        window.DiceSystem.state.hoveredButton = null;
-        
-        const centerX = canvas.width / 2;
-        const buttonY = canvas.height - 80;
-        const buttonWidth = 120;
-        const buttonHeight = 40;
-        const buttonSpacing = 14;
-        const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
-        const startX = centerX - totalWidth / 2;
-
-        const rollX = startX;
-        const rerollX = startX + buttonWidth + buttonSpacing;
-        const executeX = startX + (buttonWidth + buttonSpacing) * 2; // no execute, placeholder for alignment
-        const endTurnX = executeX;
-
-        if (mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
-            if (mousePos.x >= rollX && mousePos.x <= rollX + buttonWidth) {
-                window.DiceSystem.state.hoveredButton = 'roll';
-            } else if (mousePos.x >= rerollX && mousePos.x <= rerollX + buttonWidth) {
-                window.DiceSystem.state.hoveredButton = 'reroll';
-            } else if (mousePos.x >= endTurnX && mousePos.x <= endTurnX + buttonWidth) {
-                window.DiceSystem.state.hoveredButton = 'end_turn';
-            }
-        }
-        
-        // Check edit button hover
-        const editButtonY = buttonY + buttonHeight + 15;
-        const editButtonWidth = 140;
-        const editButtonHeight = 35;
-        const editButtonX = centerX - editButtonWidth / 2;
-        if (mousePos.x >= editButtonX && mousePos.x <= editButtonX + editButtonWidth &&
-            mousePos.y >= editButtonY && mousePos.y <= editButtonY + editButtonHeight) {
-            window.DiceSystem.state.hoveredButton = 'edit_units';
-        }
+        // Delegate to CombatButtons element
+        CombatButtons.handleHover(mousePos, canvas);
     },
     
     // Check if a combat action button was clicked
     checkCombatActionClick(mousePos, canvas) {
-        const centerX = canvas.width / 2;
-        const buttonY = canvas.height - 80;
-        const buttonWidth = 120;
-        const buttonHeight = 40;
-        const buttonSpacing = 14;
-        const totalWidth = buttonWidth * 3 + buttonSpacing * 2;
-        const startX = centerX - totalWidth / 2;
-
-        const rollX = startX;
-        const rerollX = startX + buttonWidth + buttonSpacing;
-        const executeX = startX + (buttonWidth + buttonSpacing) * 2; // no execute, placeholder for alignment
-        const endTurnX = executeX;
-
-        // Roll Dice button
-        if (mousePos.x >= rollX && mousePos.x <= rollX + buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
-            if (window.DiceSystem) {
-                window.DiceSystem.rollAllDice();
-            }
-            return true;
-        }
-
-        // Reroll button
-        const canReroll = (window.CombatManager && window.CombatManager.state &&
-                         window.CombatManager.state.rerollsRemaining > 0 &&
-                         (window.CombatManager.state.rolledDice || []).length > 0 &&
-                         window.CombatManager.state.rolledDice.some(d => !d.assigned));
-        if (canReroll &&
-            mousePos.x >= rerollX && mousePos.x <= rerollX + buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
-            if (window.DiceSystem) {
-                window.DiceSystem.openRerollModal();
-            }
-            return true;
-        }
-
-        // (Execute Ability click removed; execution happens in expanded panel)
-
-        // End Turn button
-        if (mousePos.x >= endTurnX && mousePos.x <= endTurnX + buttonWidth &&
-            mousePos.y >= buttonY && mousePos.y <= buttonY + buttonHeight) {
-            Combat.endTurn();
-            return true;
-        }
-        
-        // Edit units toggle button
-        const editButtonY = buttonY + buttonHeight + 15;
-        const editButtonWidth = 140;
-        const editButtonHeight = 35;
-        const editButtonX = centerX - editButtonWidth / 2;
-        if (mousePos.x >= editButtonX && mousePos.x <= editButtonX + editButtonWidth &&
-            mousePos.y >= editButtonY && mousePos.y <= editButtonY + editButtonHeight) {
-            if (window.DiceSystem) {
-                window.DiceSystem.state.editMode = !window.DiceSystem.state.editMode;
-                // Close unit selection dialog when toggling edit mode off
-                if (!window.DiceSystem.state.editMode) {
-                    window.DiceSystem.state.unitSelectionDialog = null;
-                }
-            }
-            return true;
-        }
-        
-        return false;
+        // Delegate to CombatButtons element
+        return CombatButtons.handleClick(mousePos, canvas);
     },
     
     // Handle mouse up

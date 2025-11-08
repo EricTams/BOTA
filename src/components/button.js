@@ -154,6 +154,40 @@ const Button = {
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
         }
+    },
+    
+    /**
+     * Draw a button with a "+" icon for adding units
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {number} x - X position
+     * @param {number} y - Y position
+     * @param {number} size - Button size (square)
+     * @param {boolean} enabled - Whether button is enabled
+     * @returns {Object} Button bounds for click detection
+     */
+    drawAddButton(ctx, x, y, size, enabled) {
+        // Draw button background
+        ctx.fillStyle = enabled ? '#44AA44' : '#333333';
+        ctx.fillRect(x, y, size, size);
+        ctx.strokeStyle = enabled ? '#66FF66' : '#555555';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, size, size);
+        
+        // Draw + symbol
+        if (enabled) {
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            // Horizontal line
+            ctx.moveTo(x + 12, y + size / 2);
+            ctx.lineTo(x + size - 12, y + size / 2);
+            // Vertical line
+            ctx.moveTo(x + size / 2, y + 12);
+            ctx.lineTo(x + size / 2, y + size - 12);
+            ctx.stroke();
+        }
+        
+        return { x, y, width: size, height: size };
     }
 };
 

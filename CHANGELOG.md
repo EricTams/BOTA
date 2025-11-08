@@ -34,7 +34,42 @@ changelog: [
 
 ---
 
-## November 8, 2025
+## November 8, 2025 (Part 2)
+
+### Added
+- Reusable UI element components for combat screens (elements/ folder)
+- Panel component for consistent canvas-based UI rendering across all screens
+- Combat Buttons element with hover states and click handling
+- Combat Log element for displaying combat actions
+- Expanded Ability Panel for showing detailed ability information
+- Expanded Unit Panel for showing detailed unit information
+- Reroll Modal for dice rerolling interface
+- Reroll Tray for managing dice reroll interactions
+- Rolling Box for dice rolling animations
+- Tooltip element for consistent tooltip rendering
+- Unit Info Card for displaying character stats
+- Unit Selection Dialog for choosing combat participants
+
+### Improved
+- Combat UI now uses modular, reusable components instead of monolithic code
+- Panel rendering is now consistent across all UI elements (background, border, glow, title)
+- All combat UI elements are canvas-based (no DOM elements for game objects)
+- Better separation of concerns between UI rendering and game logic
+
+### Changed
+- Refactored combat UI from monolithic ui_combat.js into separate element modules
+- Button component now supports text-only buttons (no icon required)
+
+### Technical
+- Created src/elements/ directory for reusable UI elements
+- Created src/components/panel.js for consistent panel rendering
+- All UI elements follow consistent API: init(), render(), handleClick(), etc.
+- Panel component supports themed rendering (player vs enemy colors)
+- Panel component supports overlays for modal dialogs
+
+---
+
+## November 8, 2025 (Part 1)
 
 ### Added
 - Combat effects system for visual feedback (damage, heal, dodge, telekinesis, chain)
